@@ -39,18 +39,18 @@ def test_topic_prioritizer_basic_functionality():
             freshness=0.7,
             evergreen=0.9,
             brand_fit=0.9,  # 4.5/5 ≈ 0.9
-            composite=0.85
+            composite=0.85,
         ),
         reason="เข้าใจง่าย เป็นประโยชน์",
         raw_keywords=["ธรรมะ", "ชีวิต"],
         similar_to=[],
-        risk_flags=[]
+        risk_flags=[],
     )
 
     input_data = PriorityInput(
         topics=[sample_topic],
         business_goals={"engagement": 0.8, "growth": 0.6},
-        audience_segments=["คนรุ่นใหม่", "ผู้สนใจธรรมะ"]
+        audience_segments=["คนรุ่นใหม่", "ผู้สนใจธรรมะ"],
     )
 
     # Run the agent
