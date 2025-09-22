@@ -15,7 +15,6 @@ from agents.topic_prioritizer import (
     TopicPrioritizerAgent,
     WeeksCapacity,
 )
-from agents.trend_scout.model import TopicEntry, TopicScore
 
 
 def test_topic_prioritizer_agent_initialization():
@@ -41,9 +40,9 @@ def test_topic_prioritizer_basic_functionality():
                 "freshness": 0.74,
                 "evergreen": 0.65,
                 "brand_fit": 0.93,
-                "composite": 0.785
+                "composite": 0.785,
             },
-            reason="ค้นสูง + ปัญหาก่อนนอน"
+            reason="ค้นสูง + ปัญหาก่อนนอน",
         ),
         CandidateTopic(
             title="ธรรมะใจเบา",
@@ -54,20 +53,16 @@ def test_topic_prioritizer_basic_functionality():
                 "freshness": 0.80,
                 "evergreen": 0.45,
                 "brand_fit": 0.85,
-                "composite": 0.71
+                "composite": 0.71,
             },
-            reason="เทรนด์ใหม่"
-        )
+            reason="เทรนด์ใหม่",
+        ),
     ]
 
     input_data = PriorityInput(
         candidate_topics=sample_topics,
         strategy_focus="fast_growth",
-        capacity=WeeksCapacity(
-            weeks=4,
-            longform_per_week=2,
-            shorts_per_week=4
-        )
+        capacity=WeeksCapacity(weeks=4, longform_per_week=2, shorts_per_week=4),
     )
 
     # Run the agent
@@ -80,7 +75,7 @@ def test_topic_prioritizer_basic_functionality():
     assert len(result.unscheduled) >= 0
     assert result.diversity_summary.distinct_pillars >= 0
     assert result.meta.total_candidates == 2
-    
+
     # Verify that at least some topics were processed
     total_processed = result.meta.scheduled_count + result.meta.unscheduled_count
     assert total_processed == 2
@@ -92,8 +87,11 @@ def test_topic_prioritizer_basic_functionality():
         assert topic.week.startswith("W")
         assert 0 <= topic.priority_score <= 100
         assert topic.expected_role in [
-            "traffic_spike", "evergreen_seed", "series_part", 
-            "balance_filler", "audience_engagement"
+            "traffic_spike",
+            "evergreen_seed",
+            "series_part",
+            "balance_filler",
+            "audience_engagement",
         ]
 
 
@@ -111,9 +109,9 @@ def test_content_type_classification():
             "freshness": 0.50,
             "evergreen": 0.85,  # High evergreen
             "brand_fit": 0.90,  # High brand fit
-            "composite": 0.71
+            "composite": 0.71,
         },
-        reason="เนื้อหาลึก"
+        reason="เนื้อหาลึก",
     )
 
     # Test shorts classification
@@ -124,21 +122,21 @@ def test_content_type_classification():
         scores={
             "search_intent": 0.85,  # High search intent
             "freshness": 0.90,
-            "evergreen": 0.40,      # Low evergreen
+            "evergreen": 0.40,  # Low evergreen
             "brand_fit": 0.75,
-            "composite": 0.73
+            "composite": 0.73,
         },
-        reason="ติดเทรนด์"
+        reason="ติดเทรนด์",
     )
 
     input_data = PriorityInput(
         candidate_topics=[longform_topic, shorts_topic],
         strategy_focus="evergreen_balance",
-        capacity=WeeksCapacity(longform_per_week=2, shorts_per_week=4)
+        capacity=WeeksCapacity(longform_per_week=2, shorts_per_week=4),
     )
 
     result = agent.run(input_data)
-    
+
     # Should have both content types
     content_types = {topic.content_type for topic in result.scheduled}
     assert len(content_types) >= 1  # At least one type should be present
@@ -155,36 +153,36 @@ def test_strategy_focus_impacts_scoring():
         predicted_14d_views=6000,
         scores={
             "search_intent": 0.70,
-            "freshness": 0.85,     # High freshness
-            "evergreen": 0.60,     # Medium evergreen  
+            "freshness": 0.85,  # High freshness
+            "evergreen": 0.60,  # Medium evergreen
             "brand_fit": 0.80,
-            "composite": 0.74
+            "composite": 0.74,
         },
-        reason="สมดุล"
+        reason="สมดุล",
     )
 
     # Test fast_growth strategy
     input_fast = PriorityInput(
         candidate_topics=[topic],
         strategy_focus="fast_growth",
-        capacity=WeeksCapacity(longform_per_week=1, shorts_per_week=2)
+        capacity=WeeksCapacity(longform_per_week=1, shorts_per_week=2),
     )
-    
+
     result_fast = agent.run(input_fast)
-    
-    # Test evergreen_balance strategy  
+
+    # Test evergreen_balance strategy
     input_evergreen = PriorityInput(
         candidate_topics=[topic],
         strategy_focus="evergreen_balance",
-        capacity=WeeksCapacity(longform_per_week=1, shorts_per_week=2)
+        capacity=WeeksCapacity(longform_per_week=1, shorts_per_week=2),
     )
-    
+
     result_evergreen = agent.run(input_evergreen)
 
     # Both should process the topic
     assert result_fast.meta.total_candidates == 1
     assert result_evergreen.meta.total_candidates == 1
-    
+
     # Strategies should be different
     assert result_fast.strategy_focus == "fast_growth"
     assert result_evergreen.strategy_focus == "evergreen_balance"

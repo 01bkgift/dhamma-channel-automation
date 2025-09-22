@@ -35,7 +35,7 @@ class Rules(BaseModel):
     min_pillars_diversity: int = Field(description="จำนวน pillar ขั้นต่ำ", default=3)
     force_series_prefixes: list[str] = Field(
         description="คำขึ้นต้นที่บังคับให้เป็นซีรีส์",
-        default_factory=lambda: ["พุทธจิตวิทยา", "ชาดกชุด", "10 วันภาวนา"]
+        default_factory=lambda: ["พุทธจิตวิทยา", "ชาดกชุด", "10 วันภาวนา"],
     )
 
 
@@ -45,15 +45,16 @@ class HistoricalContext(BaseModel):
     recent_longform_avg_views: int = Field(description="ยอดวิว longform เฉลี่ยล่าสุด")
     recent_shorts_avg_views: int = Field(description="ยอดวิว shorts เฉลี่ยล่าสุด")
     pillar_performance: dict[str, float] = Field(
-        description="ผลการดำเนินงานของแต่ละ pillar",
-        default_factory=dict
+        description="ผลการดำเนินงานของแต่ละ pillar", default_factory=dict
     )
 
 
 class PriorityInput(BaseModel):
     """Input สำหรับ TopicPrioritizerAgent v1"""
 
-    candidate_topics: list[CandidateTopic] = Field(description="หัวข้อผู้สมัครจาก TrendScout")
+    candidate_topics: list[CandidateTopic] = Field(
+        description="หัวข้อผู้สมัครจาก TrendScout"
+    )
     strategy_focus: Literal["fast_growth", "evergreen_balance", "depth_series"] = Field(
         description="กลยุทธ์หลักที่เน้น"
     )
@@ -81,8 +82,11 @@ class ScheduledTopic(BaseModel):
     slot_index: int = Field(description="ลำดับในสัปดาห์")
     priority_score: float = Field(description="คะแนนความสำคัญ")
     expected_role: Literal[
-        "traffic_spike", "evergreen_seed", "series_part",
-        "balance_filler", "audience_engagement"
+        "traffic_spike",
+        "evergreen_seed",
+        "series_part",
+        "balance_filler",
+        "audience_engagement",
     ] = Field(description="บทบาทที่คาดหวัง")
     series_group: str | None = Field(default=None, description="กลุ่มซีรีส์")
     risk_flags: list[str] = Field(default_factory=list, description="ธงเตือนความเสี่ยง")

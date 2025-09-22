@@ -52,13 +52,15 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             "ธรรมะสั้น": 1.10,
             "เจาะลึก/ซีรีส์": 1.18,
             "Q&A/ตอบคำถาม": 0.88,
-            "สรุปพระสูตร/หนังสือ": 1.00
+            "สรุปพระสูตร/หนังสือ": 1.00,
         }
 
     def run(self, input_data: PriorityInput) -> PriorityOutput:
         """ประมวลผลการสร้าง Content Calendar"""
 
-        logger.info(f"เริ่มสร้าง Content Calendar สำหรับ {len(input_data.candidate_topics)} หัวข้อ")
+        logger.info(
+            f"เริ่มสร้าง Content Calendar สำหรับ {len(input_data.candidate_topics)} หัวข้อ"
+        )
 
         try:
             # 1. คำนวณคะแนนความสำคัญและจำแนกประเภท
@@ -81,12 +83,12 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
                 strategy_focus=input_data.strategy_focus,
                 weeks_capacity={
                     "longform_per_week": input_data.capacity.longform_per_week,
-                    "shorts_per_week": input_data.capacity.shorts_per_week
+                    "shorts_per_week": input_data.capacity.shorts_per_week,
                 },
                 scheduled=scheduled,
                 unscheduled=unscheduled,
                 diversity_summary=diversity_summary,
-                meta=meta
+                meta=meta,
             )
 
             logger.info(f"สร้าง Content Calendar เสร็จสิ้น - {len(scheduled)} หัวข้อในปฏิทิน")
@@ -96,17 +98,22 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             logger.error(f"เกิดข้อผิดพลาดในการสร้าง Content Calendar: {e}")
             raise
 
-    def _calculate_priority_scores(self, input_data: PriorityInput) -> list[tuple[CandidateTopic, float, str, str]]:
+    def _calculate_priority_scores(
+        self, input_data: PriorityInput
+    ) -> list[tuple[CandidateTopic, float, str, str]]:
         """คำนวณคะแนนความสำคัญสำหรับแต่ละหัวข้อ"""
 
         scored_topics = []
-        max_predicted_views = max(
-            topic.predicted_14d_views for topic in input_data.candidate_topics
-        ) if input_data.candidate_topics else 1
+        max_predicted_views = (
+            max(topic.predicted_14d_views for topic in input_data.candidate_topics)
+            if input_data.candidate_topics
+            else 1
+        )
 
         historical_context = input_data.historical_context
         pillar_performance = (
-            historical_context.pillar_performance if historical_context
+            historical_context.pillar_performance
+            if historical_context
             else self.default_pillar_performance
         )
 
@@ -128,7 +135,10 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
                 adjustments += topic.scores.get("brand_fit", 0.5) * 8
                 adjustments += topic.scores.get("evergreen", 0.5) * 6
                 # Series bonus
-                if any(topic.title.startswith(prefix) for prefix in input_data.rules.force_series_prefixes):
+                if any(
+                    topic.title.startswith(prefix)
+                    for prefix in input_data.rules.force_series_prefixes
+                ):
                     adjustments += 6
 
             # ปรับตาม pillar performance
@@ -140,7 +150,9 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             content_type = self._classify_content_type(topic, input_data)
 
             # กำหนดบทบาทที่คาดหวัง
-            expected_role = self._determine_expected_role(topic, input_data.strategy_focus, final_score)
+            expected_role = self._determine_expected_role(
+                topic, input_data.strategy_focus, final_score
+            )
 
             scored_topics.append((topic, final_score, content_type, expected_role))
 
@@ -149,7 +161,9 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
 
         return scored_topics
 
-    def _classify_content_type(self, topic: CandidateTopic, input_data: PriorityInput) -> str:
+    def _classify_content_type(
+        self, topic: CandidateTopic, input_data: PriorityInput
+    ) -> str:
         """จำแนกประเภทเนื้อหา (longform หรือ shorts)"""
 
         historical_context = input_data.historical_context
@@ -158,7 +172,10 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
         )
 
         # ตรวจสอบเงื่อนไข force_series_prefixes
-        if any(topic.title.startswith(prefix) for prefix in input_data.rules.force_series_prefixes):
+        if any(
+            topic.title.startswith(prefix)
+            for prefix in input_data.rules.force_series_prefixes
+        ):
             return "longform"
 
         # ตรวจสอบความลึกและยอดวิว
@@ -166,15 +183,23 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
         brand_fit = topic.scores.get("brand_fit", 0.5)
         search_intent = topic.scores.get("search_intent", 0.5)
 
-        if (evergreen > 0.65 or brand_fit > 0.85) and topic.predicted_14d_views >= recent_longform_avg:
+        if (
+            evergreen > 0.65 or brand_fit > 0.85
+        ) and topic.predicted_14d_views >= recent_longform_avg:
             return "longform"
         elif search_intent > 0.7 and evergreen < 0.55:
             return "shorts"
         else:
             # Default decision based on predicted views
-            return "longform" if topic.predicted_14d_views >= recent_longform_avg else "shorts"
+            return (
+                "longform"
+                if topic.predicted_14d_views >= recent_longform_avg
+                else "shorts"
+            )
 
-    def _determine_expected_role(self, topic: CandidateTopic, strategy: str, score: float) -> str:
+    def _determine_expected_role(
+        self, topic: CandidateTopic, strategy: str, score: float
+    ) -> str:
         """กำหนดบทบาทที่คาดหวัง"""
 
         freshness = topic.scores.get("freshness", 0.5)
@@ -184,7 +209,10 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             return "traffic_spike"
         elif evergreen > 0.7:
             return "evergreen_seed"
-        elif any(topic.title.startswith(prefix) for prefix in ["พุทธจิตวิทยา", "ชาดกชุด", "10 วันภาวนา"]):
+        elif any(
+            topic.title.startswith(prefix)
+            for prefix in ["พุทธจิตวิทยา", "ชาดกชุด", "10 วันภาวนา"]
+        ):
             return "series_part"
         elif score > 70:
             return "audience_engagement"
@@ -192,7 +220,9 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             return "balance_filler"
 
     def _assign_calendar(
-        self, scored_topics: list[tuple[CandidateTopic, float, str, str]], input_data: PriorityInput
+        self,
+        scored_topics: list[tuple[CandidateTopic, float, str, str]],
+        input_data: PriorityInput,
     ) -> tuple[list[ScheduledTopic], list[UnscheduledTopic]]:
         """จัดสรรหัวข้อในปฏิทิน"""
 
@@ -211,23 +241,33 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
         for topic, score, content_type, expected_role in scored_topics:
             # ตรวจสอบคะแนนต่ำ
             if score < 40:
-                unscheduled.append(UnscheduledTopic(
-                    topic_title=topic.title,
-                    reason="low_score",
-                    priority_score=score
-                ))
+                unscheduled.append(
+                    UnscheduledTopic(
+                        topic_title=topic.title,
+                        reason="low_score",
+                        priority_score=score,
+                    )
+                )
                 continue
 
             # หาสัปดาห์ที่มีที่ว่าง
             week_assigned = None
-            for week in [f"W{i}" for i in range(current_week, input_data.capacity.weeks + 1)]:
+            for week in [
+                f"W{i}" for i in range(current_week, input_data.capacity.weeks + 1)
+            ]:
                 if content_type == "longform":
-                    if weeks_usage[week]["longform"] < input_data.capacity.longform_per_week:
+                    if (
+                        weeks_usage[week]["longform"]
+                        < input_data.capacity.longform_per_week
+                    ):
                         week_assigned = week
                         weeks_usage[week]["longform"] += 1
                         break
                 else:  # shorts
-                    if weeks_usage[week]["shorts"] < input_data.capacity.shorts_per_week:
+                    if (
+                        weeks_usage[week]["shorts"]
+                        < input_data.capacity.shorts_per_week
+                    ):
                         week_assigned = week
                         weeks_usage[week]["shorts"] += 1
                         break
@@ -236,12 +276,18 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             if not week_assigned:
                 for week in [f"W{i}" for i in range(1, current_week)]:
                     if content_type == "longform":
-                        if weeks_usage[week]["longform"] < input_data.capacity.longform_per_week:
+                        if (
+                            weeks_usage[week]["longform"]
+                            < input_data.capacity.longform_per_week
+                        ):
                             week_assigned = week
                             weeks_usage[week]["longform"] += 1
                             break
                     else:  # shorts
-                        if weeks_usage[week]["shorts"] < input_data.capacity.shorts_per_week:
+                        if (
+                            weeks_usage[week]["shorts"]
+                            < input_data.capacity.shorts_per_week
+                        ):
                             week_assigned = week
                             weeks_usage[week]["shorts"] += 1
                             break
@@ -257,20 +303,24 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
                         break
 
                 # สร้างหมายเหตุ
-                notes = self._generate_notes(topic, expected_role, input_data.strategy_focus)
+                notes = self._generate_notes(
+                    topic, expected_role, input_data.strategy_focus
+                )
 
-                scheduled.append(ScheduledTopic(
-                    topic_title=topic.title,
-                    content_type=content_type,
-                    pillar=topic.pillar,
-                    week=week_assigned,
-                    slot_index=slot_counters[week_assigned],
-                    priority_score=score,
-                    expected_role=expected_role,
-                    series_group=series_group,
-                    risk_flags=risk_flags,
-                    notes=notes
-                ))
+                scheduled.append(
+                    ScheduledTopic(
+                        topic_title=topic.title,
+                        content_type=content_type,
+                        pillar=topic.pillar,
+                        week=week_assigned,
+                        slot_index=slot_counters[week_assigned],
+                        priority_score=score,
+                        expected_role=expected_role,
+                        series_group=series_group,
+                        risk_flags=risk_flags,
+                        notes=notes,
+                    )
+                )
 
                 slot_counters[week_assigned] += 1
 
@@ -278,15 +328,19 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
                 if current_week <= input_data.capacity.weeks:
                     current_week = (current_week % input_data.capacity.weeks) + 1
             else:
-                unscheduled.append(UnscheduledTopic(
-                    topic_title=topic.title,
-                    reason="capacity_full",
-                    priority_score=score
-                ))
+                unscheduled.append(
+                    UnscheduledTopic(
+                        topic_title=topic.title,
+                        reason="capacity_full",
+                        priority_score=score,
+                    )
+                )
 
         return scheduled, unscheduled
 
-    def _generate_notes(self, topic: CandidateTopic, expected_role: str, strategy: str) -> str:
+    def _generate_notes(
+        self, topic: CandidateTopic, expected_role: str, strategy: str
+    ) -> str:
         """สร้างหมายเหตุสำหรับหัวข้อ"""
 
         notes = []
@@ -306,7 +360,9 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
 
         return " | ".join(notes) if notes else "ปกติ"
 
-    def _calculate_diversity_summary(self, scheduled: list[ScheduledTopic], input_data: PriorityInput) -> DiversitySummary:
+    def _calculate_diversity_summary(
+        self, scheduled: list[ScheduledTopic], input_data: PriorityInput
+    ) -> DiversitySummary:
         """คำนวณสรุปความหลากหลาย"""
 
         pillar_counts = {}
@@ -319,11 +375,14 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
         return DiversitySummary(
             pillar_counts=pillar_counts,
             distinct_pillars=distinct_pillars,
-            meets_minimum=meets_minimum
+            meets_minimum=meets_minimum,
         )
 
     def _perform_self_check(
-        self, scheduled: list[ScheduledTopic], unscheduled: list[UnscheduledTopic], input_data: PriorityInput
+        self,
+        scheduled: list[ScheduledTopic],
+        unscheduled: list[UnscheduledTopic],
+        input_data: PriorityInput,
     ) -> SelfCheck:
         """ตรวจสอบผลลัพธ์ด้วยตัวเอง"""
 
@@ -336,23 +395,31 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
 
         capacity_respected = True
         for _week, usage in weeks_usage.items():
-            if (usage["longform"] > input_data.capacity.longform_per_week or
-                usage["shorts"] > input_data.capacity.shorts_per_week):
+            if (
+                usage["longform"] > input_data.capacity.longform_per_week
+                or usage["shorts"] > input_data.capacity.shorts_per_week
+            ):
                 capacity_respected = False
                 break
 
         # ตรวจสอบการเรียงลำดับคะแนน (อนุโลม)
-        longform_scores = [t.priority_score for t in scheduled if t.content_type == "longform"]
-        shorts_scores = [t.priority_score for t in scheduled if t.content_type == "shorts"]
+        longform_scores = [
+            t.priority_score for t in scheduled if t.content_type == "longform"
+        ]
+        shorts_scores = [
+            t.priority_score for t in scheduled if t.content_type == "shorts"
+        ]
 
         scores_monotonic = True
         if len(longform_scores) > 1:
             scores_monotonic = scores_monotonic and all(
-                longform_scores[i] >= longform_scores[i+1] for i in range(len(longform_scores)-1)
+                longform_scores[i] >= longform_scores[i + 1]
+                for i in range(len(longform_scores) - 1)
             )
         if len(shorts_scores) > 1:
             scores_monotonic = scores_monotonic and all(
-                shorts_scores[i] >= shorts_scores[i+1] for i in range(len(shorts_scores)-1)
+                shorts_scores[i] >= shorts_scores[i + 1]
+                for i in range(len(shorts_scores) - 1)
             )
 
         # ตรวจสอบความหลากหลาย
@@ -362,7 +429,7 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
         return SelfCheck(
             capacity_respected=capacity_respected,
             scores_monotonic=scores_monotonic,
-            diversity_ok=diversity_ok
+            diversity_ok=diversity_ok,
         )
 
     def _create_meta_info(
@@ -371,7 +438,7 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
         scheduled: list[ScheduledTopic],
         unscheduled: list[UnscheduledTopic],
         diversity_summary: DiversitySummary,
-        self_check: SelfCheck
+        self_check: SelfCheck,
     ) -> MetaInfo:
         """สร้างข้อมูล Meta"""
 
@@ -395,7 +462,7 @@ class TopicPrioritizerAgent(BaseAgent[PriorityInput, PriorityOutput]):
             unscheduled_count=len(unscheduled),
             pillars_underrepresented=underrepresented,
             adjustments_notes=adjustments_notes,
-            self_check=self_check
+            self_check=self_check,
         )
 
     # Legacy methods for backward compatibility
