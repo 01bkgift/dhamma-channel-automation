@@ -7,12 +7,10 @@ Agent นี้แปลงโครงร่างและข้อควา�
 
 import logging
 import re
-from typing import Dict, List, Set, Tuple
 
 from automation_core.base_agent import BaseAgent
 
 from .model import (
-    ErrorResponse,
     QualityCheck,
     ScriptMeta,
     ScriptSegment,
@@ -26,14 +24,14 @@ logger = logging.getLogger(__name__)
 
 class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
     """Agent สำหรับเรียบเรียงสคริปต์วิดีโอจากโครงร่างและข้อความอ้างอิง"""
-    
+
     def __init__(self):
         super().__init__(
             name="ScriptWriterAgent",
-            version="1.0.0", 
+            version="1.0.0",
             description="เรียบเรียงสคริปต์วิดีโอภาษาไทยจาก Outline และ Passages พร้อม citations และ retention cues",
         )
-        
+
         # Retention cues ที่ใช้ได้
         self.retention_cues = [
             "(หายใจลึกๆ 1 ครั้ง)",
@@ -41,18 +39,18 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
             "(เสียงกระดิ่งนุ่ม)",
             "(ขึ้นคำคมสั้น 1 บรรทัด)",
             "(หยุด 2 วินาที)",
-            "(หายใจเบาๆ)", 
+            "(หายใจเบาๆ)",
         ]
-        
+
         # คำที่ห้ามใช้เพราะเป็นการยืนยันผลแน่นอน
         self.prohibited_claims = [
-            "100%", "รับรอง", "การันตี", "แน่นอน", "ได้แน่", 
+            "100%", "รับรอง", "การันตี", "แน่นอน", "ได้แน่",
             "หลับได้แน่", "หายได้แน่", "จะได้", "ต้องได้"
         ]
-        
+
         # ค่าเฉลี่ยความเร็วอ่านภาษาไทย (คำต่อนาที)
         self.avg_reading_speed = 145
-        
+
         # Segment type mapping จาก outline sections
         self.section_to_segment_type = {
             "Hook": SegmentType.HOOK,
@@ -72,42 +70,42 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
         """
         try:
             logger.info(f"เริ่มเรียบเรียงสคริปต์สำหรับหัวข้อ: {input_data.outline.topic}")
-            
+
             # 1. ตรวจสอบข้อมูลเบื้องต้น
             validation_error = self._validate_input_data(input_data)
             if validation_error:
                 return self._create_error_response(validation_error)
-            
+
             # 2. สร้างฐานข้อมูล passages สำหรับ citation
             passage_db = self._build_passage_database(input_data.passages)
-            
+
             # 3. สร้าง segments จาก outline
             segments = self._generate_segments_from_outline(
                 input_data.outline, passage_db, input_data.style_notes
             )
-            
+
             # 4. เพิ่ม retention cues
             segments = self._add_retention_cues(segments, input_data.target_seconds)
-            
+
             # 5. คำนวณเวลาและปรับแต่ง
             segments = self._adjust_timing(segments, input_data.target_seconds)
-            
+
             # 6. ตรวจสอบ citations และสร้างรายการ
             citations_used, unmatched_citations = self._validate_citations(
                 segments, passage_db
             )
-            
+
             # 7. สร้าง metadata
             meta = self._create_meta_info(segments)
-            
+
             # 8. ตรวจสอบคุณภาพ
             quality_check = self._perform_quality_check(
                 segments, citations_used, input_data.target_seconds
             )
-            
+
             # 9. สร้างคำเตือน
             warnings = self._generate_warnings(quality_check, segments, input_data)
-            
+
             # 10. สร้างผลลัพธ์
             result = ScriptWriterOutput(
                 topic=input_data.outline.topic,
@@ -119,15 +117,15 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 quality_check=quality_check,
                 warnings=warnings,
             )
-            
+
             logger.info(
                 f"เรียบเรียงสคริปต์สำเร็จ: {len(segments)} segments, "
                 f"{result.duration_est_total} วินาที, "
                 f"{len(citations_used)} citations"
             )
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"เกิดข้อผิดพลาดในการเรียบเรียงสคริปต์: {e}")
             return self._create_error_response({
@@ -140,11 +138,11 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
         """ตรวจสอบข้อมูลนำเข้า"""
         if not input_data.outline.outline:
             return {
-                "code": "MISSING_DATA", 
+                "code": "MISSING_DATA",
                 "message": "ไม่พบโครงร่างในข้อมูลนำเข้า",
                 "suggested_fix": "ตรวจสอบ outline ให้มี sections อย่างน้อย 1 รายการ"
             }
-            
+
         total_passages = len(input_data.passages.primary) + len(input_data.passages.supportive)
         if total_passages == 0:
             return {
@@ -152,7 +150,7 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 "message": "ไม่พบข้อความอ้างอิง passages",
                 "suggested_fix": "ตรวจสอบ passages ให้มี primary หรือ supportive อย่างน้อย 1 รายการ"
             }
-            
+
         return None
 
     def _create_error_response(self, error_dict: dict) -> ScriptWriterOutput:
@@ -163,7 +161,7 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
             text="เกิดข้อผิดพลาดในการเรียบเรียงสคริปต์",
             est_seconds=5
         )
-        
+
         return ScriptWriterOutput(
             topic="Error",
             segments=[error_segment],
@@ -186,48 +184,48 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
             warnings=[f"ERROR: {error_dict['message']} - {error_dict['suggested_fix']}"]
         )
 
-    def _build_passage_database(self, passages_data) -> Dict[str, any]:
+    def _build_passage_database(self, passages_data) -> dict[str, any]:
         """สร้างฐานข้อมูล passages สำหรับการอ้างอิง"""
         db = {}
-        
+
         for passage in passages_data.primary:
             db[passage.id] = passage
-            
+
         for passage in passages_data.supportive:
             db[passage.id] = passage
-            
+
         return db
 
-    def _generate_segments_from_outline(self, outline, passage_db: Dict, style_notes) -> List[ScriptSegment]:
+    def _generate_segments_from_outline(self, outline, passage_db: dict, style_notes) -> list[ScriptSegment]:
         """สร้าง segments จากโครงร่าง outline"""
         segments = []
-        
+
         for section in outline.outline:
             segment_type = self._map_section_to_segment_type(section.section)
-            
+
             # สร้างเนื้อหาตาม segment type
             text = self._generate_segment_content(section, segment_type, passage_db, style_notes)
-            
+
             # ประมาณเวลาเบื้องต้น
             est_seconds = self._estimate_segment_duration(text, section.est_seconds)
-            
+
             segment = ScriptSegment(
                 segment_type=segment_type,
                 text=text,
                 est_seconds=est_seconds
             )
-            
+
             segments.append(segment)
-            
+
         return segments
 
     def _map_section_to_segment_type(self, section_name: str) -> SegmentType:
         """แปลงชื่อ section จาก outline เป็น SegmentType"""
         return self.section_to_segment_type.get(section_name, SegmentType.TEACHING)
 
-    def _generate_segment_content(self, section, segment_type: SegmentType, passage_db: Dict, style_notes) -> str:
+    def _generate_segment_content(self, section, segment_type: SegmentType, passage_db: dict, style_notes) -> str:
         """สร้างเนื้อหา segment ตาม type"""
-        
+
         if segment_type == SegmentType.HOOK:
             return self._generate_hook_content(section, style_notes)
         elif segment_type == SegmentType.PROBLEM:
@@ -273,16 +271,16 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
         """สร้างเนื้อหา Story segment"""
         analogy_type = getattr(section, 'analogy_type', '')
         beat_points = getattr(section, 'beat_points', [])
-        
+
         if analogy_type and beat_points:
             return f"ลองคิดดูเหมือน{analogy_type} {' '.join(beat_points[:2])} นี่แหละครับที่เราจะมาเรียนรู้กัน"
         else:
             return "เหมือนกับน้ำที่ใส เมื่อเราไม่กวนมัน มันก็จะใสและสงบเองครับ"
 
-    def _generate_teaching_content(self, section, passage_db: Dict, style_notes) -> str:
+    def _generate_teaching_content(self, section, passage_db: dict, style_notes) -> str:
         """สร้างเนื้อหา Teaching segment พร้อม citations"""
         content_parts = []
-        
+
         # ใช้ sub_segments ถ้ามี
         sub_segments = getattr(section, 'sub_segments', [])
         if sub_segments:
@@ -290,24 +288,24 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 teaching_points = getattr(sub_segment, 'teaching_points', [])
                 if teaching_points:
                     content_parts.append(f"ขั้นตอนที่ {i+1}: {teaching_points[0]}")
-                    
+
                     # เพิ่ม citation จาก placeholder ถ้ามี
                     citation_placeholders = getattr(sub_segment, 'citation_placeholders', [])
                     if citation_placeholders and citation_placeholders[0] in passage_db:
                         content_parts.append(f"[CIT:{citation_placeholders[0]}]")
-        
+
         if not content_parts:
             # ถ้าไม่มี sub_segments ให้สร้างเนื้อหาพื้นฐาน
             content_parts.append("หลักการสำคัญก็คือ การรับรู้โดยไม่ยึดติด")
-            
+
             # พยายามหา passage ที่เกี่ยวข้องเพื่อใส่ citation
             available_passages = list(passage_db.keys())
             if available_passages:
                 content_parts.append(f"[CIT:{available_passages[0]}]")
-        
+
         return " ".join(content_parts)
 
-    def _generate_practice_content(self, section, passage_db: Dict, style_notes) -> str:
+    def _generate_practice_content(self, section, passage_db: dict, style_notes) -> str:
         """สร้างเนื้อหา Practice segment"""
         steps = getattr(section, 'steps', [])
         if steps:
@@ -346,24 +344,24 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
         clean_text = re.sub(r'\[CIT:[^\]]+\]', '', text)
         clean_text = re.sub(r'\([^)]+\)', '', clean_text)
         word_count = len(clean_text.split())
-        
+
         # คำนวณเวลาจากจำนวนคำ
         text_based_seconds = int((word_count / self.avg_reading_speed) * 60)
-        
+
         # ใช้ค่าเฉลี่ยระหว่าง text-based และ outline estimate
         if outline_est_seconds > 0:
             return int((text_based_seconds + outline_est_seconds) / 2)
         else:
             return max(text_based_seconds, 5)  # อย่างน้อย 5 วินาที
 
-    def _add_retention_cues(self, segments: List[ScriptSegment], target_seconds: int) -> List[ScriptSegment]:
+    def _add_retention_cues(self, segments: list[ScriptSegment], target_seconds: int) -> list[ScriptSegment]:
         """เพิ่ม retention cues ลงใน segments"""
         total_duration = sum(s.est_seconds for s in segments)
-        
+
         # คำนวณจำนวน cues ที่ต้องการ (ทุกๆ 90-120 วินาที)
         cue_interval = 105  # วินาที
         needed_cues = max(1, total_duration // cue_interval)
-        
+
         # กระจาย cues ให้เท่าๆ กัน
         cues_added = 0
         for i, segment in enumerate(segments):
@@ -372,50 +370,50 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 cue = self.retention_cues[cues_added % len(self.retention_cues)]
                 segment.text = segment.text + f" {cue}"
                 cues_added += 1
-        
+
         return segments
 
-    def _adjust_timing(self, segments: List[ScriptSegment], target_seconds: int) -> List[ScriptSegment]:
+    def _adjust_timing(self, segments: list[ScriptSegment], target_seconds: int) -> list[ScriptSegment]:
         """ปรับเวลา segments ให้ตรงตามเป้าหมาย"""
         current_total = sum(s.est_seconds for s in segments)
         tolerance = target_seconds * 0.15
-        
+
         if abs(current_total - target_seconds) <= tolerance:
             return segments
-        
+
         # ถ้าสั้นเกินไป ยืดเวลา teaching และ practice segments
         if current_total < target_seconds * 0.85:
             deficit = target_seconds - current_total
-            extendable_segments = [s for s in segments 
+            extendable_segments = [s for s in segments
                                  if s.segment_type in [SegmentType.TEACHING, SegmentType.PRACTICE]]
-            
+
             if extendable_segments:
                 extra_per_segment = deficit // len(extendable_segments)
                 for segment in extendable_segments:
                     segment.est_seconds += extra_per_segment
-        
+
         # ถ้ายาวเกินไป ลดเวลา segments ที่ไม่สำคัญ
         elif current_total > target_seconds * 1.15:
             excess = current_total - target_seconds
-            reducible_segments = [s for s in segments 
+            reducible_segments = [s for s in segments
                                 if s.segment_type not in [SegmentType.HOOK, SegmentType.CLOSING]]
-            
+
             if reducible_segments:
                 reduce_per_segment = min(10, excess // len(reducible_segments))
                 for segment in reducible_segments:
                     reduction = min(reduce_per_segment, segment.est_seconds - 5)
                     segment.est_seconds -= reduction
-        
+
         return segments
 
-    def _validate_citations(self, segments: List[ScriptSegment], passage_db: Dict) -> Tuple[List[str], List[str]]:
+    def _validate_citations(self, segments: list[ScriptSegment], passage_db: dict) -> tuple[list[str], list[str]]:
         """ตรวจสอบและรวบรวม citations"""
         citations_used = []
         unmatched_citations = []
-        
+
         # หา citations ทั้งหมดใน segments
         citation_pattern = r'\[CIT:([^\]]+)\]'
-        
+
         for segment in segments:
             citations = re.findall(citation_pattern, segment.text)
             for citation in citations:
@@ -425,27 +423,27 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 else:
                     if citation not in unmatched_citations:
                         unmatched_citations.append(citation)
-        
+
         return citations_used, unmatched_citations
 
-    def _create_meta_info(self, segments: List[ScriptSegment]) -> ScriptMeta:
+    def _create_meta_info(self, segments: list[ScriptSegment]) -> ScriptMeta:
         """สร้างข้อมูล metadata"""
-        
+
         # นับ retention cues
         interrupts_count = 0
         for segment in segments:
             interrupts_count += len(re.findall(r'\([^)]+\)', segment.text))
-        
+
         # นับ teaching segments
         teaching_segments = sum(1 for s in segments if s.segment_type == SegmentType.TEACHING)
-        
+
         # นับขั้นตอน practice
         practice_steps_count = 0
         for segment in segments:
             if segment.segment_type == SegmentType.PRACTICE:
                 # นับหมายเลขขั้นตอน
                 practice_steps_count += len(re.findall(r'\d+\.', segment.text))
-        
+
         return ScriptMeta(
             reading_speed_wpm=self.avg_reading_speed,
             interrupts_count=interrupts_count,
@@ -454,10 +452,10 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
         )
 
     def _perform_quality_check(
-        self, segments: List[ScriptSegment], citations_used: List[str], target_seconds: int
+        self, segments: list[ScriptSegment], citations_used: list[str], target_seconds: int
     ) -> QualityCheck:
         """ตรวจสอบคุณภาพของสคริปต์"""
-        
+
         # ตรวจสอบ citations
         unmatched_citations = []
         citation_pattern = r'\[CIT:([^\]]+)\]'
@@ -466,9 +464,9 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
             for citation in citations:
                 if citation not in citations_used:
                     unmatched_citations.append(citation)
-        
+
         citations_valid = len(unmatched_citations) == 0
-        
+
         # ตรวจสอบ teaching segments มี citation
         teaching_has_citation = False
         for segment in segments:
@@ -476,16 +474,16 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 if '[CIT:' in segment.text:
                     teaching_has_citation = True
                     break
-        
+
         # ตรวจสอบระยะเวลา
         total_duration = sum(s.est_seconds for s in segments)
         tolerance = target_seconds * 0.15
         duration_within_range = abs(total_duration - target_seconds) <= tolerance
-        
+
         # ตรวจสอบ hook ไม่เกิน 8 วินาที
         hook_segments = [s for s in segments if s.segment_type == SegmentType.HOOK]
         hook_within_8s = all(s.est_seconds <= 8 for s in hook_segments)
-        
+
         # ตรวจสอบคำที่ห้ามใช้
         no_prohibited_claims = True
         for segment in segments:
@@ -493,7 +491,7 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
                 if claim in segment.text:
                     no_prohibited_claims = False
                     break
-        
+
         return QualityCheck(
             citations_valid=citations_valid,
             teaching_has_citation=teaching_has_citation,
@@ -503,34 +501,34 @@ class ScriptWriterAgent(BaseAgent[ScriptWriterInput, ScriptWriterOutput]):
         )
 
     def _generate_warnings(
-        self, quality_check: QualityCheck, segments: List[ScriptSegment], input_data: ScriptWriterInput
-    ) -> List[str]:
+        self, quality_check: QualityCheck, segments: list[ScriptSegment], input_data: ScriptWriterInput
+    ) -> list[str]:
         """สร้างคำเตือนและข้อเสนอแนะ"""
         warnings = []
-        
+
         if not quality_check.citations_valid:
             warnings.append("พบ citations ที่ไม่ตรงกับ passages ที่ให้มา")
-        
+
         if not quality_check.teaching_has_citation:
             warnings.append("ส่วน teaching ไม่มี citation อ้างอิง")
-        
+
         if not quality_check.duration_within_range:
             total_duration = sum(s.est_seconds for s in segments)
             if total_duration < input_data.target_seconds * 0.85:
                 diff = input_data.target_seconds - total_duration
                 warnings.append(f"สคริปต์สั้นกว่าเป้า {diff} วินาที")
             else:
-                diff = total_duration - input_data.target_seconds 
+                diff = total_duration - input_data.target_seconds
                 warnings.append(f"สคริปต์ยาวกว่าเป้า {diff} วินาที")
-        
+
         if not quality_check.hook_within_8s:
             warnings.append("Hook segment เกิน 8 วินาที")
-        
+
         if not quality_check.no_prohibited_claims:
             warnings.append("พบคำที่อาจสร้างความคาดหวังที่แน่นอนเกินไป")
-        
+
         # ตรวจสอบจำนวน segments
         if len(segments) < 5:
             warnings.append("จำนวน segments น้อยเกินไป อาจทำให้เนื้อหาไม่สมบูรณ์")
-        
+
         return warnings

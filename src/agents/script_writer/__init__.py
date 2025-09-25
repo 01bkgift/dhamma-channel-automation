@@ -20,7 +20,7 @@ from .model import (
 
 __all__ = [
     "ScriptWriterAgent",
-    "ScriptWriterInput", 
+    "ScriptWriterInput",
     "ScriptWriterOutput",
     "ScriptSegment",
     "SegmentType",
