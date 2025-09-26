@@ -53,8 +53,7 @@
 - CTR: ถ้า > baseline & goal → highlight success, ถ้าต่ำ ให้แนะนำปรับ thumbnail/title
 - Retention: ดู avg_percentage_viewed และ retention_curve
   - หาก drop_point_sec < 120 → flag “early drop”
-  - หาก drop_point_sec >= 120 → flag “mid_clip_drop”
-  - ถ้า retention_curve ลดทีละ step รุนแรง → flag “gradual_drop”
+  - ถ้า retention_curve ลดทีละ step รุนแรง → flag “gradual drop”
   - ถ้าช่วงใดต่ำผิดปกติ ให้แนะนำแก้ไข (เช่น shorten intro)
 - AVD (average_view_duration_sec): เทียบเป้าหมาย/ baseline
 - Traffic sources: ถ้า browse+search < 70% → แนะนำเพิ่ม SEO หรือ optimize suggested
@@ -108,9 +107,7 @@
     "A/B test thumbnail กับแนว emotional face",
     "เพิ่ม CTA ให้คนคอมเมนต์ประสบการณ์"
   ],
-  "flags": [
-    "mid_clip_drop"
-  ],
+  "flags": [],
   "meta": {
     "baseline_id": "2025-09-avg",
     "goal_id": "2025-10-campaign1",
@@ -128,7 +125,7 @@
 2. all_compare_fields_present: views/ctr/avd/retention มี compare_to_baseline
 3. no_missing_data: ข้อมูลครบ
 4. ถ้าข้อมูลขาด/ผิด → ใส่ warnings[] ระบุข้อผิดพลาด
-5. flags: include “early_drop”, “mid_clip_drop”, “gradual_drop”, “low_ctr”, “low_comments”, “underperform” ตามเงื่อนไข
+5. flags: include “early drop”, “gradual drop”, “low_ctr”, “low_comments”, “underperform” ตามเงื่อนไข
 
 [ERROR SCHEMA]
 {
@@ -230,9 +227,7 @@ Goal: {goal_json}
     "A/B test thumbnail กับแนว emotional face",
     "เพิ่ม CTA ให้คนคอมเมนต์ประสบการณ์"
   ],
-  "flags": [
-    "mid_clip_drop"
-  ],
+  "flags": [],
   "meta": {
     "baseline_id": "2025-09-avg",
     "goal_id": "2025-10-campaign1",
