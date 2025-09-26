@@ -13,6 +13,14 @@ from .script_outline.agent import ScriptOutlineAgent
 from .script_outline.model import ScriptOutlineInput, ScriptOutlineOutput
 from .script_writer.agent import ScriptWriterAgent
 from .script_writer.model import ScriptWriterInput, ScriptWriterOutput
+from .scheduling_publishing.agent import SchedulingPublishingAgent
+from .scheduling_publishing.model import (
+    AudienceAnalytics,
+    ContentCalendarEntry,
+    ScheduleConstraints,
+    SchedulingInput,
+    SchedulingOutput,
+)
 from .seo_metadata.agent import SeoMetadataAgent
 from .seo_metadata.model import SeoMetadataInput, SeoMetadataOutput
 from .topic_prioritizer.agent import TopicPrioritizerAgent
@@ -39,6 +47,12 @@ __all__ = [
     "SeoMetadataAgent",
     "SeoMetadataInput",
     "SeoMetadataOutput",
+    "SchedulingPublishingAgent",
+    "SchedulingInput",
+    "SchedulingOutput",
+    "ContentCalendarEntry",
+    "ScheduleConstraints",
+    "AudienceAnalytics",
     "LocalizationSubtitleAgent",
     "LocalizationSubtitleInput",
     "LocalizationSubtitleOutput",
