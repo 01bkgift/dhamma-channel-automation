@@ -41,18 +41,27 @@
   "config": {
     "incident_notify": ["operator", "admin"],
     "auto_restart_on": ["critical"]
+  },
+  "history": {
+    "previous_health_reports": [
+      {
+        "agent": "Notification Agent",
+        "service": "LINE",
+        "flags": ["high_latency", "high_error_rate"],
+        "timestamp": "2025-09-27T08:00:00Z"
+      }
+    ]
   }
 }
 
 [MONITORING RULES]
 - uptime < threshold → flag "downtime" (critical)
 - latency > threshold → flag "high_latency" (warning)
-- error_rate > threshold → flag "high_error_rate" (critical/warning)
+- error_rate > threshold → flag "high_error_rate" (warning, critical ถ้า error_rate_pct > 2 × threshold.error_rate_pct)
 - queue_length > threshold → flag "backlog" (warning)
-- ถ้า ≥2 flag ใน agent/service เดียวกัน → incident severity = critical
-- สรุป health: healthy | warning | critical (per agent/service)
+- health/severity ของ agent/service = ค่าสูงสุดของ flag severity ที่เกิดขึ้น และจะถูกยกระดับเป็น critical เสมอถ้ามี ≥2 flag
 - Suggest action: restart, escalate, increase resource, investigate, wait, ฯลฯ
-- recurring_issue: flag/code เดิมซ้ำ ≥2 ครั้งล่าสุด
+- recurring_issue: flag/code เดิมซ้ำ ≥2 ครั้งล่าสุด (ใช้ข้อมูลจาก history.previous_health_reports)
 
 [OUTPUT SCHEMA (STRICT JSON)]
 {
@@ -113,10 +122,10 @@
 }
 
 [VALIDATION & SELF-CHECK RULES]
-1. all_sections_present: health_report, incident_alert, recurring_issue, meta ต้องไม่ว่าง
+1. all_sections_present: health_report, recurring_issue, meta ต้องไม่ว่าง (incident_alert[] ว่างได้ถ้าไม่มี incident)
 2. no_empty_fields: ทุก field มีข้อมูล (ยกเว้น suggested_action[]/flags[] ของ healthy agent)
 3. ถ้า flag เดิมซ้ำ ≥2 ครั้ง → recurring_issue
-4. severity: ≥2 flag = critical, 1 flag (warning) = warning
+4. severity: ใช้ค่าสูงสุดของ flag severity ต่อ agent/service และยกระดับเป็น critical ถ้ามี ≥2 flag
 5. incident_alert[] ว่างได้ถ้าไม่มี incident
 
 [ERROR SCHEMA]
