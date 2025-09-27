@@ -66,7 +66,7 @@ class EmbeddingSimilarGroup(BaseModel):
 
     group_id: str = Field(description="ID ของกลุ่ม")
     keywords: list[str] = Field(description="คำในกลุ่ม")
-    similarity_score: float = Field(description="คะแนนความคล้าย")
+    similarity_score: float = Field(ge=0, le=1, description="คะแนนความคล้าย")
 
     @field_validator("similarity_score")
     def validate_similarity(cls, value: float) -> float:
