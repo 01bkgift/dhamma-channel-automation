@@ -47,6 +47,7 @@ nav:
   - "สถาปัตยกรรม": ARCHITECTURE.md  
   - "วงจรการทำงาน Agent": AGENT_LIFECYCLE.md
   - "Prompt Templates": PROMPTS_OVERVIEW.md
+  - "Workflow Chain": DHAMMA_WORKFLOW.md
   - "แผนงาน (Roadmap)": ROADMAP.md
   - "แก้ไขปัญหา": TROUBLESHOOTING.md
 
