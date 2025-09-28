@@ -108,7 +108,9 @@ class TopicScore(BaseModel):
     brand_fit: float = Field(description="ความเข้ากับแบรนด์")
     composite: float = Field(description="คะแนนรวม")
 
-    @field_validator("search_intent", "freshness", "evergreen", "brand_fit", "composite")
+    @field_validator(
+        "search_intent", "freshness", "evergreen", "brand_fit", "composite"
+    )
     def validate_score_range(cls, value: float) -> float:
         if not 0 <= value <= 1:
             raise ValueError("คะแนนต้องอยู่ระหว่าง 0-1")
@@ -183,9 +185,7 @@ class TrendScoutOutput(BaseModel):
     meta: MetaInfo = Field(description="ข้อมูล Meta")
 
     @field_validator("topics")
-    def validate_topics(
-        cls, value: list["TopicEntry"]
-    ) -> list["TopicEntry"]:  # noqa: F821 (forward reference)
+    def validate_topics(cls, value: list["TopicEntry"]) -> list["TopicEntry"]:  # noqa: F821 (forward reference)
         if len(value) > 15:
             raise ValueError("จำนวนหัวข้อต้องไม่เกิน 15 หัวข้อ")
         if len(value) > 1:
