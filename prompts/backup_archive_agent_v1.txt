@@ -11,7 +11,7 @@
 ---
 
 [OBJECTIVE]
-รับ backup_archive_request (asset, config)
+รับ backup_archive_request (assets, config)
 → ทำการสำรองข้อมูล, ตรวจสอบความครบถ้วน, สร้าง archive record
 → สรุป backup_archive_result (JSON) พร้อมสถานะ, error/warning, suggestion, และ log
 
@@ -53,7 +53,7 @@
 - ถ้าไฟล์หาย/ไม่ครบ → status=error + suggestion
 - ตรวจสอบความสมบูรณ์ (เช่น checksum, ไฟล์แตก/size=0)
 - log ขั้นตอนการสำรอง, แจ้งเตือน error/warning
-- สรุป backup_archive_result: asset, location, status (success/error/warning), suggestion, log, timestamp
+- สรุป backup_archive_result: asset_type, asset_id, file_name, version, backup_location, status (success/error/warning), suggestion, log, timestamp
 - summary: จำนวน asset, success_count, error_count, warning_count, run_time, self_check
 
 ---
@@ -128,77 +128,5 @@
 BackupArchiveRequest: {{backup_archive_request_json}}
 
 ส่งออก JSON ตาม Output Schema เท่านั้น ห้ามมีข้อความอื่นนอก JSON
-
-[ตัวอย่าง input]
-{
-  "backup_archive_request": {
-    "request_id": "B001",
-    "assets": [
-      {
-        "asset_type": "video",
-        "asset_id": "V001",
-        "file_name": "V001_full.mp4",
-        "version": "1.0",
-        "timestamp": "2025-10-04T09:10:00Z"
-      },
-      {
-        "asset_type": "script",
-        "asset_id": "V001",
-        "file_name": "V001_script.txt",
-        "version": "1.0",
-        "timestamp": "2025-10-04T09:10:01Z"
-      }
-    ],
-    "config": {
-      "backup_location": "s3://backup-bucket/2025-10-04/",
-      "archive_policy": "full-daily",
-      "verify_checksum": true,
-      "notify_operator_on_error": true
-    }
-  }
-}
-
-[ตัวอย่าง output]
-{
-  "backup_archive_result": [
-    {
-      "asset_type": "video",
-      "asset_id": "V001",
-      "file_name": "V001_full.mp4",
-      "version": "1.0",
-      "backup_location": "s3://backup-bucket/2025-10-04/",
-      "status": "success",
-      "suggestion": [],
-      "log": [
-        "backup video V001_full.mp4 ไปยัง s3://backup-bucket/2025-10-04/ สำเร็จ"
-      ],
-      "timestamp": "2025-10-04T09:10:10Z"
-    },
-    {
-      "asset_type": "script",
-      "asset_id": "V001",
-      "file_name": "V001_script.txt",
-      "version": "1.0",
-      "backup_location": "s3://backup-bucket/2025-10-04/",
-      "status": "success",
-      "suggestion": [],
-      "log": [
-        "backup script V001_script.txt ไปยัง s3://backup-bucket/2025-10-04/ สำเร็จ"
-      ],
-      "timestamp": "2025-10-04T09:10:11Z"
-    }
-  ],
-  "backup_archive_summary": {
-    "total_asset": 2,
-    "success_count": 2,
-    "error_count": 0,
-    "warning_count": 0,
-    "run_time": "2025-10-04T09:10:12Z",
-    "self_check": {
-      "all_sections_present": true,
-      "no_empty_fields": true
-    }
-  }
-}
 
 [END OF PROMPT]

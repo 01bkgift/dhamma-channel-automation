@@ -11,7 +11,7 @@
 ---
 
 [OBJECTIVE]
-รับ training_data_request (data, label, config)
+รับ training_data_request (data_type, items, config)
 → ตรวจสอบ, clean, คัดเลือก, สร้าง training_data_summary (JSON)
 → สรุปข้อมูลคุณภาพ, flag anomaly/duplicate/missing, แนะนำ action/แก้ไข
 
@@ -103,12 +103,16 @@
   }
 }
 
+หมายเหตุ:
+- flagged_data ควรเป็น array ของ object ที่มีข้อมูลต้นฉบับเต็ม (id, text, label ฯลฯ) พร้อม field อธิบายเหตุผลที่ถูกคัดออก เช่น "issue": "duplicate_id"
+- anomaly ใช้เก็บ object ที่สรุปเหตุผิดปกติพิเศษ (อาจมี field เช่น id, issue, note) ที่ไม่จัดอยู่ในหมวด duplicate/missing_label
+
 ---
 
 [VALIDATION & SELF-CHECK RULES]
 1. cleaned_data[] คือข้อมูลที่ quality พร้อมใช้ (label ครบ, ไม่น้อยกว่า min_word_count, ไม่ซ้ำ)
-2. flagged_data[] ถ้ามี duplicate/missing_label/anomaly
-3. anomaly[] ถ้ามี label ผิด, ข้อความผิดปกติ ฯลฯ
+2. flagged_data[] ต้องเก็บรายการข้อมูลเต็มที่ถูกตัดออก (เช่น duplicate, missing label, ต่ำกว่า min_word_count) พร้อมเหตุผลในแต่ละ entry
+3. anomaly[] ใช้บันทึกเหตุการณ์ผิดปกติที่ไม่เข้าเงื่อนไขอื่น (เช่น ข้อความผิดรูปแบบ, encoding เสีย) อาจเก็บเป็น object ระบุ id + issue
 4. summary ต้องมี total, cleaned, duplicate, missing_label, anomaly_count
 5. action_recommendation[] สอดคล้องกับผลจริง
 6. meta ต้องมี data_type, required_labels, run_time, self_check
@@ -132,79 +136,5 @@
 TrainingDataRequest: {{training_data_request_json}}
 
 ส่งออก JSON ตาม Output Schema เท่านั้น ห้ามมีข้อความอื่นนอก JSON
-
-[ตัวอย่าง input]
-{
-  "training_data_request": {
-    "data_type": "comment",
-    "items": [
-      {
-        "id": "C001",
-        "text": "ฟังแล้วสบายใจมาก ขอบคุณค่ะ",
-        "label": {"sentiment": "positive", "intent": "thank"}
-      },
-      {
-        "id": "C002",
-        "text": "เสียงเบาไปนิดครับ อยากให้ดังขึ้น",
-        "label": {"sentiment": "neutral", "intent": "request_fix"}
-      },
-      {
-        "id": "C003",
-        "text": "ขอคลิปเกี่ยวกับสมาธิสำหรับวัยรุ่นอีก",
-        "label": {"sentiment": "neutral", "intent": "request_content"}
-      }
-    ],
-    "config": {
-      "min_word_count": 3,
-      "allow_duplicate": false,
-      "required_labels": ["sentiment", "intent"]
-    }
-  }
-}
-
-[ตัวอย่าง output]
-{
-  "training_data_summary": {
-    "cleaned_data": [
-      {
-        "id": "C001",
-        "text": "ฟังแล้วสบายใจมาก ขอบคุณค่ะ",
-        "label": {"sentiment": "positive", "intent": "thank"}
-      },
-      {
-        "id": "C002",
-        "text": "เสียงเบาไปนิดครับ อยากให้ดังขึ้น",
-        "label": {"sentiment": "neutral", "intent": "request_fix"}
-      },
-      {
-        "id": "C003",
-        "text": "ขอคลิปเกี่ยวกับสมาธิสำหรับวัยรุ่นอีก",
-        "label": {"sentiment": "neutral", "intent": "request_content"}
-      }
-    ],
-    "flagged_data": [],
-    "anomaly": [],
-    "summary": {
-      "total": 3,
-      "cleaned": 3,
-      "duplicate": 0,
-      "missing_label": 0,
-      "anomaly_count": 0
-    },
-    "action_recommendation": [
-      "ข้อมูลพร้อมสำหรับ ML pipeline",
-      "ไม่มี duplicate หรือ anomaly"
-    ],
-    "meta": {
-      "data_type": "comment",
-      "required_labels": ["sentiment", "intent"],
-      "run_time": "2025-10-04T09:20:00Z",
-      "self_check": {
-        "all_sections_present": true,
-        "no_empty_fields": true
-      }
-    }
-  }
-}
 
 [END OF PROMPT]
