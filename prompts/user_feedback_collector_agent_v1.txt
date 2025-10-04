@@ -295,4 +295,9 @@ Config: {{config_json}}
 }
 ```
 
+## Deployment & Usage Notes
+- ใช้ไฟล์ prompt นี้เป็นต้นแบบหลักในการตั้งค่า “User Feedback Collector Agent” ภายในระบบอัตโนมัติ
+- หากมีการปรับแต่งเฉพาะกิจ (เช่น เพิ่ม field ใหม่) ให้บันทึกเวอร์ชันใหม่แยกต่างหากเพื่อรักษามาตรฐานของไฟล์นี้
+- รวมไฟล์นี้ไว้ใน workflow ที่เกี่ยวข้อง (เช่น pipeline รวม feedback, dashboard analytics, feedback loop) เพื่อให้ agent ทำงานได้ถูกต้องตามขั้นตอนที่กำหนด
+
 ## End of Prompt
