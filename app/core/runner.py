@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import signal
 import sys
 from pathlib import Path
+from typing import TypeAlias
+
 import yaml
-from typing import Dict, List, Optional
 
 try:
     import psutil  # สำหรับ Windows pause/resume
@@ -14,7 +17,7 @@ except Exception:  # pragma: no cover
 LOG_DIR = Path("output") / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-def _resolve_python(cmd: List[str]) -> List[str]:
+def _resolve_python(cmd: list[str]) -> list[str]:
     """
     หากคำสั่งเริ่มด้วย "python" จะพยายามแทนด้วย ENV PYTHON_BIN หรือ sys.executable
     เพื่อให้ Windows ใช้ interpreter ใน venv ได้ถูกต้อง
@@ -28,15 +31,15 @@ def _resolve_python(cmd: List[str]) -> List[str]:
     return cmd
 
 class ProcessJob:
-    def __init__(self, agent_key: str, cmd: List[str]):
+    def __init__(self, agent_key: str, cmd: list[str]):
         self.agent_key = agent_key
         self.cmd = _resolve_python(cmd)
         self.status = "idle"     # idle|starting|running|paused|stopping|stopped|completed|error
         self.progress = 0
-        self.log: List[str] = []
-        self.proc: Optional[asyncio.subprocess.Process] = None
-        self._stdout_task: Optional[asyncio.Task] = None
-        self._stderr_task: Optional[asyncio.Task] = None
+        self.log: list[str] = []
+        self.proc: asyncio.subprocess.Process | None = None
+        self._stdout_task: asyncio.Task | None = None
+        self._stderr_task: asyncio.Task | None = None
         self._log_file_path = LOG_DIR / f"{agent_key}.log"
 
     def _append_file_log(self, text: str):
@@ -189,13 +192,16 @@ class ProcessJob:
         self.log.append("รีเซ็ตสถานะงานแล้ว")
         self._append_file_log("รีเซ็ตสถานะงานแล้ว")
 
+PROCESS_JOB_TYPE: TypeAlias = ProcessJob
+
+
 class Runner:
     def __init__(self, mapping_path: str = "app/agent_commands.yml"):
-        with open(mapping_path, "r", encoding="utf-8") as f:
-            self.map: Dict = yaml.safe_load(f) or {}
-        self.jobs: Dict[str, ProcessJob] = {}
+        with open(mapping_path, encoding="utf-8") as f:
+            self.map: dict = yaml.safe_load(f) or {}
+        self.jobs: dict[str, ProcessJob] = {}
 
-    def _get_cmd(self, agent_key: str) -> List[str]:
+    def _get_cmd(self, agent_key: str) -> list[str]:
         entry = self.map.get(agent_key) or self.map.get("default") or {}
         cmd = entry.get("cmd") or ["python", "-c", f"print('ยังไม่ได้กำหนดคำสั่งสำหรับ {agent_key}')"]
         return _resolve_python(cmd)

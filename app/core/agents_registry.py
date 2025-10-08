@@ -1,7 +1,5 @@
-from typing import List, Dict
-
 # รายการเอเจนต์สำหรับเมนู UI (ครบตามที่ผู้ใช้ยืนยัน + งานระบบ)
-AGENTS: List[Dict] = [
+AGENTS: list[dict[str, str]] = [
     {"key": "trend_scout", "name": "Trend Scout Agent", "desc": "วิเคราะห์เทรนด์และเสนอหัวข้อคอนเทนต์"},
     {"key": "topic_prioritizer", "name": "Topic Prioritizer Agent", "desc": "จัดลำดับความสำคัญของหัวข้อ"},
     {"key": "research_retrieval", "name": "Research Retrieval Agent", "desc": "ค้นคว้าข้อมูลสนับสนุน"},

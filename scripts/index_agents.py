@@ -1,8 +1,10 @@
 import argparse
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 import yaml
+
 
 def scan_files():
     root = Path(".")

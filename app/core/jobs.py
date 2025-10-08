@@ -1,16 +1,18 @@
 import asyncio
-from app.core.runner import RUNNER, ProcessJob
+
+from app.core.runner import PROCESS_JOB_TYPE, RUNNER
+
 
 class JobManager:
     def __init__(self):
         self.runner = RUNNER
 
-    def get(self, agent_key: str) -> ProcessJob:
+    def get(self, agent_key: str) -> PROCESS_JOB_TYPE:
         return self.runner.get(agent_key)
 
-    def start(self, agent_key: str):
+    async def start(self, agent_key: str) -> PROCESS_JOB_TYPE:
         job = self.get(agent_key)
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         loop.create_task(job.start())
         return job
 

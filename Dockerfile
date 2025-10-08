@@ -7,17 +7,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl git && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy project
-COPY . /app
+# Install dependencies first to leverage Docker layer caching
+COPY requirements.web.txt ./
+RUN pip install --no-cache-dir -r requirements.web.txt
 
-# Install web deps + project (editable install for existing package)
-RUN pip install --no-cache-dir -r requirements.web.txt && \
-    pip install --no-cache-dir -e .
+# Copy the rest of the project
+COPY . .
+RUN pip install --no-cache-dir -e .
 
 EXPOSE 8000
+
 ENV APP_NAME="dhamma-automation"
-ENV ADMIN_USERNAME="admin"
-ENV ADMIN_PASSWORD="admin123"
 ENV OUTPUT_DIR="./output"
 
 RUN mkdir -p ${OUTPUT_DIR}

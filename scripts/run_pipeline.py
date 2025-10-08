@@ -1,12 +1,14 @@
 import argparse
+import json
+import os
 import subprocess
 import sys
-import os
-import json
 import time
 from datetime import datetime
 from pathlib import Path
+
 import yaml
+
 
 def run_cmd(cmd, cwd=None, env=None, log_file=None):
     start = time.time()
@@ -35,7 +37,7 @@ def main():
     ap.add_argument("--pipeline", required=True, help="path to pipeline yaml")
     args = ap.parse_args()
 
-    with open(args.pipeline, "r", encoding="utf-8") as f:
+    with open(args.pipeline, encoding="utf-8") as f:
         pipeline = yaml.safe_load(f)
 
     steps = pipeline.get("steps", [])
@@ -64,9 +66,10 @@ def main():
                 py = os.getenv("PYTHON_BIN") or sys.executable
                 cmd = [py] + cmd[1:]
 
-            lf.write(f"==> [{name}] CMD: {' '.join(cmd)}\n"); lf.flush()
+            lf.write(f"==> [{name}] CMD: {' '.join(cmd)}\n")
+            lf.flush()
             print(f"==> RUN [{name}]")
-            rc, dur, lines = run_cmd(cmd, cwd=cwd, env=env, log_file=lf)
+            rc, dur, _ = run_cmd(cmd, cwd=cwd, env=env, log_file=lf)
             status = "success" if rc == 0 else "error"
             summary["steps"].append({
                 "id": name,

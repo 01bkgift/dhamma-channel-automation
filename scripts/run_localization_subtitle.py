@@ -3,7 +3,12 @@ import json
 from pathlib import Path
 
 # ใช้ API ตามตัวอย่างใน README ของโปรเจกต์
-from agents.localization_subtitle import LocalizationSubtitleAgent, LocalizationSubtitleInput, SubtitleSegment
+from agents.localization_subtitle import (
+    LocalizationSubtitleAgent,
+    LocalizationSubtitleInput,
+    SubtitleSegment,
+)
+
 
 def main():
     ap = argparse.ArgumentParser()
