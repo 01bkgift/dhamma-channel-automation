@@ -50,9 +50,9 @@ def load_prompt(path: str | Path, encoding: str = "utf-8") -> str:
         return content
 
     except UnicodeDecodeError as e:
-        raise PromptLoadError(f"ปัญหา encoding ในไฟล์ {prompt_path}: {e}")
+        raise PromptLoadError(f"ปัญหา encoding ในไฟล์ {prompt_path}: {e}") from e
     except OSError as e:
-        raise PromptLoadError(f"ไม่สามารถอ่านไฟล์ {prompt_path}: {e}")
+        raise PromptLoadError(f"ไม่สามารถอ่านไฟล์ {prompt_path}: {e}") from e
 
 
 def get_prompt_path(prompt_name: str, prompts_dir: str = "prompts") -> Path:
