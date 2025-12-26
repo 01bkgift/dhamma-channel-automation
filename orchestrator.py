@@ -5,12 +5,11 @@ Dhamma Channel Automation - Orchestrator Pipeline
 import argparse
 import json
 import os
-import shutil
 import time
 from datetime import datetime
 from pathlib import Path
-import yaml
 
+import yaml
 
 ROOT = Path(__file__).parent
 
@@ -48,11 +47,11 @@ def log(msg: str, level="INFO"):
 def agent_prompt_pack(step, run_dir: Path):
     """Prompt Pack/Workflow Diagram - จัดการแพ็กพร็อมต์และไดอะแกรม"""
     out = run_dir / step["output"]
-    
+
     # สแกนพร็อมต์จริงจากโฟลเดอร์
     prompts_dir = ROOT / "prompts"
     prompt_files = list(prompts_dir.glob("*.txt")) if prompts_dir.exists() else []
-    
+
     prompts_dict = {}
     for pf in prompt_files:
         agent_name = pf.stem.replace("_v1", "").replace("_", " ").title()
@@ -61,7 +60,7 @@ def agent_prompt_pack(step, run_dir: Path):
             "agent": agent_name,
             "size_bytes": pf.stat().st_size
         }
-    
+
     pack = {
         "pack_id": "dhamma_v1",
         "created_at": datetime.now().isoformat(),
@@ -70,18 +69,18 @@ def agent_prompt_pack(step, run_dir: Path):
         "workflow_diagram": {
             "phases": ["system_setup", "discovery", "content_creation", "publishing", "analytics"],
             "agents_per_phase": {
-                "system_setup": ["PromptPack", "AgentTemplate", "Security", "Integration", "DataSync", 
+                "system_setup": ["PromptPack", "AgentTemplate", "Security", "Integration", "DataSync",
                                 "InventoryIndex", "Monitoring", "Notification", "ErrorFlag", "Dashboard", "BackupArchive"],
                 "discovery": ["TrendScout", "TopicPrioritizer", "ResearchRetrieval", "DataEnrichment"],
                 "content_creation": ["ScriptOutline", "ScriptWriter", "DoctrineValidator", "LegalCompliance",
                                     "VisualAsset", "Voiceover", "Localization", "ThumbnailGenerator"],
                 "publishing": ["SEOMetadata", "FormatConversion", "MultiChannelPublish", "SchedulingPublishing"],
-                "analytics": ["Analytics", "AdvancedBI", "ExperimentOrchestrator", "GrowthForecast", 
+                "analytics": ["Analytics", "AdvancedBI", "ExperimentOrchestrator", "GrowthForecast",
                              "FeedbackLoop", "UserFeedbackCollector", "CommunityInsight"]
             }
         }
     }
-    
+
     write_json(out, pack)
     log(f"✓ Prompt Pack created with {len(prompts_dict)} prompts from {prompts_dir}")
     return out
@@ -90,7 +89,7 @@ def agent_prompt_pack(step, run_dir: Path):
 def agent_template(step, run_dir: Path):
     """Agent Template - แม่แบบสร้างเอเจนต์ใหม่"""
     out = run_dir / step["output"]
-    
+
     template = {
         "agent_template_version": "1.0",
         "template": {
@@ -117,7 +116,7 @@ def agent_template(step, run_dir: Path):
         },
         "example_agents": ["TrendScout", "TopicPrioritizer", "ResearchRetrieval"]
     }
-    
+
     write_json(out, template)
     log("✓ Agent Template created")
     return out
@@ -126,17 +125,17 @@ def agent_template(step, run_dir: Path):
 def agent_security(step, run_dir: Path):
     """Security Agent - จัดการความปลอดภัย API keys และ access control"""
     out = run_dir / step["output"]
-    
+
     # ตรวจสอบไฟล์ .env
     env_file = ROOT / ".env"
-    env_example = ROOT / ".env.example"
+    ROOT / ".env.example"
     gitignore = ROOT / ".gitignore"
-    
+
     api_keys_status = {}
     env_vars = {}
-    
+
     if env_file.exists():
-        with open(env_file, "r", encoding="utf-8") as f:
+        with open(env_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -148,13 +147,13 @@ def agent_security(step, run_dir: Path):
                         api_keys_status[key] = {"status": "configured", "masked": value[:8] + "***"}
                     else:
                         api_keys_status[key] = {"status": "not_configured", "masked": ""}
-    
+
     # ตรวจสอบ .gitignore
     gitignore_ok = False
     if gitignore.exists():
         gitignore_content = gitignore.read_text(encoding="utf-8")
         gitignore_ok = ".env" in gitignore_content
-    
+
     security_config = {
         "checked_at": datetime.now().isoformat(),
         "env_file": {
@@ -183,21 +182,21 @@ def agent_security(step, run_dir: Path):
             "ใช้ IAM roles สำหรับ production"
         ]
     }
-    
+
     write_json(out, security_config)
-    
+
     if not env_file.exists():
         log("⚠ .env file not found - using default configuration", "WARNING")
     else:
         log(f"✓ Security check completed - {len(env_vars)} environment variables found")
-    
+
     return out
 
 
 def agent_integration(step, run_dir: Path):
     """Integration Agent - เชื่อมต่อระบบภายนอก"""
     out = run_dir / step["output"]
-    
+
     integrations = {
         "tested_at": datetime.now().isoformat(),
         "external_services": {
@@ -222,7 +221,7 @@ def agent_integration(step, run_dir: Path):
             "file_storage": {"type": "local", "path": "output/"}
         }
     }
-    
+
     write_json(out, integrations)
     log(f"✓ Integration check - {len(integrations['external_services'])} services ready")
     return out
@@ -231,7 +230,7 @@ def agent_integration(step, run_dir: Path):
 def agent_data_sync(step, run_dir: Path):
     """Data Sync Agent - ซิงก์ข้อมูลระหว่างระบบ"""
     out = run_dir / step["output"]
-    
+
     sync_status = {
         "synced_at": datetime.now().isoformat(),
         "sources": {
@@ -249,7 +248,7 @@ def agent_data_sync(step, run_dir: Path):
             "examples/*.json → cache"
         ]
     }
-    
+
     write_json(out, sync_status)
     log("✓ Data sync completed - All sources synced")
     return out
@@ -258,14 +257,14 @@ def agent_data_sync(step, run_dir: Path):
 def agent_inventory_index(step, run_dir: Path):
     """Inventory/Index Agent - สแกนและจัดทำดัชนีไฟล์"""
     out = run_dir / step["output"]
-    
+
     # สแกนไฟล์จริงในโปรเจกต์
     prompts_dir = ROOT / "prompts"
     examples_dir = ROOT / "examples"
-    
+
     prompt_files = list(prompts_dir.glob("*.txt")) if prompts_dir.exists() else []
     example_files = list(examples_dir.glob("*.json")) if examples_dir.exists() else []
-    
+
     inventory = {
         "indexed_at": datetime.now().isoformat(),
         "total_agents": 36,
@@ -283,7 +282,7 @@ def agent_inventory_index(step, run_dir: Path):
             "ResearchRetrieval": {"prompt": "prompts/research_retrieval_v1.txt", "example": "examples/research_retrieval_input.json"}
         }
     }
-    
+
     write_json(out, inventory)
     log(f"✓ Inventory indexed - {inventory['prompts']['count']} prompts, {inventory['examples']['count']} examples")
     return out
@@ -292,7 +291,7 @@ def agent_inventory_index(step, run_dir: Path):
 def agent_monitoring(step, run_dir: Path):
     """Monitoring Agent - เฝ้าระวังระบบ"""
     out = run_dir / step["output"]
-    
+
     monitoring = {
         "checked_at": datetime.now().isoformat(),
         "system_health": {
@@ -314,7 +313,7 @@ def agent_monitoring(step, run_dir: Path):
             "error_rate": "0%"
         }
     }
-    
+
     write_json(out, monitoring)
     log("✓ Monitoring initialized - System healthy")
     return out
@@ -323,7 +322,7 @@ def agent_monitoring(step, run_dir: Path):
 def agent_notification(step, run_dir: Path):
     """Notification Agent - ระบบแจ้งเตือน"""
     out = run_dir / step["output"]
-    
+
     notification_config = {
         "configured_at": datetime.now().isoformat(),
         "channels": {
@@ -343,7 +342,7 @@ def agent_notification(step, run_dir: Path):
             "status": "success"
         }
     }
-    
+
     write_json(out, notification_config)
     log("✓ Notification system configured - Console enabled")
     return out
@@ -352,7 +351,7 @@ def agent_notification(step, run_dir: Path):
 def agent_error_flag(step, run_dir: Path):
     """Error/Flag Agent - จัดการข้อผิดพลาดและธงเตือน"""
     out = run_dir / step["output"]
-    
+
     error_system = {
         "initialized_at": datetime.now().isoformat(),
         "error_categories": {
@@ -368,7 +367,7 @@ def agent_error_flag(step, run_dir: Path):
         "current_flags": [],
         "error_log_path": "logs/errors.log"
     }
-    
+
     write_json(out, error_system)
     log("✓ Error/Flag system initialized - 0 active flags")
     return out
@@ -377,7 +376,7 @@ def agent_error_flag(step, run_dir: Path):
 def agent_dashboard(step, run_dir: Path):
     """Dashboard Agent - ศูนย์รวมสถานะและตัวชี้วัด"""
     out = run_dir / step["output"]
-    
+
     dashboard = {
         "generated_at": datetime.now().isoformat(),
         "system_overview": {
@@ -397,7 +396,7 @@ def agent_dashboard(step, run_dir: Path):
         ],
         "dashboard_url": "file:///" + str(run_dir / "dashboard.html")
     }
-    
+
     write_json(out, dashboard)
     log("✓ Dashboard initialized - System ready")
     return out
@@ -406,15 +405,15 @@ def agent_dashboard(step, run_dir: Path):
 def agent_backup_archive(step, run_dir: Path):
     """Backup/Archive Agent - สำรองและจัดเก็บข้อมูล"""
     out = run_dir / step["output"]
-    
+
     # สร้าง backup directory
     backup_dir = ROOT / "output" / "backups"
     ensure_dir(backup_dir)
-    
+
     # สร้าง backup timestamp
     backup_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_name = f"backup_{backup_timestamp}.zip"
-    
+
     # เตรียมรายการไฟล์ที่จะ backup
     backup_targets = {
         "prompts": {"path": "prompts/", "exists": (ROOT / "prompts").exists()},
@@ -422,7 +421,7 @@ def agent_backup_archive(step, run_dir: Path):
         "pipelines": {"path": "pipelines/", "exists": (ROOT / "pipelines").exists()},
         "configs": {"path": "*.yml", "exists": True}
     }
-    
+
     # นับไฟล์ที่พร้อม backup
     files_to_backup = []
     for target, info in backup_targets.items():
@@ -431,7 +430,7 @@ def agent_backup_archive(step, run_dir: Path):
             if target_path.is_dir():
                 files = list(target_path.glob("*"))
                 files_to_backup.extend(files)
-    
+
     backup_config = {
         "configured_at": datetime.now().isoformat(),
         "backup_strategy": {
@@ -452,7 +451,7 @@ def agent_backup_archive(step, run_dir: Path):
         },
         "next_backup": datetime.now().strftime("%Y-%m-%d 00:00:00")
     }
-    
+
     write_json(out, backup_config)
     log(f"✓ Backup/Archive configured - {len(files_to_backup)} files ready for backup to {backup_dir}")
     return out
@@ -465,7 +464,7 @@ def agent_trend_scout(step, run_dir: Path):
     out = run_dir / step["output"]
     niches = step.get("input", {}).get("niches", [])
     horizon = step.get("input", {}).get("horizon_days", 30)
-    
+
     # สร้างข้อมูลเทรนด์จำลอง (ในการใช้งานจริงจะเชื่อมต่อ YouTube API / Google Trends)
     candidates = [
         {
@@ -509,7 +508,7 @@ def agent_trend_scout(step, run_dir: Path):
             "risk": "ต่ำ"
         }
     ]
-    
+
     data = {
         "scouted_at": datetime.now().isoformat(),
         "niches": niches,
@@ -517,7 +516,7 @@ def agent_trend_scout(step, run_dir: Path):
         "total_candidates": len(candidates),
         "candidates": candidates
     }
-    
+
     write_json(out, data)
     log(f"✓ Trend Scout found {len(candidates)} trending topics")
     return out
@@ -527,13 +526,13 @@ def agent_topic_prioritizer(step, run_dir: Path):
     """Topic Prioritizer - จัดอันดับหัวข้อตามเกณฑ์"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     # Check if topic is provided via environment variable
     topic_override = os.environ.get('DHAMMA_TOPIC')
-    
+
     data = read_json(in_path)
     candidates = data["candidates"]
-    
+
     # If topic is provided, force it to be rank 1
     if topic_override:
         # Find matching topic or create new one
@@ -542,7 +541,7 @@ def agent_topic_prioritizer(step, run_dir: Path):
             if topic_override.lower() in c["title"].lower() or c["title"].lower() in topic_override.lower():
                 matched = c
                 break
-        
+
         # If not found in candidates, create a new one
         if not matched:
             matched = {
@@ -553,7 +552,7 @@ def agent_topic_prioritizer(step, run_dir: Path):
                 "difficulty": "กลาง",
                 "risk": "ต่ำ"
             }
-        
+
         # Force this topic to rank 1
         scored = [{
             "rank": 1,
@@ -569,7 +568,7 @@ def agent_topic_prioritizer(step, run_dir: Path):
             "risk": matched.get("risk", "ต่ำ"),
             "audience": matched.get("audience", "ทั่วไป")
         }]
-        
+
         # Add other topics with lower ranks
         for c in candidates:
             if c["title"] != matched["title"]:
@@ -577,7 +576,7 @@ def agent_topic_prioritizer(step, run_dir: Path):
                 risk_score = {"ต่ำ": 10, "กลาง": 6, "สูง": 3}.get(c["risk"].split(" - ")[0], 5)
                 impact = 8 if "เพิ่มขึ้น" in c["why_now"] else 6
                 total = (impact * 0.4) + (diff_score * 0.3) + (risk_score * 0.3)
-                
+
                 scored.append({
                     "rank": len(scored) + 1,
                     "title": c["title"],
@@ -599,18 +598,18 @@ def agent_topic_prioritizer(step, run_dir: Path):
             # คำนวณคะแนนตามเกณฑ์
             diff_score = {"ง่าย": 10, "กลาง": 7, "ยาก": 4}.get(c["difficulty"], 5)
             risk_score = {"ต่ำ": 10, "กลาง": 6, "สูง": 3}.get(c["risk"].split(" - ")[0], 5)
-            
+
             # Impact (ประเมินจาก why_now และ audience)
             impact = 8 if "เพิ่มขึ้น" in c["why_now"] else 6
-            
+
             # Feasibility (จากความยาก)
             feasibility = diff_score
-            
+
             # Alignment (จากความเสี่ยง)
             alignment = risk_score
-            
+
             total = (impact * 0.4) + (feasibility * 0.3) + (alignment * 0.3)
-            
+
             scored.append({
                 "rank": 0,  # จะอัพเดทภายหลัง
                 "title": c["title"],
@@ -625,14 +624,14 @@ def agent_topic_prioritizer(step, run_dir: Path):
                 "risk": c["risk"],
                 "audience": c["audience"]
             })
-        
+
         # เรียงตามคะแนน
         scored.sort(key=lambda x: x["scores"]["total"], reverse=True)
-        
+
         # อัพเดท rank
         for i, item in enumerate(scored, 1):
             item["rank"] = i
-    
+
     result = {
         "prioritized_at": datetime.now().isoformat(),
         "total_evaluated": len(scored),
@@ -640,7 +639,7 @@ def agent_topic_prioritizer(step, run_dir: Path):
         "ranked": scored,
         "topic_override": topic_override if topic_override else None
     }
-    
+
     write_json(out, result)
     log(f"✓ Topic Prioritizer ranked {len(scored)} topics - Top: '{scored[0]['title']}' (score: {scored[0]['scores']['total']})")
     return out
@@ -650,10 +649,10 @@ def agent_research_retrieval(step, run_dir: Path):
     """Research Retrieval - รวบรวมอ้างอิงจากแหล่งที่เชื่อถือได้"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     data = read_json(in_path)
     top_topic = data["ranked"][0]  # เลือก rank 1
-    
+
     # สร้างข้อมูลวิจัยจำลอง (ในการใช้งานจริงจะค้นหาจากฐานข้อมูลพระไตรปิฎก)
     bundle = {
         "researched_at": datetime.now().isoformat(),
@@ -700,7 +699,7 @@ def agent_research_retrieval(step, run_dir: Path):
         "target_duration": "8-10 นาที",
         "content_level": "ผู้เริ่มต้น"
     }
-    
+
     write_json(out, bundle)
     log(f"✓ Research Retrieval completed for '{bundle['topic']}' - {len(bundle['citations'])} citations")
     return out
@@ -710,9 +709,9 @@ def agent_script_outline(step, run_dir: Path):
     """Script Outline - สร้างโครงร่างสคริปต์"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     data = read_json(in_path)
-    
+
     # รองรับทั้ง research_bundle และ data_enrichment
     if "original_research" in data:
         # มาจาก data_enrichment
@@ -723,7 +722,7 @@ def agent_script_outline(step, run_dir: Path):
         # มาจาก research_bundle โดยตรง
         topic = data["topic"]
         claims = data.get("claims", [])
-    
+
     outline_md = f"""# โครงสคริปต์: {topic}
 
 ## 📊 ข้อมูลพื้นฐาน
@@ -794,7 +793,7 @@ def agent_script_outline(step, run_dir: Path):
 - ใส่ subtitle ภาษาไทย (สำคัญ!)
 - Background music: Ambient/Meditation (เบาๆ)
 """
-    
+
     write_text(out, outline_md)
     log(f"✓ Script Outline created for '{topic}'")
     return out
@@ -804,9 +803,9 @@ def agent_script_writer(step, run_dir: Path):
     """Script Writer - เขียนสคริปต์เต็มรูปแบบ"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     outline = in_path.read_text(encoding="utf-8")
-    
+
     # สร้างสคริปต์เต็มจากโครงร่าง
     script = f"""---
 title: เจริญสติในชีวิตประจำวัน 5 นาที
@@ -830,7 +829,7 @@ target: ผู้เริ่มต้น
 
 [PAUSE]
 
-ชีวิตยุคใหม่เต็มไปด้วยความเร่งรีบ ข้อมูลข่าวสารท่วมท้น 
+ชีวิตยุคใหม่เต็มไปด้วยความเร่งรีบ ข้อมูลข่าวสารท่วมท้น
 ทำให้จิตใจของเราไม่ค่อยได้พัก [PAUSE] ไม่ค่อยได้สงบเลย
 
 [B-ROLL: มือเลื่อนดูโทรศัพท์ไม่หยุด]
@@ -869,10 +868,10 @@ target: ผู้เริ่มต้น
 
 ประโยชน์ 3 อย่างหลักๆ คือ:
 1. **ใจสงบ ไม่ฟุ้งซ่าน** [TEXT: ✓ ใจสงบ]
-2. **ลดความเครียด** [TEXT: ✓ ลดเครียด]  
+2. **ลดความเครียด** [TEXT: ✓ ลดเครียด]
 3. **มีสติในการทำงานและการดำเนินชีวิต** [TEXT: ✓ มีสติ]
 
-เอาล่ะ... มาเริ่มกันเลยครับ! 
+เอาล่ะ... มาเริ่มกันเลยครับ!
 
 ---
 
@@ -933,7 +932,7 @@ target: ผู้เริ่มต้น
 [CITATION: วิสุทธิมรรค บทที่ 8]
 
 วิธีทำก็ง่ายมากครับ:
-- **สังเกตลมหายใจเข้า** [PAUSE] 
+- **สังเกตลมหายใจเข้า** [PAUSE]
 - **สังเกตลมหายใจออก** [PAUSE]
 - **ไม่ต้องควบคุม** แค่รับรู้ว่ากำลังหายใจ
 
@@ -1045,7 +1044,7 @@ target: ผู้เริ่มต้น
 [TEXT: ⚠ อย่าโกรธตัวเอง - นี่เป็นเรื่องปกติ]
 
 **[พูด]** นี่เป็นเรื่อง**ปกติ**มาก
-แค่... เมื่อสังเกตเห็นว่าใจฟุ้ง... 
+แค่... เมื่อสังเกตเห็นว่าใจฟุ้ง...
 ค่อย ๆ พาใจกลับมาที่ **ลมหายใจ** อีกครั้ง
 
 [VISUAL: Gentle hand gesture guiding back]
@@ -1145,7 +1144,7 @@ target: ผู้เริ่มต้น
 
 [FADE OUT with soft music]
 
-[END SCREEN: 
+[END SCREEN:
 - วิดีโอแนะนำ 2 อัน
 - ปุ่ม Subscribe
 - Link คลิปเพลย์ลิสต์ธรรมะ]
@@ -1185,9 +1184,9 @@ target: ผู้เริ่มต้น
 - Font: Prompt, Kanit (อ่านง่าย)
 - White text + black outline
 """
-    
+
     write_text(out, script)
-    log(f"✓ Script Writer completed - Full script with timestamps ready")
+    log("✓ Script Writer completed - Full script with timestamps ready")
     return out
 
 
@@ -1195,9 +1194,9 @@ def agent_doctrine_validator(step, run_dir: Path):
     """Doctrine Validator - ตรวจสอบความถูกต้องตามหลักธรรม"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     script = in_path.read_text(encoding="utf-8")
-    
+
     # ตรวจสอบจำลอง (ในการใช้งานจริงจะใช้ AI หรือผู้เชี่ยวชาญ)
     validation = {
         "validated_at": datetime.now().isoformat(),
@@ -1221,7 +1220,7 @@ def agent_doctrine_validator(step, run_dir: Path):
             "อาจเพิ่มข้อมูลเกี่ยวกับความแตกต่างของสติกับ mindfulness สมัยใหม่"
         ]
     }
-    
+
     # เพิ่มหมายเหตุในสคริปต์
     validated_script = f"""<!-- DOCTRINE VALIDATION -->
 <!-- Status: {validation['status'].upper()} -->
@@ -1239,13 +1238,13 @@ def agent_doctrine_validator(step, run_dir: Path):
 <!-- Citations Verified: {len(validation['citations_verified'])} -->
 <!-- ==================== -->
 """
-    
+
     write_text(out, validated_script)
-    
+
     # บันทึกรายงานแยก
     validation_report = run_dir / "validation_report.json"
     write_json(validation_report, validation)
-    
+
     log(f"✓ Doctrine Validator - APPROVED - {len(validation['approved_sections'])} sections verified")
     return out
 
@@ -1254,10 +1253,10 @@ def agent_seo_metadata(step, run_dir: Path):
     """SEO & Metadata - สร้าง metadata สำหรับเผยแพร่"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     # อ่านสคริปต์เพื่อสร้าง metadata
-    script = in_path.read_text(encoding="utf-8")
-    
+    in_path.read_text(encoding="utf-8")
+
     metadata = {
         "generated_at": datetime.now().isoformat(),
         "platform": "youtube",
@@ -1265,7 +1264,7 @@ def agent_seo_metadata(step, run_dir: Path):
         "title_length": 68,  # ต้องไม่เกิน 70
         "description": """🙏 เจริญสติง่ายๆ แค่ 5 นาที ทำได้ทุกที่ ทุกเวลา!
 
-วิดีโอนี้จะพาคุณเรียนรู้การฝึก "อานาปานสติ" หรือสติกับลมหายใจ 
+วิดีโอนี้จะพาคุณเรียนรู้การฝึก "อานาปานสติ" หรือสติกับลมหายใจ
 ตามหลักพระพุทธศาสนาแบบเข้าใจง่าย เหมาะสำหรับผู้เริ่มต้น
 
 📖 เนื้อหาในวิดีโอ:
@@ -1352,7 +1351,7 @@ def agent_seo_metadata(step, run_dir: Path):
             "เจริญสติ 5 นาที"
         ]
     }
-    
+
     write_json(out, metadata)
     log(f"✓ SEO & Metadata created - Title: {metadata['title_length']} chars, Tags: {len(metadata['tags'])}")
     return out
@@ -1362,10 +1361,10 @@ def agent_data_enrichment(step, run_dir: Path):
     """Data Enrichment - เพิ่มข้อมูลเสริมจากแหล่งต่างๆ"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     data = read_json(in_path)
     topic = data["topic"]
-    
+
     # เพิ่มข้อมูลเสริม
     enriched = {
         "enriched_at": datetime.now().isoformat(),
@@ -1424,7 +1423,7 @@ def agent_data_enrichment(step, run_dir: Path):
             "credibility_score": 9.5
         }
     }
-    
+
     write_json(out, enriched)
     log(f"✓ Data Enrichment completed - Added {len(enriched['additional_context'])} context categories")
     return out
@@ -1434,9 +1433,9 @@ def agent_legal_compliance(step, run_dir: Path):
     """Legal/Compliance - ตรวจสอบด้านกฎหมายและข้อบังคับ"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
-    script = in_path.read_text(encoding="utf-8")
-    
+
+    in_path.read_text(encoding="utf-8")
+
     compliance = {
         "checked_at": datetime.now().isoformat(),
         "status": "compliant",
@@ -1501,7 +1500,7 @@ def agent_legal_compliance(step, run_dir: Path):
         ],
         "approval_status": "approved_with_disclaimers"
     }
-    
+
     write_json(out, compliance)
     log(f"✓ Legal/Compliance check - {compliance['status'].upper()} - {len(compliance['required_disclaimers'])} disclaimers needed")
     return out
@@ -1511,9 +1510,9 @@ def agent_visual_asset(step, run_dir: Path):
     """Visual Asset - สร้างคำแนะนำสำหรับภาพและวิดีโอประกอบ"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
-    script = in_path.read_text(encoding="utf-8")
-    
+
+    in_path.read_text(encoding="utf-8")
+
     visual_guide = {
         "generated_at": datetime.now().isoformat(),
         "total_scenes": 12,
@@ -1613,7 +1612,7 @@ def agent_visual_asset(step, run_dir: Path):
         "total_duration": "10:00",
         "estimated_edit_time": "4-6 hours"
     }
-    
+
     write_json(out, visual_guide)
     log(f"✓ Visual Asset guide created - {visual_guide['total_scenes']} scenes, {len(visual_guide['b_roll_list'])} B-roll clips")
     return out
@@ -1623,9 +1622,9 @@ def agent_voiceover(step, run_dir: Path):
     """Voiceover - คำแนะนำสำหรับการพากย์เสียง"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
-    script = in_path.read_text(encoding="utf-8")
-    
+
+    in_path.read_text(encoding="utf-8")
+
     voiceover_guide = {
         "generated_at": datetime.now().isoformat(),
         "voice_profile": {
@@ -1730,7 +1729,7 @@ def agent_voiceover(step, run_dir: Path):
         "estimated_recording_time": "30-45 minutes (with retakes)",
         "estimated_editing_time": "1-2 hours"
     }
-    
+
     write_json(out, voiceover_guide)
     log(f"✓ Voiceover guide created - {len(voiceover_guide['sections'])} sections with detailed direction")
     return out
@@ -1740,9 +1739,9 @@ def agent_localization(step, run_dir: Path):
     """Localization & Subtitle - สร้างคำบรรยายและแปลภาษา"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
-    script = in_path.read_text(encoding="utf-8")
-    
+
+    in_path.read_text(encoding="utf-8")
+
     # สร้าง SRT template
     srt_content = """1
 00:00:00,000 --> 00:00:05,000
@@ -1774,7 +1773,7 @@ def agent_localization(step, run_dir: Path):
 
 ... [continues]
 """
-    
+
     localization = {
         "generated_at": datetime.now().isoformat(),
         "primary_language": "th",
@@ -1844,11 +1843,11 @@ def agent_localization(step, run_dir: Path):
         ],
         "estimated_time": "2-3 hours (manual timing)"
     }
-    
+
     # เขียนไฟล์ SRT ตัวอย่าง
     srt_path = run_dir / "subtitles_th.srt"
     write_text(srt_path, srt_content)
-    
+
     write_json(out, localization)
     log(f"✓ Localization completed - Thai SRT generated ({localization['subtitles']['thai']['total_lines']} lines)")
     return out
@@ -1858,10 +1857,10 @@ def agent_thumbnail_generator(step, run_dir: Path):
     """Thumbnail Generator - สร้างคอนเซ็ปต์ภาพปก"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     metadata = read_json(in_path)
     title = metadata.get("title", "")
-    
+
     thumbnail_concepts = {
         "generated_at": datetime.now().isoformat(),
         "video_title": title,
@@ -1972,7 +1971,7 @@ def agent_thumbnail_generator(step, run_dir: Path):
             "Clickbait หลอกลวง"
         ]
     }
-    
+
     write_json(out, thumbnail_concepts)
     log(f"✓ Thumbnail concepts created - {len(thumbnail_concepts['concepts'])} designs ready")
     return out
@@ -1982,9 +1981,9 @@ def agent_format_conversion(step, run_dir: Path):
     """Format Conversion - แปลงไฟล์เป็นรูปแบบต่างๆ"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
-    script = in_path.read_text(encoding="utf-8")
-    
+
+    in_path.read_text(encoding="utf-8")
+
     formats = {
         "converted_at": datetime.now().isoformat(),
         "source_file": str(in_path),
@@ -2066,7 +2065,7 @@ def agent_format_conversion(step, run_dir: Path):
             "PDF script (backup)"
         ]
     }
-    
+
     write_json(out, formats)
     log(f"✓ Format conversion specs created - {len(formats['conversions'])} format categories")
     return out
@@ -2076,9 +2075,9 @@ def agent_multi_channel_publish(step, run_dir: Path):
     """Multi-Channel Publish - เผยแพร่หลายแพลตฟอร์ม"""
     in_path = run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     metadata = read_json(in_path)
-    
+
     multi_channel = {
         "published_at": datetime.now().isoformat(),
         "status": "ready_for_distribution",
@@ -2196,7 +2195,7 @@ def agent_multi_channel_publish(step, run_dir: Path):
             "YouTube Studio (native scheduling)"
         ]
     }
-    
+
     write_json(out, multi_channel)
     log(f"✓ Multi-Channel publish configured - {len([p for p in multi_channel['platforms'].values() if p.get('enabled')])} platforms enabled")
     return out
@@ -2204,9 +2203,9 @@ def agent_multi_channel_publish(step, run_dir: Path):
 
 def agent_publish(step, run_dir: Path):
     """Scheduling & Publishing - จัดการเผยแพร่และกำหนดเวลา"""
-    in_path = run_dir / step["input_from"]
+    run_dir / step["input_from"]
     out = run_dir / step["output"]
-    
+
     # รับ input หลายไฟล์
     input_from = step.get("input_from", {})
     if isinstance(input_from, dict):
@@ -2215,13 +2214,13 @@ def agent_publish(step, run_dir: Path):
     else:
         metadata_file = input_from
         script_file = "script_validated.md"
-    
-    script_path = run_dir / script_file if "/" in script_file or "\\" in script_file else run_dir / script_file
+
+    run_dir / script_file if "/" in script_file or "\\" in script_file else run_dir / script_file
     metadata_path = run_dir / metadata_file if "/" in metadata_file or "\\" in metadata_file else run_dir / metadata_file
-    
+
     # อ่านข้อมูล
     metadata = read_json(metadata_path) if metadata_path.exists() else {}
-    
+
     # สร้างข้อมูลการเผยแพร่
     publish_config = {
         "scheduled_at": datetime.now().isoformat(),
@@ -2250,9 +2249,9 @@ def agent_publish(step, run_dir: Path):
             "voiceover": False
         }
     }
-    
+
     write_json(out, publish_config)
-    
+
     # สร้าง checklist แยก
     checklist_md = f"""# 📋 Complete Publish Checklist
 
@@ -2296,165 +2295,12 @@ def agent_publish(step, run_dir: Path):
 - Comments: 20+
 - Shares: 50+
 """
-    
+
     checklist_path = run_dir / "publish_checklist.md"
     write_text(checklist_path, checklist_md)
-    
+
     log(f"✓ Publish configured - Scheduled for {publish_config['youtube']['publish_time']}")
     log(f"✓ Complete checklist created: {checklist_path}")
-    return out
-
-
-def agent_backup_archive(step, run_dir: Path):
-    """Backup/Archive - แพ็กและสำรองไฟล์ทั้งหมด"""
-    out = run_dir / step["output"]
-    
-    # รวบรวมไฟล์ทั้งหมดใน run_dir
-    all_files = list(run_dir.glob("*"))
-    
-    # จัดหมวดหมู่ไฟล์
-    categorized = {
-        "json": [],
-        "markdown": [],
-        "srt": [],
-        "other": []
-    }
-    
-    for f in all_files:
-        if f.is_file():
-            if f.suffix == ".json":
-                categorized["json"].append(f.name)
-            elif f.suffix == ".md":
-                categorized["markdown"].append(f.name)
-            elif f.suffix == ".srt":
-                categorized["srt"].append(f.name)
-            else:
-                categorized["other"].append(f.name)
-    
-    backup_info = {
-        "archived_at": datetime.now().isoformat(),
-        "run_id": run_dir.name,
-        "total_files": len(all_files),
-        "files_by_category": categorized,
-        "package_contents": {
-            "research": [
-                "trend_candidates.json",
-                "topics_ranked.json",
-                "research_bundle.json",
-                "data_enrichment.json"
-            ],
-            "scripts": [
-                "outline.md",
-                "script.md",
-                "script_validated.md"
-            ],
-            "validation": [
-                "validation_report.json",
-                "compliance_report.json"
-            ],
-            "production": [
-                "visual_guide.json",
-                "voiceover_guide.json",
-                "localization.json",
-                "subtitles_th.srt",
-                "thumbnail_concepts.json"
-            ],
-            "publishing": [
-                "metadata.json",
-                "format_specs.json",
-                "multi_channel.json",
-                "publish_receipt.json",
-                "publish_checklist.md"
-            ],
-            "summary": [
-                "pipeline_summary.json"
-            ]
-        },
-        "archive_format": "ZIP",
-        "archive_filename": f"{run_dir.name}_complete_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
-        "storage_locations": {
-            "local": str(run_dir),
-            "backup": f"output/backups/{run_dir.name}",
-            "cloud": "Google Drive / Dropbox (optional)"
-        },
-        "retention_policy": {
-            "keep_local": "30 days",
-            "keep_backup": "90 days",
-            "keep_cloud": "1 year"
-        },
-        "restore_instructions": [
-            "1. Unzip archive file",
-            "2. Place in output/ directory",
-            "3. Reference files as needed",
-            "4. Re-run pipeline if needed: python orchestrator.py --pipeline pipelines/video_complete.yaml --run-id restored_[date]"
-        ],
-        "metadata": {
-            "project": "dhamma-channel-automation",
-            "pipeline": "video_complete",
-            "topic": "เจริญสติในชีวิตประจำวัน 5 นาที",
-            "status": "production_ready",
-            "next_steps": [
-                "Record voiceover",
-                "Create visual assets",
-                "Edit video",
-                "Upload to YouTube"
-            ]
-        },
-        "estimated_archive_size": "2-5 MB (text files only)",
-        "note": "Video files (MP4) and images (JPG/PNG) should be backed up separately due to size"
-    }
-    
-    write_json(out, backup_info)
-    
-    # สร้าง README สำหรับ archive
-    readme_content = f"""# Archive Package: {run_dir.name}
-
-Created: {backup_info['archived_at']}
-Total Files: {backup_info['total_files']}
-
-## Contents
-
-### Research & Planning
-{chr(10).join(['- ' + f for f in backup_info['package_contents']['research']])}
-
-### Scripts
-{chr(10).join(['- ' + f for f in backup_info['package_contents']['scripts']])}
-
-### Validation
-{chr(10).join(['- ' + f for f in backup_info['package_contents']['validation']])}
-
-### Production Assets
-{chr(10).join(['- ' + f for f in backup_info['package_contents']['production']])}
-
-### Publishing
-{chr(10).join(['- ' + f for f in backup_info['package_contents']['publishing']])}
-
-## Usage
-
-This archive contains all files generated by the Dhamma Channel Automation pipeline.
-
-**To use these files:**
-1. Review `pipeline_summary.json` for overview
-2. Check `publish_checklist.md` for production status
-3. Use `script_validated.md` for video production
-4. Apply `metadata.json` when uploading
-5. Follow `visual_guide.json` and `voiceover_guide.json` for production
-
-## Next Steps
-
-{chr(10).join(['- ' + step for step in backup_info['metadata']['next_steps']])}
-
----
-Generated by Dhamma Channel Automation System
-"""
-    
-    readme_path = run_dir / "README_ARCHIVE.md"
-    write_text(readme_path, readme_content)
-    
-    log(f"✓ Backup/Archive completed - {backup_info['total_files']} files cataloged")
-    log(f"✓ Archive manifest: {out}")
-    log(f"✓ Archive README: {readme_path}")
-    
     return out
 
 
@@ -2473,7 +2319,7 @@ AGENTS = {
     "ErrorFlag": agent_error_flag,
     "Dashboard": agent_dashboard,
     "BackupArchive": agent_backup_archive,
-    
+
     # Video Workflow Phase
     "TrendScout": agent_trend_scout,
     "TopicPrioritizer": agent_topic_prioritizer,
@@ -2491,7 +2337,6 @@ AGENTS = {
     "FormatConversion": agent_format_conversion,
     "MultiChannelPublish": agent_multi_channel_publish,
     "SchedulingPublishing": agent_publish,
-    "BackupArchive": agent_backup_archive,
 }
 
 
@@ -2500,33 +2345,33 @@ AGENTS = {
 def run_pipeline(pipeline_path: Path, run_id: str):
     """รัน pipeline ตามไฟล์ YAML"""
     log(f"Loading pipeline: {pipeline_path}")
-    
-    with open(pipeline_path, "r", encoding="utf-8") as f:
+
+    with open(pipeline_path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
-    
+
     pipeline_name = cfg.get("pipeline", "unknown")
     steps = cfg.get("steps", [])
-    
+
     log(f"Pipeline: {pipeline_name} ({len(steps)} steps)")
-    
+
     run_dir = ROOT / "output" / run_id
     ensure_dir(run_dir)
-    
+
     log(f"Output directory: {run_dir}")
-    
+
     results = {}
-    
+
     for i, step in enumerate(steps, 1):
         step_id = step["id"]
         uses = step["uses"]
-        
+
         log(f"[{i}/{len(steps)}] Running: {step_id} (uses: {uses})")
-        
+
         agent_func = AGENTS.get(uses)
         if not agent_func:
             log(f"ERROR: Agent not implemented: {uses}", "ERROR")
             raise RuntimeError(f"Agent not implemented: {uses}")
-        
+
         try:
             result_path = agent_func(step, run_dir)
             results[step_id] = {"status": "success", "output": str(result_path)}
@@ -2535,7 +2380,7 @@ def run_pipeline(pipeline_path: Path, run_id: str):
             log(f"ERROR in {step_id}: {e}", "ERROR")
             results[step_id] = {"status": "error", "error": str(e)}
             raise
-    
+
     # สรุปผล
     summary = {
         "pipeline": pipeline_name,
@@ -2547,15 +2392,15 @@ def run_pipeline(pipeline_path: Path, run_id: str):
         "results": results,
         "output_dir": str(run_dir)
     }
-    
+
     summary_path = run_dir / "pipeline_summary.json"
     write_json(summary_path, summary)
-    
+
     log("=" * 60)
     log(f"Pipeline completed: {summary['successful']}/{summary['total_steps']} steps successful")
     log(f"Results saved to: {run_dir}")
     log("=" * 60)
-    
+
     return summary
 
 
@@ -2564,22 +2409,22 @@ def main():
     parser.add_argument("--pipeline", required=True, help="Path to YAML pipeline file")
     parser.add_argument("--run-id", default=None, help="Run ID (default: timestamp)")
     parser.add_argument("--topic", default=None, help="Topic title to use (overrides mock data)")
-    
+
     args = parser.parse_args()
-    
+
     if args.run_id is None:
         args.run_id = f"run_{int(time.time())}"
-    
+
     # Store topic in environment for agents to access
     if args.topic:
         os.environ['DHAMMA_TOPIC'] = args.topic
-    
+
     pipeline_path = Path(args.pipeline)
-    
+
     if not pipeline_path.exists():
         print(f"ERROR: Pipeline file not found: {pipeline_path}")
         return 1
-    
+
     try:
         run_pipeline(pipeline_path, args.run_id)
         return 0

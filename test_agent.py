@@ -2,12 +2,13 @@
 Test Individual Agents - Dhamma Channel Automation
 สคริปต์สำหรับทดสอบเอเจนต์แต่ละตัวอย่างง่าย
 """
+
 import argparse
 import json
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 ROOT = Path(__file__).parent
 
@@ -16,7 +17,7 @@ def load_env():
     """โหลด environment variables จาก .env"""
     env_file = ROOT / ".env"
     if env_file.exists():
-        with open(env_file, "r", encoding="utf-8") as f:
+        with open(env_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -59,10 +60,11 @@ def print_info(text):
 
 # ========== AGENT TEST IMPLEMENTATIONS ==========
 
+
 def test_trend_scout(input_data=None):
     """ทดสอบ Trend Scout Agent - ค้นหาเทรนด์ธรรมะ"""
     print_header("Testing: Trend Scout Agent")
-    
+
     # ใช้ input จาก parameter หรือสร้างใหม่
     if input_data is None:
         input_data = {
@@ -70,12 +72,12 @@ def test_trend_scout(input_data=None):
             "horizon_days": 30,
             "sources": ["youtube", "google_trends"],
             "language": "th",
-            "max_results": 10
+            "max_results": 10,
         }
-    
+
     print_info(f"กำลังค้นหาเทรนด์ใน: {', '.join(input_data.get('niches', []))}")
     print_info(f"ระยะเวลา: {input_data.get('horizon_days', 30)} วัน")
-    
+
     # จำลองผลลัพธ์ (ในการใช้งานจริงจะเรียก API จริง)
     trends = [
         {
@@ -86,7 +88,7 @@ def test_trend_scout(input_data=None):
             "audience": "วัยทำงาน 25-40 ปี",
             "difficulty": "ง่าย",
             "risk": "ต่ำ",
-            "estimated_views": "15,000-25,000"
+            "estimated_views": "15,000-25,000",
         },
         {
             "title": "อริยสัจ 4 ฉบับเข้าใจง่าย",
@@ -96,7 +98,7 @@ def test_trend_scout(input_data=None):
             "audience": "ผู้เริ่มต้นศึกษาธรรม",
             "difficulty": "กลาง",
             "risk": "กลาง",
-            "estimated_views": "10,000-18,000"
+            "estimated_views": "10,000-18,000",
         },
         {
             "title": "วิธีรับมือความโกรธด้วยหลักธรรม",
@@ -106,7 +108,7 @@ def test_trend_scout(input_data=None):
             "audience": "ทั่วไป",
             "difficulty": "ง่าย-กลาง",
             "risk": "ต่ำ",
-            "estimated_views": "12,000-20,000"
+            "estimated_views": "12,000-20,000",
         },
         {
             "title": "เจริญสติในชีวิตประจำวัน",
@@ -116,7 +118,7 @@ def test_trend_scout(input_data=None):
             "audience": "วัยทำงาน",
             "difficulty": "ง่าย",
             "risk": "ต่ำ",
-            "estimated_views": "10,000-15,000"
+            "estimated_views": "10,000-15,000",
         },
         {
             "title": "กรรม คืออะไร? อธิบายแบบวิทยาศาสตร์",
@@ -126,10 +128,10 @@ def test_trend_scout(input_data=None):
             "audience": "คนรุ่นใหม่ที่ชอบเหตุผล",
             "difficulty": "กลาง-ยาก",
             "risk": "กลาง",
-            "estimated_views": "8,000-15,000"
-        }
+            "estimated_views": "8,000-15,000",
+        },
     ]
-    
+
     result = {
         "agent": "TrendScout",
         "version": "1.0",
@@ -140,14 +142,19 @@ def test_trend_scout(input_data=None):
         "metadata": {
             "total_sources_checked": 4,
             "search_keywords": 25,
-            "processing_time": "2.3 seconds"
-        }
+            "processing_time": "2.3 seconds",
+        },
     }
-    
+
     # บันทึกผล
-    output_file = ROOT / "output" / "test_agents" / f"trend_scout_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = (
+        ROOT
+        / "output"
+        / "test_agents"
+        / f"trend_scout_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     write_json(output_file, result)
-    
+
     print_success(f"พบ {len(trends)} เทรนด์")
     print("\nTop 3 Trends:")
     for i, trend in enumerate(trends[:3], 1):
@@ -156,27 +163,25 @@ def test_trend_scout(input_data=None):
         print(f"   เหตุผล: {trend['why_now']}")
         print(f"   กลุ่มเป้าหมาย: {trend['audience']}")
         print(f"   คาดการณ์ views: {trend['estimated_views']}")
-    
+
     print_success(f"บันทึกผลลัพธ์: {output_file.relative_to(ROOT)}")
-    
+
     return result
 
 
 def test_topic_prioritizer(input_data=None):
     """ทดสอบ Topic Prioritizer Agent - จัดลำดับหัวข้อ"""
     print_header("Testing: Topic Prioritizer Agent")
-    
+
     # ถ้าไม่มี input ให้รัน Trend Scout ก่อน
     if input_data is None:
         print_info("ไม่มี input, รัน Trend Scout ก่อน...")
         trend_result = test_trend_scout()
-        input_data = {
-            "candidates": trend_result["trends"]
-        }
-    
+        input_data = {"candidates": trend_result["trends"]}
+
     candidates = input_data.get("candidates", [])
     print_info(f"กำลังจัดลำดับ {len(candidates)} หัวข้อ...")
-    
+
     # คำนวณ priority score
     prioritized = []
     for topic in candidates:
@@ -184,70 +189,87 @@ def test_topic_prioritizer(input_data=None):
         base_score = topic.get("score", 0)
         difficulty_factor = {"ง่าย": 1.2, "กลาง": 1.0, "กลาง-ยาก": 0.8, "ยาก": 0.6}
         risk_factor = {"ต่ำ": 1.2, "กลาง": 1.0, "สูง": 0.7}
-        
+
         diff_mult = difficulty_factor.get(topic.get("difficulty", "กลาง"), 1.0)
         risk_mult = risk_factor.get(topic.get("risk", "กลาง"), 1.0)
-        
+
         priority_score = base_score * diff_mult * risk_mult
-        
-        prioritized.append({
-            "rank": 0,  # จะกำหนดทีหลัง
-            "title": topic["title"],
-            "priority_score": round(priority_score, 2),
-            "original_score": base_score,
-            "reasons": [
-                f"Trend score: {base_score}/100",
-                f"Difficulty: {topic.get('difficulty', 'N/A')} (×{diff_mult})",
-                f"Risk: {topic.get('risk', 'N/A')} (×{risk_mult})",
-                topic.get("why_now", "")
-            ],
-            "recommendation": "แนะนำทำ" if priority_score >= 85 else "พิจารณา" if priority_score >= 70 else "รอก่อน",
-            "estimated_effort": "ต่ำ" if topic.get("difficulty") == "ง่าย" else "กลาง" if topic.get("difficulty") == "กลาง" else "สูง"
-        })
-    
+
+        prioritized.append(
+            {
+                "rank": 0,  # จะกำหนดทีหลัง
+                "title": topic["title"],
+                "priority_score": round(priority_score, 2),
+                "original_score": base_score,
+                "reasons": [
+                    f"Trend score: {base_score}/100",
+                    f"Difficulty: {topic.get('difficulty', 'N/A')} (×{diff_mult})",
+                    f"Risk: {topic.get('risk', 'N/A')} (×{risk_mult})",
+                    topic.get("why_now", ""),
+                ],
+                "recommendation": "แนะนำทำ"
+                if priority_score >= 85
+                else "พิจารณา"
+                if priority_score >= 70
+                else "รอก่อน",
+                "estimated_effort": "ต่ำ"
+                if topic.get("difficulty") == "ง่าย"
+                else "กลาง"
+                if topic.get("difficulty") == "กลาง"
+                else "สูง",
+            }
+        )
+
     # เรียงตาม priority_score
     prioritized.sort(key=lambda x: x["priority_score"], reverse=True)
-    
+
     # กำหนด rank
     for i, item in enumerate(prioritized, 1):
         item["rank"] = i
-    
+
     result = {
         "agent": "TopicPrioritizer",
         "version": "1.0",
         "executed_at": datetime.now().isoformat(),
         "total_topics": len(prioritized),
-        "recommended": len([p for p in prioritized if p["recommendation"] == "แนะนำทำ"]),
+        "recommended": len(
+            [p for p in prioritized if p["recommendation"] == "แนะนำทำ"]
+        ),
         "prioritized_topics": prioritized,
         "metadata": {
             "criteria": ["trend_score", "difficulty", "risk", "audience_fit"],
-            "processing_time": "0.5 seconds"
-        }
+            "processing_time": "0.5 seconds",
+        },
     }
-    
+
     # บันทึกผล
-    output_file = ROOT / "output" / "test_agents" / f"topic_prioritizer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = (
+        ROOT
+        / "output"
+        / "test_agents"
+        / f"topic_prioritizer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     write_json(output_file, result)
-    
+
     print_success(f"จัดลำดับ {len(prioritized)} หัวข้อเรียบร้อย")
     print(f"\nแนะนำทำ: {result['recommended']} หัวข้อ\n")
-    
+
     print("Top 3 Recommended Topics:")
     for topic in prioritized[:3]:
         print(f"\n#{topic['rank']}. {topic['title']}")
         print(f"   Priority Score: {topic['priority_score']}/100")
         print(f"   แนะนำ: {topic['recommendation']}")
         print(f"   ความพยายาม: {topic['estimated_effort']}")
-    
+
     print_success(f"บันทึกผลลัพธ์: {output_file.relative_to(ROOT)}")
-    
+
     return result
 
 
 def test_script_outline(input_data=None):
     """ทดสอบ Script Outline Agent - สร้างโครงสคริปต์"""
     print_header("Testing: Script Outline Agent")
-    
+
     # ถ้าไม่มี input ให้ใช้หัวข้อ #1 จาก Topic Prioritizer
     if input_data is None:
         print_info("ไม่มี input, รัน Topic Prioritizer ก่อน...")
@@ -257,22 +279,22 @@ def test_script_outline(input_data=None):
             "topic": top_topic["title"],
             "target_duration": "8-10 minutes",
             "tone": "friendly_expert",
-            "target_audience": "ผู้เริ่มต้น-กลาง"
+            "target_audience": "ผู้เริ่มต้น-กลาง",
         }
-    
+
     topic = input_data.get("topic", "หัวข้อทดสอบ")
     duration = input_data.get("target_duration", "8-10 minutes")
-    
+
     print_info(f"หัวข้อ: {topic}")
     print_info(f"ความยาว: {duration}")
-    
+
     # สร้างโครงสคริปต์
     outline = f"""# โครงสคริปต์: {topic}
 
 ## ข้อมูลพื้นฐาน
 - ความยาว: {duration}
-- น้ำเสียง: {input_data.get('tone', 'friendly_expert')}
-- กลุ่มเป้าหมาย: {input_data.get('target_audience', 'ทั่วไป')}
+- น้ำเสียง: {input_data.get("tone", "friendly_expert")}
+- กลุ่มเป้าหมาย: {input_data.get("target_audience", "ทั่วไป")}
 
 ---
 
@@ -369,7 +391,7 @@ def test_script_outline(input_data=None):
 - เชิญชวนกด Like, Subscribe, Comment
 
 **ตัวอย่างปิดท้าย:**
-"ลองเริ่มฝึกวันนี้เลยนะครับ แค่วันละ 5 นาที ชีวิตจะเปลี่ยนแบบที่คุณไม่คิด 
+"ลองเริ่มฝึกวันนี้เลยนะครับ แค่วันละ 5 นาที ชีวิตจะเปลี่ยนแบบที่คุณไม่คิด
 ถ้าชอบก็อย่าลืมกด Like Subscribe และแชร์ให้เพื่อนๆ ด้วยนะครับ"
 
 ---
@@ -413,38 +435,43 @@ def test_script_outline(input_data=None):
             "sections": 6,
             "estimated_duration": duration,
             "target_audience": input_data.get("target_audience", "ทั่วไป"),
-            "processing_time": "1.2 seconds"
-        }
+            "processing_time": "1.2 seconds",
+        },
     }
-    
+
     # บันทึกผล
-    output_file = ROOT / "output" / "test_agents" / f"script_outline_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    output_file = (
+        ROOT
+        / "output"
+        / "test_agents"
+        / f"script_outline_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    )
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(outline, encoding="utf-8")
-    
+
     # บันทึก JSON
-    json_file = output_file.with_suffix('.json')
+    json_file = output_file.with_suffix(".json")
     write_json(json_file, result)
-    
+
     print_success("สร้างโครงสคริปต์เรียบร้อย")
-    print(f"\nโครงสร้าง:")
+    print("\nโครงสร้าง:")
     print("  1. Hook (30 วินาที)")
     print("  2. ปัญหา/บริบท (90 วินาที)")
     print("  3. หลักธรรม (2 นาที)")
     print("  4. วิธีปฏิบัติ (3 นาที)")
     print("  5. ตัวอย่างจริง (1 นาที)")
     print("  6. สรุป + CTA (30 วินาที)")
-    
+
     print_success(f"บันทึกโครงสคริปต์: {output_file.relative_to(ROOT)}")
     print_success(f"บันทึก JSON: {json_file.relative_to(ROOT)}")
-    
+
     return result
 
 
 def test_script_writer(input_data=None):
     """ทดสอบ Script Writer Agent - เขียนสคริปต์เต็มรูป"""
     print_header("Testing: Script Writer Agent")
-    
+
     # ถ้าไม่มี input ให้รัน Script Outline ก่อน
     if input_data is None:
         print_info("ไม่มี input, รัน Script Outline ก่อน...")
@@ -452,11 +479,11 @@ def test_script_writer(input_data=None):
         input_data = {
             "outline": outline_result["outline"],
             "tone": "friendly_expert",
-            "style": "conversational"
+            "style": "conversational",
         }
-    
+
     print_info("กำลังเขียนสคริปต์เต็มรูปแบบ...")
-    
+
     # สร้างสคริปต์ตัวอย่าง
     script = """# สคริปต์วิดีโอ: ทำสมาธิ 5 นาที ลดความเครียด
 
@@ -470,8 +497,8 @@ def test_script_writer(input_data=None):
 **พูด:**
 "คุณเคยรู้สึกเครียดจนปวดหัว นอนไม่หลับ แล้วไม่รู้จะทำยังไงไหมครับ?
 
-วันนี้ผมจะมาแนะนำวิธีทำสมาธิง่ายๆ แค่ 5 นาที 
-ที่สามารถช่วยคลายความเครียดได้จริง 
+วันนี้ผมจะมาแนะนำวิธีทำสมาธิง่ายๆ แค่ 5 นาที
+ที่สามารถช่วยคลายความเครียดได้จริง
 ไม่ต้องมีอุปกรณ์อะไรเลย ทำที่ไหนก็ได้
 
 มาเริ่มกันเลยครับ"
@@ -485,17 +512,17 @@ def test_script_writer(input_data=None):
 **[Visual: Montage คนในสถานการณ์เครียดต่างๆ]**
 
 **พูด:**
-"ในยุคที่ทุกอย่างเร็ว ทุกอย่างเปลี่ยน 
+"ในยุคที่ทุกอย่างเร็ว ทุกอย่างเปลี่ยน
 หลายคนรู้สึกเหมือนถูกไล่ตามตลอดเวลา
 
-งานเยอะ ข้อความเข้ามาไม่หยุด 
-ปัญหาบ้าน ปัญหาการเงิน ปัญหาความสัมพันธ์ 
+งานเยอะ ข้อความเข้ามาไม่หยุด
+ปัญหาบ้าน ปัญหาการเงิน ปัญหาความสัมพันธ์
 สมองไม่มีวันได้พัก
 
 ผลก็คือ...
-นอนไม่หลับ ตื่นมาก็เหนื่อย 
-ตัดสินใจอะไรไม่ถูก 
-อารมณ์แปรปรวน 
+นอนไม่หลับ ตื่นมาก็เหนื่อย
+ตัดสินใจอะไรไม่ถูก
+อารมณ์แปรปรวน
 บางทีอาจนำไปสู่โรคซึมเศร้าได้
 
 หลายคนเลยหันไปพึ่งยา พึ่งแอลกอฮอล์ หรือดูซีรีส์ทั้งคืน
@@ -514,11 +541,11 @@ def test_script_writer(input_data=None):
 **[Visual: อนาปานสติ Infographic]**
 
 **พูด:**
-"วิธีที่ผมจะแนะนำวันนี้ชื่อว่า 'อนาปานสติ' 
+"วิธีที่ผมจะแนะนำวันนี้ชื่อว่า 'อนาปานสติ'
 หรือ การเจริญสติด้วยการระลึกถึงลมหายใจ
 
-ในพระไตรปิฎก พระพุทธเจ้าตรัสว่า 
-'อนาปานสติ ถ้าเจริญแล้ว ทำให้มากแล้ว 
+ในพระไตรปิฎก พระพุทธเจ้าตรัสว่า
+'อนาปานสติ ถ้าเจริญแล้ว ทำให้มากแล้ว
 ย่อมมีผลใหญ่ มีอานิสงส์ใหญ่'
 
 ทำไมถึงเลือกลมหายใจ?
@@ -529,8 +556,8 @@ def test_script_writer(input_data=None):
 ✓ เป็นจุดยึดที่ปลอดภัย เป็นกลาง
 ✓ ทำได้ทุกที่ ทุกเวลา
 
-เมื่อเราจดจ่อกับลมหายใจ 
-ใจจะหยุดวิ่งไปในอดีตและอนาคต 
+เมื่อเราจดจ่อกับลมหายใจ
+ใจจะหยุดวิ่งไปในอดีตและอนาคต
 กลับมาอยู่กับปัจจุบันขณะ
 
 และนั่นคือ จุดที่ความสงบเกิดขึ้น"
@@ -548,7 +575,7 @@ def test_script_writer(input_data=None):
 
 **ขั้นตอนที่ 1: เตรียมตัว (30 วินาที)**
 
-หาที่นั่งสบายๆ 
+หาที่นั่งสบายๆ
 อาจเป็นเก้าอี้ โซฟา หรือพื้น
 ไม่จำเป็นต้องนั่งสมาธิแบบพระก็ได้
 
@@ -582,7 +609,7 @@ def test_script_writer(input_data=None):
 
 **ขั้นตอนที่ 3: จบการปฏิบัติ (30 วินาที)**
 
-เมื่อครบ 5 นาที 
+เมื่อครบ 5 นาที
 ค่อยๆ ขยับนิ้วมือ นิ้วเท้า
 หมุนไหล่เบาๆ
 ลืมตาขึ้นช้าๆ
@@ -611,13 +638,13 @@ def test_script_writer(input_data=None):
 "ผมเองก็เคยเป็นคนที่เครียดง่ายมากครับ
 งานเยอะ นอนไม่หลับ ปวดหัวบ่อย
 
-พอมาเริ่มฝึกสมาธิแบบนี้ 
+พอมาเริ่มฝึกสมาธิแบบนี้
 ตอนแรกก็รู้สึกว่า 'มันช่วยอะไรได้เหรอ แค่นั่งหายใจ?'
 
-แต่พอฝึกไปสัก 2 สัปดาห์ 
+แต่พอฝึกไปสัก 2 สัปดาห์
 เริ่มสังเกตว่า...
 - นอนหลับง่ายขึ้น
-- ตื่นมารู้สึกสดชื่นกว่าเดิม  
+- ตื่นมารู้สึกสดชื่นกว่าเดิม
 - เวลามีปัญหาก็ตัดสินใจได้ชัดเจนขึ้น
 - อารมณ์ไม่แปรปรวนเท่าเดิม
 
@@ -646,7 +673,7 @@ def test_script_writer(input_data=None):
 
 ทำทุกวัน ผลจะเห็นภายใน 2 สัปดาห์
 
-วันนี้พอเลิกดูวิดีโอนี้ 
+วันนี้พอเลิกดูวิดีโอนี้
 ลองทำดูเลยนะครับ แค่ 5 นาที
 
 ถ้าชอบวิดีโอนี้ ก็อย่าลืม
@@ -655,7 +682,7 @@ def test_script_writer(input_data=None):
 ✓ แชร์ให้คนที่คุณรักได้เจอ
 
 แล้วมาคุยกันในคอมเมนต์นะครับว่า
-คุณฝึกสมาธิอยู่แล้วหรือยัง? 
+คุณฝึกสมาธิอยู่แล้วหรือยัง?
 หรือมีปัญหาอะไรอยากให้ทำวิดีโออธิบาย
 
 สวัสดีครับ 🙏"
@@ -702,28 +729,33 @@ def test_script_writer(input_data=None):
             "estimated_speaking_time": "8-9 minutes",
             "tone": input_data.get("tone", "friendly_expert"),
             "sections": 6,
-            "processing_time": "3.5 seconds"
-        }
+            "processing_time": "3.5 seconds",
+        },
     }
-    
+
     # บันทึกผล
-    output_file = ROOT / "output" / "test_agents" / f"script_full_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    output_file = (
+        ROOT
+        / "output"
+        / "test_agents"
+        / f"script_full_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    )
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(script, encoding="utf-8")
-    
+
     # บันทึก JSON
-    json_file = output_file.with_suffix('.json')
+    json_file = output_file.with_suffix(".json")
     write_json(json_file, result)
-    
+
     print_success("เขียนสคริปต์เต็มรูปเรียบร้อย")
-    print(f"\nสถิติสคริปต์:")
+    print("\nสถิติสคริปต์:")
     print(f"  - จำนวนคำ: {result['metadata']['word_count']:,} คำ")
     print(f"  - ความยาวโดยประมาณ: {result['metadata']['estimated_speaking_time']}")
     print(f"  - จำนวน sections: {result['metadata']['sections']}")
-    
+
     print_success(f"บันทึกสคริปต์: {output_file.relative_to(ROOT)}")
     print_success(f"บันทึก JSON: {json_file.relative_to(ROOT)}")
-    
+
     return result
 
 
@@ -733,23 +765,23 @@ AVAILABLE_AGENTS = {
     "trend-scout": {
         "name": "Trend Scout",
         "description": "ค้นหาเทรนด์และเสนอหัวข้อคอนเทนต์",
-        "func": test_trend_scout
+        "func": test_trend_scout,
     },
     "topic-prioritizer": {
         "name": "Topic Prioritizer",
         "description": "จัดลำดับความสำคัญของหัวข้อ",
-        "func": test_topic_prioritizer
+        "func": test_topic_prioritizer,
     },
     "script-outline": {
         "name": "Script Outline",
         "description": "สร้างโครงสคริปต์",
-        "func": test_script_outline
+        "func": test_script_outline,
     },
     "script-writer": {
         "name": "Script Writer",
         "description": "เขียนสคริปต์วิดีโอเต็มรูป",
-        "func": test_script_writer
-    }
+        "func": test_script_writer,
+    },
 }
 
 
@@ -761,21 +793,18 @@ def main():
         "--agent",
         choices=list(AVAILABLE_AGENTS.keys()) + ["all"],
         required=True,
-        help="เอเจนต์ที่ต้องการทดสอบ"
+        help="เอเจนต์ที่ต้องการทดสอบ",
     )
-    parser.add_argument(
-        "--input",
-        help="ไฟล์ input JSON (optional)"
-    )
-    
+    parser.add_argument("--input", help="ไฟล์ input JSON (optional)")
+
     args = parser.parse_args()
-    
+
     # โหลด environment variables
     load_env()
-    
+
     print("\n" + "🔬 AGENT TESTING TOOL".center(60, "="))
     print("Dhamma Channel Automation\n")
-    
+
     # อ่าน input
     input_data = None
     if args.input:
@@ -786,7 +815,7 @@ def main():
         else:
             print_error(f"ไม่พบไฟล์: {input_file}")
             return 1
-    
+
     # รันเอเจนต์
     if args.agent == "all":
         print_info("รันทดสอบทุกเอเจนต์ตามลำดับ...\n")
@@ -799,11 +828,11 @@ def main():
     else:
         agent_info = AVAILABLE_AGENTS[args.agent]
         result = agent_info["func"](input_data)
-    
+
     print("\n" + "=" * 60)
     print_success("ทดสอบเสร็จสมบูรณ์!")
     print("=" * 60 + "\n")
-    
+
     return 0
 
 

@@ -1,21 +1,22 @@
 """
 Quick OpenAI API Test
 """
+
 import os
 from pathlib import Path
+
+import httpx
+from openai import OpenAI
 
 # โหลด .env
 env_file = Path(".env")
 if env_file.exists():
-    with open(env_file, "r", encoding="utf-8") as f:
+    with open(env_file, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 key, value = line.split("=", 1)
                 os.environ[key.strip()] = value.strip().strip('"').strip("'")
-
-from openai import OpenAI
-import httpx
 
 print("กำลังทดสอบ OpenAI API...\n")
 
@@ -30,20 +31,18 @@ print("ส่งคำถาม: อธิบายอนาปานสติ�
 
 response = client.chat.completions.create(
     model="gpt-4o-mini",
-    messages=[
-        {"role": "user", "content": "อธิบายอนาปานสติแบบสั้นๆ ใน 2-3 ประโยค"}
-    ],
-    max_tokens=150
+    messages=[{"role": "user", "content": "อธิบายอนาปานสติแบบสั้นๆ ใน 2-3 ประโยค"}],
+    max_tokens=150,
 )
 
 answer = response.choices[0].message.content
 tokens = response.usage.total_tokens
 
-print("="*60)
+print("=" * 60)
 print("คำตอบจาก GPT-4o-mini:")
-print("="*60)
+print("=" * 60)
 print(answer)
-print("="*60)
+print("=" * 60)
 print(f"\nTokens ใช้: {tokens}")
 print("ราคา: ~$0.0001 (ถูกมาก)")
 print("\n✅ OpenAI API ทำงานได้ปกติ!")

@@ -2,11 +2,10 @@
 ทดสอบ Video Production Workflow
 17 ขั้นตอนการผลิตวิดีโอ - จาก Trend Scout ถึง Backup/Archive
 """
-import os
-import sys
 import json
 from datetime import datetime
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment
@@ -21,7 +20,7 @@ class VideoProductionWorkflow:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.workflow_data = {}
         self.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
     def save_step(self, step_num, agent_name, data):
         """บันทึกผลลัพธ์แต่ละขั้นตอน"""
         self.workflow_data[f"step_{step_num:02d}"] = {
@@ -29,21 +28,21 @@ class VideoProductionWorkflow:
             "timestamp": datetime.now().isoformat(),
             "data": data
         }
-        
+
         # Save JSON
         json_file = self.output_dir / f"step_{step_num:02d}_{agent_name.lower().replace(' ', '_')}.json"
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-    
+
     # ===== PHASE 1: DISCOVERY (ค้นหาและวิเคราะห์) =====
-    
+
     def step_01_trend_scout(self):
         """1. หาเทรนด์จาก YouTube"""
         print("\n" + "="*60)
         print("STEP 1: Trend Scout Agent")
         print("="*60)
         print("🔍 ค้นหาเทรนด์วิดีโอธรรมะบน YouTube...")
-        
+
         # TODO: ใช้ YouTube API จริง
         result = {
             "trending_topics": [
@@ -72,20 +71,20 @@ class VideoProductionWorkflow:
             "analysis": "หัวข้อสมาธิมีความนิยมสูงสุด เหมาะสำหรับผู้เริ่มต้น",
             "recommendation": "ควรสร้างคอนเทนต์ระดับพื้นฐาน ง่ายต่อความเข้าใจ"
         }
-        
+
         self.save_step(1, "Trend Scout", result)
         print(f"✅ พบ {len(result['trending_topics'])} เทรนด์")
         for t in result['trending_topics']:
             print(f"   - {t['topic']} (Score: {t['trend_score']})")
         return result
-    
+
     def step_02_topic_prioritizer(self, trends):
         """2. จัดลำดับความสำคัญของหัวข้อ"""
         print("\n" + "="*60)
         print("STEP 2: Topic Prioritizer Agent")
         print("="*60)
         print("📊 จัดอันดับหัวข้อตามความเหมาะสม...")
-        
+
         result = {
             "selected_topic": {
                 "title": "สมาธิภาวนา เบื้องต้น สำหรับผู้เริ่มต้น",
@@ -102,19 +101,19 @@ class VideoProductionWorkflow:
             },
             "alternatives": ["วิธีรับมือความโกรธ", "กรรม ผล วิบาก"]
         }
-        
+
         self.save_step(2, "Topic Prioritizer", result)
         print(f"✅ เลือกหัวข้อ: {result['selected_topic']['title']}")
         print(f"   Priority Score: {result['selected_topic']['priority_score']}")
         return result
-    
+
     def step_03_research_retrieval(self, topic):
         """3. ค้นคว้าข้อมูลหลักธรรม"""
         print("\n" + "="*60)
         print("STEP 3: Research Retrieval Agent")
         print("="*60)
         print("📚 ค้นคว้าข้อมูลหลักธรรมที่เกี่ยวข้อง...")
-        
+
         result = {
             "topic": topic["selected_topic"]["title"],
             "sources": [
@@ -144,19 +143,19 @@ class VideoProductionWorkflow:
                 "ฝึกสม่ำเสมอวันละ 10-15 นาที"
             ]
         }
-        
+
         self.save_step(3, "Research Retrieval", result)
         print(f"✅ พบแหล่งข้อมูล: {len(result['sources'])} รายการ")
         print(f"✅ Key Points: {len(result['key_points'])} ข้อ")
         return result
-    
+
     def step_04_data_enrichment(self, research):
         """4. เพิ่มข้อมูลเสริม (ตัวอย่าง, สถิติ)"""
         print("\n" + "="*60)
         print("STEP 4: Data Enrichment Agent")
         print("="*60)
         print("💎 เพิ่มข้อมูลเสริมให้น่าสนใจ...")
-        
+
         result = {
             "enriched_data": {
                 "statistics": [
@@ -181,21 +180,21 @@ class VideoProductionWorkflow:
                 ]
             }
         }
-        
+
         self.save_step(4, "Data Enrichment", result)
         print(f"✅ เพิ่มสถิติ: {len(result['enriched_data']['statistics'])} ข้อ")
         print(f"✅ เพิ่มตัวอย่างจริง: {len(result['enriched_data']['real_examples'])} เรื่อง")
         return result
-    
+
     # ===== PHASE 2: CONTENT CREATION (สร้างเนื้อหา) =====
-    
+
     def step_05_script_outline(self, research, enriched):
         """5. สร้างโครงร่างสคริปต์"""
         print("\n" + "="*60)
         print("STEP 5: Script Outline Agent")
         print("="*60)
         print("📝 สร้างโครงร่างสคริปต์วิดีโอ...")
-        
+
         result = {
             "video_structure": {
                 "duration": "7-9 นาที",
@@ -238,19 +237,19 @@ class VideoProductionWorkflow:
                 ]
             }
         }
-        
+
         self.save_step(5, "Script Outline", result)
         print(f"✅ สร้างโครงร่าง: {len(result['video_structure']['sections'])} ส่วน")
         print(f"   ความยาว: {result['video_structure']['duration']}")
         return result
-    
+
     def step_06_script_writer(self, outline, research, enriched):
         """6. เขียนสคริปต์เต็ม"""
         print("\n" + "="*60)
         print("STEP 6: Script Writer Agent")
         print("="*60)
         print("✍️ เขียนสคริปต์วิดีโอเต็ม...")
-        
+
         # TODO: ใช้ OpenAI GPT-4 สร้างสคริปต์จริง
         result = {
             "full_script": """
@@ -366,28 +365,28 @@ class VideoProductionWorkflow:
             "tone": "เป็นกันเอง, อธิบายง่าย",
             "reading_speed": "ปานกลาง (100-120 คำ/นาที)"
         }
-        
+
         self.save_step(6, "Script Writer", result)
         print(f"✅ สคริปต์เสร็จ: {result['word_count']} คำ")
         print(f"   ความยาว: {result['estimated_duration']}")
-        
+
         # Save Markdown
         md_file = self.output_dir / f"full_script_{self.run_id}.md"
         with open(md_file, 'w', encoding='utf-8') as f:
             f.write(result['full_script'])
         print(f"   ไฟล์: {md_file}")
-        
+
         return result
-    
+
     # ===== PHASE 3: VALIDATION & ENHANCEMENT (ตรวจสอบและปรับปรุง) =====
-    
+
     def step_07_doctrine_validator(self, script):
         """7. ตรวจสอบความถูกต้องหลักธรรม"""
         print("\n" + "="*60)
         print("STEP 7: Doctrine Validator Agent")
         print("="*60)
         print("✅ ตรวจสอบความถูกต้องตามหลักพุทธศาสนา...")
-        
+
         result = {
             "validation_status": "APPROVED",
             "checks": [
@@ -413,19 +412,19 @@ class VideoProductionWorkflow:
             ],
             "overall_score": 95
         }
-        
+
         self.save_step(7, "Doctrine Validator", result)
         print(f"   สถานะ: {result['validation_status']}")
         print(f"   คะแนน: {result['overall_score']}/100")
         return result
-    
+
     def step_08_legal_compliance(self, script):
         """8. ตรวจสอบลิขสิทธิ์และกฎหมาย"""
         print("\n" + "="*60)
         print("STEP 8: Legal/Compliance Agent")
         print("="*60)
         print("⚖️ ตรวจสอบด้านลิขสิทธิ์และกฎหมาย...")
-        
+
         result = {
             "compliance_status": "PASS",
             "checks": [
@@ -454,13 +453,13 @@ class VideoProductionWorkflow:
                 "ควรใส่ Disclaimer: 'เนื้อหานี้เป็นการให้ความรู้เท่านั้น ไม่ใช่คำแนะนำทางการแพทย์'"
             ]
         }
-        
+
         self.save_step(8, "Legal Compliance", result)
         print(f"   สถานะ: {result['compliance_status']}")
         return result
-    
+
     # ===== PHASE 4: PRODUCTION (ผลิตสื่อ) =====
-    
+
     def step_09_visual_asset(self, script):
         """9. สร้าง Visual Assets (ยังไม่มี API)"""
         print("\n" + "="*60)
@@ -468,7 +467,7 @@ class VideoProductionWorkflow:
         print("="*60)
         print("🎨 วางแผน Visual Assets...")
         print("   ⚠️ ยังไม่มี API สำหรับสร้างภาพอัตโนมัติ")
-        
+
         result = {
             "status": "PLANNED",
             "assets_needed": [
@@ -505,12 +504,12 @@ class VideoProductionWorkflow:
             ],
             "total_production_time": "80 นาที (1 ชั่วโมง 20 นาที)"
         }
-        
+
         self.save_step(9, "Visual Asset", result)
         print(f"   จำนวน Assets: {len(result['assets_needed'])} ประเภท")
         print(f"   เวลาผลิตโดยประมาณ: {result['total_production_time']}")
         return result
-    
+
     def step_10_voiceover(self, script):
         """10. สร้าง Voiceover (ยังไม่มี API)"""
         print("\n" + "="*60)
@@ -518,7 +517,7 @@ class VideoProductionWorkflow:
         print("="*60)
         print("🎙️ วางแผน Voiceover...")
         print("   ⚠️ ยังไม่มี API สำหรับ Text-to-Speech คุณภาพสูง")
-        
+
         result = {
             "status": "PLANNED",
             "options": [
@@ -547,18 +546,18 @@ class VideoProductionWorkflow:
             ],
             "recommendation": "เริ่มจากบันทึกเอง → ElevenLabs (ถ้าช่องโต)"
         }
-        
+
         self.save_step(10, "Voiceover", result)
         print(f"   แนะนำ: {result['recommendation']}")
         return result
-    
+
     def step_11_localization_subtitle(self, script):
         """11. สร้างคำบรรยาย"""
         print("\n" + "="*60)
         print("STEP 11: Localization & Subtitle Agent")
         print("="*60)
         print("📝 สร้างคำบรรยาย...")
-        
+
         result = {
             "subtitles": {
                 "thai": {
@@ -578,19 +577,19 @@ class VideoProductionWorkflow:
                 "ตำแหน่งล่างกลางหน้าจอ"
             ]
         }
-        
+
         self.save_step(11, "Localization Subtitle", result)
         print(f"   ภาษาไทย: {result['subtitles']['thai']['status']}")
         print(f"   จำนวนบรรทัด: {result['subtitles']['thai']['lines']}")
         return result
-    
+
     def step_12_thumbnail_generator(self, topic):
         """12. สร้างภาพปก Thumbnail"""
         print("\n" + "="*60)
         print("STEP 12: Thumbnail Generator Agent")
         print("="*60)
         print("🖼️ ออกแบบ Thumbnail...")
-        
+
         result = {
             "thumbnail_design": {
                 "title_text": "สมาธิภาวนา\nเบื้องต้น",
@@ -610,19 +609,19 @@ class VideoProductionWorkflow:
             "tools": ["Canva", "Photopea", "Adobe Spark"],
             "estimated_time": "10-15 นาที"
         }
-        
+
         self.save_step(12, "Thumbnail Generator", result)
         print(f"   ขนาด: {result['thumbnail_design']['dimensions']}")
         print(f"   เครื่องมือแนะนำ: {', '.join(result['tools'])}")
         return result
-    
+
     def step_13_seo_metadata(self, script, topic):
         """13. สร้าง SEO & Metadata"""
         print("\n" + "="*60)
         print("STEP 13: SEO & Metadata Agent")
         print("="*60)
         print("🔍 สร้าง Title, Description, Tags...")
-        
+
         result = {
             "title": "สมาธิภาวนา เบื้องต้น สำหรับผู้เริ่มต้น | ฝึกง่ายๆ ได้ผลจริง",
             "description": """สอนวิธีฝึกสมาธิภาวนาสำหรับผู้เริ่มต้น อธิบายง่ายๆ ทำตามได้ทันที
@@ -675,20 +674,20 @@ Instagram: [ลิงก์]
                 "ธรรมะ": "3 ครั้ง"
             }
         }
-        
+
         self.save_step(13, "SEO Metadata", result)
         print(f"   Title: {result['title'][:50]}...")
         print(f"   Tags: {len(result['tags'])} tags")
         print(f"   SEO Score: {result['seo_score']}/100")
         return result
-    
+
     def step_14_format_conversion(self):
         """14. แปลงไฟล์วิดีโอ"""
         print("\n" + "="*60)
         print("STEP 14: Format Conversion Agent")
         print("="*60)
         print("🎬 วางแผนแปลงไฟล์วิดีโอ...")
-        
+
         result = {
             "formats": [
                 {
@@ -727,20 +726,20 @@ Instagram: [ลิงก์]
                 "FFmpeg (command line)"
             ]
         }
-        
+
         self.save_step(14, "Format Conversion", result)
         print(f"   จำนวน Formats: {len(result['formats'])} แบบ")
         return result
-    
+
     # ===== PHASE 5: PUBLISHING (เผยแพร่) =====
-    
+
     def step_15_multi_channel_publish(self, metadata):
         """15. อัพโหลดหลายช่องทาง"""
         print("\n" + "="*60)
         print("STEP 15: Multi-Channel Publish Agent")
         print("="*60)
         print("🚀 วางแผนเผยแพร่หลายแพลตฟอร์ม...")
-        
+
         result = {
             "channels": [
                 {
@@ -771,19 +770,19 @@ Instagram: [ลิงก์]
             ],
             "automation_level": "50% (YouTube auto, อื่นๆ manual)"
         }
-        
+
         self.save_step(15, "Multi-Channel Publish", result)
         print(f"   แพลตฟอร์ม: {len(result['channels'])} ช่องทาง")
         print(f"   Automation: {result['automation_level']}")
         return result
-    
+
     def step_16_scheduling_publishing(self, metadata):
         """16. กำหนดตารางเผยแพร่"""
         print("\n" + "="*60)
         print("STEP 16: Scheduling & Publishing Agent")
         print("="*60)
         print("📅 กำหนดตารางเผยแพร่...")
-        
+
         result = {
             "recommended_schedule": {
                 "youtube": {
@@ -810,29 +809,29 @@ Instagram: [ลิงก์]
             },
             "tools": ["YouTube Studio", "Facebook Creator Studio", "Buffer", "Hootsuite"]
         }
-        
+
         self.save_step(16, "Scheduling Publishing", result)
         print(f"   YouTube: {result['recommended_schedule']['youtube']['time']}")
         print(f"   แผนการเผยแพร่: {len(result['publication_plan'])} แพลตฟอร์ม")
         return result
-    
+
     def step_17_backup_archive(self):
         """17. สำรองข้อมูล"""
         print("\n" + "="*60)
         print("STEP 17: Backup/Archive Agent")
         print("="*60)
         print("💾 สำรองข้อมูลโปรเจกต์...")
-        
+
         backup_files = [
             f"full_script_{self.run_id}.md",
-            f"step_01_trend_scout.json",
-            f"step_06_script_writer.json",
-            f"step_13_seo_metadata.json",
+            "step_01_trend_scout.json",
+            "step_06_script_writer.json",
+            "step_13_seo_metadata.json",
             "video_final.mp4",
             "thumbnail.png",
             "subtitles_th.srt"
         ]
-        
+
         result = {
             "backup_location": f"output/backups/video_{self.run_id}/",
             "files_backed_up": backup_files,
@@ -846,24 +845,24 @@ Instagram: [ลิงก์]
             ],
             "retention_policy": "เก็บไว้ 6 เดือน → ย้ายไป Archive → ลบหลัง 2 ปี"
         }
-        
+
         # Create backup directory
         backup_dir = self.output_dir.parent / "backups" / f"video_{self.run_id}"
         backup_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.save_step(17, "Backup Archive", result)
         print(f"   ไฟล์ที่สำรอง: {result['total_files']} ไฟล์")
         print(f"   ตำแหน่ง: {result['backup_location']}")
         return result
-    
+
     # ===== FINAL SUMMARY =====
-    
+
     def generate_summary(self):
         """สรุปผลการทำงานทั้งหมด"""
         print("\n" + "="*60)
         print("📋 WORKFLOW SUMMARY")
         print("="*60)
-        
+
         summary = {
             "run_id": self.run_id,
             "total_steps": 17,
@@ -888,21 +887,21 @@ Instagram: [ลิงก์]
                 "5. อัพโหลด YouTube ตามตารางที่กำหนด"
             ]
         }
-        
+
         # Save final summary
         summary_file = self.output_dir / f"workflow_summary_{self.run_id}.json"
         with open(summary_file, 'w', encoding='utf-8') as f:
             json.dump(summary, f, ensure_ascii=False, indent=2, default=str)
-        
-        print(f"\n✅ Workflow เสร็จสมบูรณ์!")
+
+        print("\n✅ Workflow เสร็จสมบูรณ์!")
         print(f"   Run ID: {self.run_id}")
         print(f"   ไฟล์ทั้งหมด: {len(summary['output_files'])} ไฟล์")
         print(f"   สรุปเต็ม: {summary_file}")
-        print(f"\n⏱️ เวลาโดยประมาณ:")
+        print("\n⏱️ เวลาโดยประมาณ:")
         print(f"   - Automated: {summary['estimated_total_time']['automated']}")
         print(f"   - Manual: {summary['estimated_total_time']['manual']}")
         print(f"   - Total: {summary['estimated_total_time']['total']}")
-        
+
         return summary
 
 
@@ -913,46 +912,46 @@ def main():
     print("="*60)
     print("จาก Trend Scout → Backup/Archive")
     print("="*60)
-    
+
     workflow = VideoProductionWorkflow()
-    
+
     # Phase 1: Discovery
     trends = workflow.step_01_trend_scout()
     topic = workflow.step_02_topic_prioritizer(trends)
     research = workflow.step_03_research_retrieval(topic)
     enriched = workflow.step_04_data_enrichment(research)
-    
+
     # Phase 2: Content Creation
     outline = workflow.step_05_script_outline(research, enriched)
     script = workflow.step_06_script_writer(outline, research, enriched)
-    
+
     # Phase 3: Validation & Enhancement
-    doctrine = workflow.step_07_doctrine_validator(script)
-    legal = workflow.step_08_legal_compliance(script)
-    
+    workflow.step_07_doctrine_validator(script)
+    workflow.step_08_legal_compliance(script)
+
     # Phase 4: Production
-    visual = workflow.step_09_visual_asset(script)
-    voiceover = workflow.step_10_voiceover(script)
-    subtitle = workflow.step_11_localization_subtitle(script)
-    thumbnail = workflow.step_12_thumbnail_generator(topic)
+    workflow.step_09_visual_asset(script)
+    workflow.step_10_voiceover(script)
+    workflow.step_11_localization_subtitle(script)
+    workflow.step_12_thumbnail_generator(topic)
     metadata = workflow.step_13_seo_metadata(script, topic)
-    conversion = workflow.step_14_format_conversion()
-    
+    workflow.step_14_format_conversion()
+
     # Phase 5: Publishing
-    publish = workflow.step_15_multi_channel_publish(metadata)
-    schedule = workflow.step_16_scheduling_publishing(metadata)
-    backup = workflow.step_17_backup_archive()
-    
+    workflow.step_15_multi_channel_publish(metadata)
+    workflow.step_16_scheduling_publishing(metadata)
+    workflow.step_17_backup_archive()
+
     # Final Summary
     summary = workflow.generate_summary()
-    
+
     print("\n" + "="*60)
     print("🎉 SUCCESS! Video Production Workflow Complete!")
     print("="*60)
     print(f"\n📁 ตรวจสอบผลลัพธ์ที่: {workflow.output_dir}")
     print(f"📄 สคริปต์เต็ม: {workflow.output_dir}/full_script_{workflow.run_id}.md")
     print(f"📊 สรุป: {workflow.output_dir}/workflow_summary_{workflow.run_id}.json")
-    
+
     return workflow, summary
 
 

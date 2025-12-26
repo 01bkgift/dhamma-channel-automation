@@ -18,13 +18,12 @@ Usage:
 """
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Optional
 
 
-def ensure_package(import_name: str, install_name: Optional[str] = None) -> bool:
+def ensure_package(import_name: str, install_name: str | None = None) -> bool:
     """Import a package, installing it if necessary.
     Supports different pip name via install_name and strips SSL env vars that can break pip.
     """
@@ -37,9 +36,16 @@ def ensure_package(import_name: str, install_name: Optional[str] = None) -> bool
         try:
             env = os.environ.copy()
             # Some environments set cert variables that break pip on Windows
-            for key in ("REQUESTS_CA_BUNDLE", "PIP_CERT", "SSL_CERT_FILE", "CURL_CA_BUNDLE"):
+            for key in (
+                "REQUESTS_CA_BUNDLE",
+                "PIP_CERT",
+                "SSL_CERT_FILE",
+                "CURL_CA_BUNDLE",
+            ):
                 env.pop(key, None)
-            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg], env=env)
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", pkg], env=env
+            )
             __import__(import_name)
             return True
         except Exception as e:
@@ -47,9 +53,9 @@ def ensure_package(import_name: str, install_name: Optional[str] = None) -> bool
             return False
 
 
-def find_broll_images(broll_dir: Path) -> List[Path]:
+def find_broll_images(broll_dir: Path) -> list[Path]:
     exts = {".jpg", ".jpeg", ".png"}
-    files: List[Path] = []
+    files: list[Path] = []
     if broll_dir.exists():
         for p in sorted(broll_dir.rglob("*")):
             if p.suffix.lower() in exts:
@@ -59,6 +65,7 @@ def find_broll_images(broll_dir: Path) -> List[Path]:
 
 def create_gradient_image(path: Path, width: int = 1920, height: int = 1080) -> Path:
     from PIL import Image
+
     img = Image.new("RGB", (width, height))
     px = img.load()
     for y in range(height):
@@ -73,19 +80,26 @@ def create_gradient_image(path: Path, width: int = 1920, height: int = 1080) -> 
     return path
 
 
-def render_video(audio_path: Path, output_path: Path, title: Optional[str] = None, broll_dir: Optional[Path] = None) -> int:
+def render_video(
+    audio_path: Path,
+    output_path: Path,
+    title: str | None = None,
+    broll_dir: Path | None = None,
+) -> int:
     # Ensure deps (moviepy 2.x uses new import structure)
-    ok = ensure_package("moviepy", install_name="moviepy") and ensure_package("imageio_ffmpeg", install_name="imageio[ffmpeg]")
+    ok = ensure_package("moviepy", install_name="moviepy") and ensure_package(
+        "imageio_ffmpeg", install_name="imageio[ffmpeg]"
+    )
     if not ok:
         print("❌ Required packages missing and could not be installed")
         return 1
 
     # MoviePy 2.x: import directly from moviepy.video/audio, not moviepy.editor
     try:
-        from moviepy import ImageClip, AudioFileClip, concatenate_videoclips
+        from moviepy import AudioFileClip, ImageClip, concatenate_videoclips
     except ImportError:
         # Try old API for backwards compat
-        from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
+        from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips
     import imageio_ffmpeg
     from PIL import Image, ImageDraw, ImageFont
 
@@ -140,15 +154,15 @@ def render_video(audio_path: Path, output_path: Path, title: Optional[str] = Non
             # Position and shadow
             x, y = 80, 820
             shadow = 4
-            draw.text((x+shadow, y+shadow), title, fill=(0,0,0), font=font)
-            draw.text((x, y), title, fill=(255,255,255), font=font)
+            draw.text((x + shadow, y + shadow), title, fill=(0, 0, 0), font=font)
+            draw.text((x, y), title, fill=(255, 255, 255), font=font)
             out = temp_dir / f"frame_title_{path.stem}.png"
             img.save(out)
             return out
         except Exception:
             return path
 
-    title_applied_images: List[Path] = []
+    title_applied_images: list[Path] = []
     for img_path in images:
         title_applied_images.append(draw_title_on(img_path))
 
@@ -193,15 +207,18 @@ def render_video(audio_path: Path, output_path: Path, title: Optional[str] = Non
         except Exception:
             pass
 
-    size_mb = output_path.stat().st_size / (1024*1024)
+    size_mb = output_path.stat().st_size / (1024 * 1024)
     print(f"✅ Video rendered: {output_path} ({size_mb:.2f} MB)")
     return 0
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Fallback Video Renderer")
-    parser.add_argument("--audio", required=True, help="Path to voiceover audio (mp3/wav)")
+    parser.add_argument(
+        "--audio", required=True, help="Path to voiceover audio (mp3/wav)"
+    )
     parser.add_argument("--output", required=True, help="Output MP4 path")
     parser.add_argument("--title", default=None, help="Optional title text overlay")
     parser.add_argument("--broll-dir", default="broll", help="B-roll images directory")
