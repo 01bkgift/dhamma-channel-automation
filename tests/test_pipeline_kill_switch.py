@@ -246,13 +246,17 @@ def test_web_runner_no_subprocess_spawn_when_disabled(monkeypatch):
 
     job = ProcessJob("test_agent", ["python", "-c", "print('test')"])
 
-    # Mock the subprocess function
-    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_spawn:
+    # Mock the subprocess function and _append_file_log
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_spawn, \
+         patch.object(job, "_append_file_log") as mock_file_log:
         # Run the async start() method
         asyncio.run(job.start())
 
         # ✅ ASSERT: subprocess MUST NOT be called
         mock_spawn.assert_not_called()
+
+        # ✅ ASSERT: _append_file_log MUST NOT be called (no file artifacts when disabled)
+        mock_file_log.assert_not_called()
 
         # ✅ ASSERT: status should be "disabled"
         assert job.status == "disabled", (
