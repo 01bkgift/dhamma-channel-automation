@@ -23,19 +23,19 @@ def ensure_dir(p: Path):
 def parse_pipeline_enabled(env_value: str | None) -> bool:
     """
     Parse PIPELINE_ENABLED environment variable.
-    
+
     Args:
         env_value: Value from os.environ.get('PIPELINE_ENABLED')
-    
+
     Returns:
         True if pipeline should run (enabled or not set)
         False if pipeline should be disabled
-    
+
     Default: True (enabled) when env var is not set
     """
     if env_value is None:
         return True  # Default to enabled
-    
+
     # Case-insensitive check for "false"
     return env_value.strip().lower() not in ("false", "0", "no", "off", "disabled")
 
@@ -2549,7 +2549,7 @@ def main():
 
     # Check global kill switch (PIPELINE_ENABLED)
     pipeline_enabled = parse_pipeline_enabled(os.environ.get("PIPELINE_ENABLED"))
-    
+
     if not pipeline_enabled:
         log("Pipeline disabled by PIPELINE_ENABLED=false", "INFO")
         print("Pipeline disabled by PIPELINE_ENABLED=false")
