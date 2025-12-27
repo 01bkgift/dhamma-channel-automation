@@ -173,7 +173,7 @@ if [ "$SERVICE_RUNNING" = true ]; then
         if echo "$meta_response" | grep -q '"service"' && \
            echo "$meta_response" | grep -q '"environment"' && \
            echo "$meta_response" | grep -q '"version"' && \
-            echo "$meta_response" | grep -q '"build_sha"'; then
+           echo "$meta_response" | grep -q '"build_sha"'; then
             check_pass "/v1/meta endpoint responds with correct schema"
         else
             check_fail "/v1/meta endpoint schema incorrect"
