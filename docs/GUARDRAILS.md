@@ -12,6 +12,8 @@ Guardrails are automated checks that verify compliance with FlowBiz Client Produ
 
 **Why**: Public port bindings bypass System Nginx and expose services directly to the internet.
 
+**Port source**: `config/flowbiz_port.env` (single source of truth for `FLOWBIZ_ALLOCATED_PORT`)
+
 **Verification**:
 ```bash
 # Check docker-compose.yml
@@ -123,6 +125,9 @@ make guardrails
 
 # Or directly
 bash scripts/guardrails.sh
+
+# Quick runtime verification (brings services up and checks endpoints/ports)
+bash scripts/runtime_verify.sh
 ```
 
 ### CI Execution

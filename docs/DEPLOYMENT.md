@@ -8,6 +8,8 @@ This guide covers production deployment of the Dhamma Channel Automation service
 
 **FLOWBIZ_ALLOCATED_PORT**: `3007`
 
+Single source of truth: `config/flowbiz_port.env`
+
 This port is registered in the FlowBiz VPS port allocation registry:
 - [VPS Status Document](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/VPS_STATUS.md)
 
@@ -172,6 +174,14 @@ curl https://dhamma.yourdomain.com/v1/meta
 
 # Check logs
 sudo docker logs dhamma-web --tail 50
+```
+
+### Quick runtime verification
+
+Run the automated runtime check (reads the port from `config/flowbiz_port.env`):
+
+```bash
+bash scripts/runtime_verify.sh
 ```
 
 ## Port Binding Verification
