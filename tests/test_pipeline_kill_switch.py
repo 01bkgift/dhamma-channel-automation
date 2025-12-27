@@ -246,13 +246,19 @@ def test_web_runner_no_subprocess_spawn_when_disabled(monkeypatch):
 
     job = ProcessJob("test_agent", ["python", "-c", "print('test')"])
 
-    # Mock the subprocess function
-    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_spawn:
+    # Mock the subprocess function and _append_file_log
+    with (
+        patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_spawn,
+        patch.object(job, "_append_file_log") as mock_file_log,
+    ):
         # Run the async start() method
         asyncio.run(job.start())
 
         # ✅ ASSERT: subprocess MUST NOT be called
         mock_spawn.assert_not_called()
+
+        # ✅ ASSERT: _append_file_log MUST NOT be called (no file artifacts when disabled)
+        mock_file_log.assert_not_called()
 
         # ✅ ASSERT: status should be "disabled"
         assert job.status == "disabled", (
@@ -309,3 +315,37 @@ def test_web_runner_subprocess_spawn_when_enabled(monkeypatch):
         assert "DISABLED" not in log_text, (
             f"Should not have [DISABLED] when enabled, got: {log_text}"
         )
+
+
+def test_web_runner_no_log_file_created_when_disabled(monkeypatch):
+    """
+    When PIPELINE_ENABLED=false, runner must NOT create a new log file
+    under output/logs/ for that agent.
+    """
+    import asyncio
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from app.core.runner import LOG_DIR, ProcessJob
+
+    monkeypatch.setenv("PIPELINE_ENABLED", "false")
+
+    agent_key = "no_log_when_disabled"
+    log_path = LOG_DIR / f"{agent_key}.log"
+    # Ensure clean state
+    try:
+        if log_path.exists():
+            log_path.unlink()
+    except Exception:
+        pass
+
+    job = ProcessJob(agent_key, ["python", "-c", "print('noop')"])
+
+    # Run disabled start
+    asyncio.run(job.start())
+
+    # Assert log file was NOT created
+    assert not log_path.exists(), (
+        f"Log file should not be created when disabled, but found: {log_path}"
+    )

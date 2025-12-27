@@ -46,11 +46,12 @@ Values are case-insensitive: `False`, `FALSE`, `false` all work.
 
 When `PIPELINE_ENABLED=false`:
 1. **Orchestrator:** Main entry point checks the flag before loading pipeline YAML
-2. **CLI Commands:** Individual commands check the flag before executing agents
-3. **Web Dashboard:** Job runner checks the flag before starting agent processes
-4. **Exit Code:** Returns `0` (success) to indicate intentional no-op, not an error
-5. **Logging:** Logs message: `"Pipeline disabled by PIPELINE_ENABLED=false"`
-6. **No Artifacts:** Pipeline does NOT create partial or incomplete outputs
+2. **Web Dashboard:** Job runner checks the flag before starting agent processes
+3. **Exit Code:** Returns `0` (success) to indicate intentional no-op, not an error
+4. **Logging:** Logs message: `"Pipeline disabled by PIPELINE_ENABLED=false"`
+5. **No Artifacts:** Pipeline does NOT create partial or incomplete outputs
+
+**Note on CLI Commands:** Direct per-agent CLI invocations (e.g., `python -m cli.main trend-scout ...`) do NOT enforce the `PIPELINE_ENABLED` kill switch. They will execute regardless of the environment variable setting. To ensure kill switch enforcement, run agents through the orchestrator (e.g., `python orchestrator.py --pipeline pipeline.web.yml`).
 
 ### What Gets Blocked
 
@@ -75,11 +76,12 @@ When `PIPELINE_ENABLED=false`:
 # Export for entire shell session
 export PIPELINE_ENABLED=false
 
-# Or set for single command
+# Or set for single command (orchestrator enforces kill switch)
 PIPELINE_ENABLED=false python orchestrator.py --pipeline pipeline.web.yml --run-id test_001
 
-# CLI commands
-PIPELINE_ENABLED=false python -m cli.main trend-scout --input data/mock.json --out output/test.json
+# Note: Direct CLI commands do NOT enforce PIPELINE_ENABLED
+# This will still run even with PIPELINE_ENABLED=false:
+# python -m cli.main trend-scout --input data/mock.json --out output/test.json
 ```
 
 **Enable Pipeline (explicitly):**

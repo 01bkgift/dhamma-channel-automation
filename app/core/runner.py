@@ -142,7 +142,6 @@ class ProcessJob:
             self.progress = 100
             msg = "[DISABLED] Pipeline disabled by PIPELINE_ENABLED=false"
             self.log.append(msg)
-            self._append_file_log(msg)
             return
 
         self.status = "starting"
