@@ -2,8 +2,6 @@
 # FlowBiz Guardrails Check
 # Automated compliance verification for FlowBiz Client Product standards
 
-set -e
-
 echo "==================================================================="
 echo "  FlowBiz Guardrails Check"
 echo "==================================================================="
@@ -21,17 +19,17 @@ FAIL_COUNT=0
 
 check_pass() {
     echo -e "${GREEN}✓ PASS${NC}: $1"
-    ((PASS_COUNT++))
+    PASS_COUNT=$((PASS_COUNT + 1))
 }
 
 check_warn() {
     echo -e "${YELLOW}⚠ WARN${NC}: $1"
-    ((WARN_COUNT++))
+    WARN_COUNT=$((WARN_COUNT + 1))
 }
 
 check_fail() {
     echo -e "${RED}✗ FAIL${NC}: $1"
-    ((FAIL_COUNT++))
+    FAIL_COUNT=$((FAIL_COUNT + 1))
 }
 
 echo "1. Checking port binding configuration..."
