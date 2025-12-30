@@ -7,8 +7,9 @@
 ตามระบบ content-addressed naming ที่เป็น deterministic
 
 วิธีใช้งาน:
-    python scripts/tts_generate.py --run-id RUN_001 --slug demo --script script.txt
-    echo "Hello" | python scripts/tts_generate.py --run-id RUN_001 --slug demo
+    python scripts/tts_generate.py --run-id run_001 --slug demo --script script.txt
+    echo "Hello" | python scripts/tts_generate.py --run-id run_001 --slug demo
+    python scripts/tts_generate.py --run-id run_001 --slug demo --script script.txt --dry-run
 """
 
 import sys

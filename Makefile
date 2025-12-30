@@ -1,5 +1,5 @@
 # Makefile for Dhamma Channel Automation project
-.PHONY: help install lint format test test-cov docs serve-docs agent preflight quick mypy clean
+.PHONY: help install lint format test test-cov tts-demo docs serve-docs agent preflight quick mypy clean
 
 # Default target
 help:
@@ -17,6 +17,9 @@ help:
 	@echo "🧪 Testing:"
 	@echo "  test        - Run pytest (quick)"
 	@echo "  test-cov    - Run pytest with coverage"
+	@echo ""
+	@echo "🎧 TTS:"
+	@echo "  tts-demo    - Smoke test deterministic TTS (dry-run)"
 	@echo ""
 	@echo "📚 Documentation:"
 	@echo "  docs        - Build documentation"
@@ -46,6 +49,9 @@ test:
 
 test-cov:
 	pytest --cov=src --cov-report=term-missing -q
+
+tts-demo:
+	python scripts/tts_generate.py --run-id sample_run --slug voiceover_demo --script samples/reference/tts/input.txt --dry-run
 
 docs:
 	mkdocs build --strict
