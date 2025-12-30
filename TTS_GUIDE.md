@@ -8,7 +8,7 @@
 โดยไม่เรียกใช้ผู้ให้บริการภายนอก (สร้างเสียงเงียบด้วย Null engine)
 
 **คำสั่งตัวอย่าง (dry-run, ไม่สร้างไฟล์):**
-```powershell
+```bash
 python scripts/tts_generate.py --run-id sample_run --slug voiceover_demo --script samples/reference/tts/input.txt --dry-run
 ```
 
