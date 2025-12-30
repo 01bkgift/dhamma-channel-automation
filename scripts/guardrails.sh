@@ -63,8 +63,10 @@ if [ -f "docker-compose.yml" ]; then
     fi
     
     # Check allocated port variable usage
-    if grep -q '127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}:8000' docker-compose.yml || \
-       grep -q '127.0.0.1:${FLOWBIZ_ALLOCATED_PORT:?': docker-compose.yml; then
+    # Accept both:
+    # - ${FLOWBIZ_ALLOCATED_PORT}
+    # - ${FLOWBIZ_ALLOCATED_PORT:?message}
+    if grep -qE '127\.0\.0\.1:\$\{FLOWBIZ_ALLOCATED_PORT(:\?[^}]+)?\}:8000' docker-compose.yml; then
         check_pass "Using FLOWBIZ_ALLOCATED_PORT variable (currently ${PORT})"
     elif grep -q "127.0.0.1:${PORT}:8000" docker-compose.yml; then
         check_warn "Using hardcoded port ${PORT} instead of \${FLOWBIZ_ALLOCATED_PORT} variable"
