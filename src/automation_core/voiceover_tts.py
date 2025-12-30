@@ -27,7 +27,9 @@ WAV_SAMPLE_RATE = 16000
 WAV_CHANNELS = 1
 WAV_SAMPLE_WIDTH_BYTES = 2
 NULL_TTS_DURATION_SECONDS = 1.0
-_IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
+MAX_SCRIPT_LENGTH = 4096
+METADATA_SCHEMA_VERSION = "1"
+_IDENTIFIER_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
 
 class TTSEngine(Protocol):
@@ -104,24 +106,57 @@ def _validate_identifier(value: str, field_name: str) -> str:
     if not value or not value.strip():
         raise ValueError(f"{field_name} is required")
 
-    if value in {".", ".."}:
-        raise ValueError(f"{field_name} must not be '.' or '..'")
+    if value in {".", ".."} or ".." in value:
+        raise ValueError(f"{field_name} must not contain path traversal")
 
     for sep in (os.sep, os.altsep):
         if sep and sep in value:
             raise ValueError(f"{field_name} must not contain path separators")
 
     if not _IDENTIFIER_RE.fullmatch(value):
-        raise ValueError(
-            f"{field_name} must be filesystem-safe (letters, digits, _, -)"
-        )
+        raise ValueError(f"{field_name} must match [a-z0-9][a-z0-9-_]{{0,63}}")
 
     return value
+
+
+def normalize_script_text(script_text: str) -> str:
+    """
+    ปรับข้อความสคริปต์ให้เป็นรูปแบบมาตรฐาน (บรรทัดใหม่และช่องว่างท้ายบรรทัด)
+
+    Args:
+        script_text: ข้อความสคริปต์ที่ต้องการ normalize
+
+    Returns:
+        ข้อความที่ normalize แล้ว โดยใช้ '\n' เป็นตัวคั่นบรรทัด
+        และตัดช่องว่างท้ายบรรทัดแบบ deterministic
+    """
+    if not isinstance(script_text, str):
+        raise TypeError("script_text must be a string")
+
+    normalized = script_text.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = "\n".join(line.rstrip() for line in normalized.split("\n"))
+    return normalized
+
+
+def _validate_script_text(script_text: str) -> str:
+    normalized = normalize_script_text(script_text)
+    if not normalized.strip():
+        raise ValueError("script_text must be a non-empty string")
+    if len(normalized) > MAX_SCRIPT_LENGTH:
+        raise ValueError(
+            f"script_text exceeds max length of {MAX_SCRIPT_LENGTH} characters"
+        )
+    return normalized
+
+
+def _hash_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def compute_input_sha256(script_text: str) -> str:
     """
     คำนวณค่าแฮช SHA-256 ของข้อความสคริปต์เพื่อใช้เป็นตัวระบุอินพุต
+    (normalize CRLF/LF และตัดช่องว่างท้ายบรรทัดก่อนคำนวณ)
 
     Args:
         script_text: ข้อความสคริปต์ที่ต้องการคำนวณค่าแฮช
@@ -132,9 +167,8 @@ def compute_input_sha256(script_text: str) -> str:
     Raises:
         TypeError: ถ้า script_text ไม่ใช่สตริง
     """
-    if not isinstance(script_text, str):
-        raise TypeError("script_text must be a string")
-    return hashlib.sha256(script_text.encode("utf-8")).hexdigest()
+    normalized_text = normalize_script_text(script_text)
+    return _hash_text(normalized_text)
 
 
 def build_voiceover_paths(
@@ -255,6 +289,36 @@ def _relative_to_root(path: Path, root_dir: Path) -> str:
     return path.resolve().relative_to(root_dir).as_posix()
 
 
+def _prepare_voiceover_data(
+    script_text: str,
+    run_id: str,
+    slug: str,
+    *,
+    root_dir: Path | None = None,
+    base_dir: Path | None = None,
+) -> tuple[str, str, Path, Path, Path]:
+    """เตรียมข้อมูลที่จำเป็นสำหรับสร้าง voiceover แบบ deterministic (ไม่มี side effects)
+
+    ฟังก์ชันนี้รวม logic ที่ generate_voiceover และ cli_main(--dry-run)
+    ต้องใช้ร่วมกัน ได้แก่ normalize/validate, hash, และ path planning
+    โดยตั้งใจให้ไม่มีการสร้างโฟลเดอร์/ไฟล์ เพื่อให้ใช้กับ dry-run ได้ปลอดภัย
+    """
+    normalized_text = _validate_script_text(script_text)
+
+    resolved_root_dir = _resolve_root_dir(root_dir)
+    resolved_base_dir = _resolve_base_dir(resolved_root_dir, base_dir)
+    try:
+        resolved_base_dir.relative_to(resolved_root_dir)
+    except ValueError as exc:
+        raise ValueError("base_dir must be within root_dir") from exc
+
+    input_sha256 = _hash_text(normalized_text)
+    wav_path, metadata_path = build_voiceover_paths(
+        run_id, slug, input_sha256, base_dir=resolved_base_dir
+    )
+    return normalized_text, input_sha256, wav_path, metadata_path, resolved_root_dir
+
+
 def generate_voiceover(
     script_text: str,
     run_id: str,
@@ -277,6 +341,8 @@ def generate_voiceover(
 
     Args:
         script_text: ข้อความสคริปต์ที่ต้องการแปลงเป็นเสียง (ต้องไม่เป็นสตริงว่าง)
+            ระบบจะ normalize บรรทัดและตัดช่องว่างท้ายบรรทัดแบบ deterministic
+            และจำกัดความยาวไม่เกิน MAX_SCRIPT_LENGTH
         run_id: ตัวระบุการรันที่เป็น filesystem-safe
         slug: ชื่อสั้นๆ สำหรับไฟล์ที่เป็น filesystem-safe
         engine: เอนจิน TTS ที่จะใช้ (ค่าเริ่มต้น: NullTTSEngine)
@@ -302,24 +368,19 @@ def generate_voiceover(
             log(PIPELINE_DISABLED_MESSAGE)
         return None
 
-    if not isinstance(script_text, str) or not script_text.strip():
-        raise ValueError("script_text must be a non-empty string")
-
-    root_dir = _resolve_root_dir(root_dir)
-    base_dir = _resolve_base_dir(root_dir, base_dir)
-    try:
-        base_dir.relative_to(root_dir)
-    except ValueError as exc:
-        raise ValueError("base_dir must be within root_dir") from exc
-
-    input_sha256 = compute_input_sha256(script_text)
-    wav_path, metadata_path = build_voiceover_paths(
-        run_id, slug, input_sha256, base_dir=base_dir
+    normalized_text, input_sha256, wav_path, metadata_path, root_dir = (
+        _prepare_voiceover_data(
+            script_text,
+            run_id,
+            slug,
+            root_dir=root_dir,
+            base_dir=base_dir,
+        )
     )
     wav_path.parent.mkdir(parents=True, exist_ok=True)
 
     engine = engine or NullTTSEngine()
-    engine.synthesize(script_text, wav_path)
+    engine.synthesize(normalized_text, wav_path)
 
     if not wav_path.exists():
         raise RuntimeError(f"Expected WAV output was not created: {wav_path}")
@@ -328,6 +389,7 @@ def generate_voiceover(
     engine_name = getattr(engine, "name", type(engine).__name__)
 
     metadata: dict[str, object] = {
+        "schema_version": METADATA_SCHEMA_VERSION,
         "run_id": run_id,
         "slug": slug,
         "input_sha256": input_sha256,
@@ -397,6 +459,11 @@ def cli_main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--voice", default=None, help="Optional voice parameter")
     parser.add_argument("--style", default=None, help="Optional style parameter")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate inputs and show outputs without writing files",
+    )
 
     args = parser.parse_args(argv)
 
@@ -405,6 +472,22 @@ def cli_main(argv: list[str] | None = None) -> int:
             print(PIPELINE_DISABLED_MESSAGE)
             return 0
         script_text = _read_script(args.script)
+        if args.dry_run:
+            _, input_sha256, wav_path, metadata_path, root_dir = (
+                _prepare_voiceover_data(
+                    script_text,
+                    args.run_id,
+                    args.slug,
+                    root_dir=REPO_ROOT,
+                    base_dir=DEFAULT_VOICEOVER_DIR,
+                )
+            )
+            print("Dry run: no files will be created.")
+            print(f"  Input SHA-256: {input_sha256}")
+            print(f"  WAV: {_relative_to_root(wav_path, root_dir)}")
+            print(f"  Metadata: {_relative_to_root(metadata_path, root_dir)}")
+            return 0
+
         metadata = generate_voiceover(
             script_text,
             args.run_id,

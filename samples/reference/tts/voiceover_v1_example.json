@@ -1,0 +1,9 @@
+{
+  "duration_seconds": 1.0,
+  "engine_name": "null",
+  "input_sha256": "e900fd786491e0f8100293b43df3b32d4e89b7d84e9b559f270d87a24af57107",
+  "output_wav_path": "data/voiceovers/sample_run/voiceover_demo_e900fd786491.wav",
+  "run_id": "sample_run",
+  "schema_version": "1",
+  "slug": "voiceover_demo"
+}

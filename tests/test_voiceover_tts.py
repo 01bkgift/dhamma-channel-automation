@@ -11,12 +11,15 @@
 
 from __future__ import annotations
 
+import re
 import wave
 from pathlib import Path
 
 import pytest
 
 from automation_core.voiceover_tts import (
+    MAX_SCRIPT_LENGTH,
+    METADATA_SCHEMA_VERSION,
     NULL_TTS_DURATION_SECONDS,
     PIPELINE_DISABLED_MESSAGE,
     WAV_CHANNELS,
@@ -27,6 +30,7 @@ from automation_core.voiceover_tts import (
     cli_main,
     compute_input_sha256,
     generate_voiceover,
+    normalize_script_text,
 )
 
 
@@ -60,6 +64,39 @@ def test_different_script_changes_output_name():
     assert wav_a.name != wav_b.name
 
 
+def test_crlf_normalization_hash_and_filename_stable():
+    """ทดสอบว่า CRLF/LF ให้ hash และชื่อไฟล์เหมือนกัน"""
+    run_id = "run_123"
+    slug = "demo_slug"
+    script_lf = "Line one\nLine two\n"
+    script_crlf = "Line one\r\nLine two\r\n"
+
+    sha_lf = compute_input_sha256(script_lf)
+    sha_crlf = compute_input_sha256(script_crlf)
+
+    assert sha_lf == sha_crlf
+
+    wav_lf, _ = build_voiceover_paths(run_id, slug, sha_lf)
+    wav_crlf, _ = build_voiceover_paths(run_id, slug, sha_crlf)
+    assert wav_lf.name == wav_crlf.name
+
+
+def test_trailing_whitespace_normalization_hash_stable():
+    """ทดสอบว่า trailing whitespace ให้ hash เหมือนกัน"""
+    script_a = "Line one \nLine two\t \n"
+    script_b = "Line one\nLine two\n"
+
+    sha_a = compute_input_sha256(script_a)
+    sha_b = compute_input_sha256(script_b)
+    assert sha_a == sha_b
+
+
+def test_normalize_script_text_mixed_line_endings_and_rstrip():
+    """ทดสอบ normalize_script_text รองรับ mixed line endings และ rstrip แบบ deterministic"""
+    raw = "a\r\nb \n\r c\t\r"
+    assert normalize_script_text(raw) == "a\nb\n\n c\n"
+
+
 def test_kill_switch_no_side_effects(tmp_path, monkeypatch, capsys):
     """ทดสอบว่า kill switch (PIPELINE_ENABLED=false) ไม่สร้างไฟล์หรือไดเรกทอรีใดๆ"""
     monkeypatch.chdir(tmp_path)
@@ -83,6 +120,53 @@ def test_kill_switch_no_side_effects(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert PIPELINE_DISABLED_MESSAGE in captured.out
+    assert not (tmp_path / "data" / "voiceovers").exists()
+    after = sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+    assert before == after
+
+
+def test_cli_dry_run_prints_paths_without_creating_files(tmp_path, monkeypatch, capsys):
+    """ทดสอบว่า --dry-run แสดง path แบบ deterministic และไม่สร้างไฟล์/โฟลเดอร์"""
+    # Patch module constants so dry-run plans paths inside tmp_path
+    import automation_core.voiceover_tts as vtts
+
+    monkeypatch.setattr(vtts, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(vtts, "DEFAULT_VOICEOVER_DIR", tmp_path / "data" / "voiceovers")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PIPELINE_ENABLED", "true")
+
+    run_id = "run_010"
+    slug = "demo_slug"
+    script_text = "Hello\r\nworld  \n"
+
+    script_path = tmp_path / "script.txt"
+    script_path.write_text(script_text, encoding="utf-8")
+
+    before = sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
+    exit_code = cli_main(
+        [
+            "--run-id",
+            run_id,
+            "--slug",
+            slug,
+            "--script",
+            str(script_path),
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Dry run: no files will be created." in captured.out
+
+    match = re.search(r"Input SHA-256: ([0-9a-f]{64})", captured.out)
+    assert match is not None
+    sha = match.group(1)
+    expected_wav = f"data/voiceovers/{run_id}/{slug}_{sha[:12]}.wav"
+    expected_json = f"data/voiceovers/{run_id}/{slug}_{sha[:12]}.json"
+    assert expected_wav in captured.out
+    assert expected_json in captured.out
+
     assert not (tmp_path / "data" / "voiceovers").exists()
     after = sorted(p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*"))
     assert before == after
@@ -128,6 +212,7 @@ def test_metadata_schema_stable(tmp_path, monkeypatch):
     assert metadata is not None
 
     required = {
+        "schema_version",
         "run_id",
         "slug",
         "input_sha256",
@@ -138,6 +223,8 @@ def test_metadata_schema_stable(tmp_path, monkeypatch):
     optional = {"voice", "style", "created_utc"}
     assert required.issubset(metadata.keys())
     assert set(metadata.keys()).issubset(required | optional)
+    assert isinstance(metadata["schema_version"], str)
+    assert metadata["schema_version"] == METADATA_SCHEMA_VERSION
     assert isinstance(metadata["run_id"], str)
     assert isinstance(metadata["slug"], str)
     assert isinstance(metadata["input_sha256"], str)
@@ -168,3 +255,13 @@ def test_slug_rejects_path_traversal(tmp_path, monkeypatch):
 
     with pytest.raises(ValueError):
         generate_voiceover("test", "run_004", "..", root_dir=tmp_path)
+
+
+def test_max_length_guard(tmp_path, monkeypatch):
+    """ทดสอบว่า script ที่ยาวเกินกำหนดจะถูกปฏิเสธแบบ deterministic"""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PIPELINE_ENABLED", "true")
+
+    script_text = "a" * (MAX_SCRIPT_LENGTH + 1)
+    with pytest.raises(ValueError):
+        generate_voiceover(script_text, "run_005", "too_long", root_dir=tmp_path)

@@ -1,93 +1,108 @@
-# Baseline Documentation
+# เอกสาร Baseline
 
-## Purpose
+## วัตถุประสงค์
 
-This document defines the **baseline behavior** of the Dhamma Channel Automation pipeline in **Client Product mode** (single-channel optimized). The baseline serves as a reference for detecting unintended behavior changes (drift) over time.
+เอกสารนี้กำหนดพฤติกรรม **baseline** ของระบบ Dhamma Channel Automation ในโหมด **Client Product** (ปรับแต่งสำหรับช่องเดียว) โดยใช้เป็นจุดอ้างอิงเพื่อตรวจจับการเปลี่ยนแปลงที่ไม่ตั้งใจ (drift) เมื่อเวลาผ่านไป
 
-## Why Baseline Matters
+## ทำไม Baseline สำคัญ
 
-In a production system, code changes, dependency updates, or external API changes can subtly alter system behavior. A baseline:
+ในระบบโปรดักชัน การเปลี่ยนโค้ด อัปเดต dependency หรือการเปลี่ยนแปลงของ external API สามารถทำให้พฤติกรรมเปลี่ยนไปแบบไม่ตั้งใจได้ Baseline ช่วยให้:
 
-1. **Detects Drift:** Identifies unintended changes in output structure, format, tone, or content quality
-2. **Ensures Consistency:** Maintains predictable behavior for the single-channel client product
-3. **Facilitates Testing:** Provides reference artifacts for regression testing
-4. **Documents Intent:** Captures what "correct" behavior looks like at a point in time
+1. **ตรวจจับ Drift:** ระบุความเปลี่ยนแปลงที่ไม่ตั้งใจในโครงสร้าง รูปแบบ โทน หรือคุณภาพของผลลัพธ์
+2. **คงความสม่ำเสมอ:** รักษาพฤติกรรมให้คาดเดาได้สำหรับโปรดักต์ช่องเดียว
+3. **ช่วยในการทดสอบ:** มีตัวอย่างอ้างอิงสำหรับ regression testing
+4. **บันทึกเจตนา:** ระบุว่า “พฤติกรรมที่ถูกต้อง” ณ เวลาหนึ่งควรเป็นอย่างไร
 
-## What Must Stay Stable (Client Product Mode)
+## สิ่งที่ต้องคงที่ (Client Product Mode)
 
-The following aspects of pipeline output must remain stable unless intentionally changed:
+ด้านล่างคือสิ่งที่ต้องคงที่ เว้นแต่มีการเปลี่ยนแปลงโดยตั้งใจและมีการบันทึกไว้:
 
-### 1. Output Structure
-- **JSON Schema:** All JSON outputs must maintain consistent field names and types
-- **File Naming:** Output files follow predictable naming conventions (e.g., `metadata.json`, `topics_ranked.json`, `outline.md`)
-- **Directory Structure:** Pipeline creates `output/{run_id}/` with expected files
-- **Voiceover Artifacts:** Deterministic TTS outputs live under `data/voiceovers/<run_id>/` with filenames like `<slug>_<sha256[:12]>.wav` and `<slug>_<sha256[:12]>.json`
+### 1. โครงสร้างผลลัพธ์
+- **JSON Schema:** ฟิลด์และชนิดข้อมูลของ JSON ต้องคงที่
+- **การตั้งชื่อไฟล์:** ชื่อไฟล์ต้องเป็นไปตามกติกาเดิม (เช่น `metadata.json`, `topics_ranked.json`, `outline.md`)
+- **โครงสร้างไดเรกทอรี:** Pipeline ต้องสร้าง `output/{run_id}/` พร้อมไฟล์ที่คาดหวัง
+- **Voiceover Artifacts:** ไฟล์เสียงและเมทาดาทาเก็บใน `data/voiceovers/<run_id>/` และชื่อไฟล์แบบ `<slug>_<sha256[:12]>.wav` และ `<slug>_<sha256[:12]>.json`
 
-### 2. Content Format
-- **Metadata Format:** YouTube metadata follows established structure (title, description, tags, SEO keywords)
-- **Topic Ranking Format:** Topics include rank, title, scores (impact/feasibility/alignment), reason, difficulty, risk, audience
-- **Outline Structure:** Script outlines follow Hook → Intro → Main Content → CTA format with timing estimates
+### 2. รูปแบบเนื้อหา
+- **Metadata Format:** เมทาดาทา YouTube ต้องมีโครงสร้างเดิม (title, description, tags, SEO keywords)
+- **Topic Ranking Format:** หัวข้อต้องมีอันดับ ชื่อ คะแนน (impact/feasibility/alignment) เหตุผล ความยาก ความเสี่ยง และกลุ่มเป้าหมาย
+- **Outline Structure:** โครงสร้างสคริปต์ต้องเป็น Hook → Intro → Main Content → CTA พร้อมเวลาประมาณการ
 
-### 3. Content Tone & Style
-- **Tone:** Accessible, warm, friendly, non-preachy (เข้าถึงง่าย, เป็นกันเอง, มีความอบอุ่น)
-- **Language Mix:** Thai primary with appropriate English terms (e.g., "mindfulness", "meditation")
-- **Length Targets:** Titles 60-70 chars, descriptions 500-1000 chars, videos 5-10 minutes
-- **Audience Focus:** General audience interested in practical Buddhism and mindfulness
+### 3. โทนและสไตล์ของเนื้อหา
+- **โทน:** เข้าถึงง่าย เป็นกันเอง อบอุ่น ไม่เทศนา
+- **ภาษา:** ไทยเป็นหลัก เสริมอังกฤษเท่าที่จำเป็น (เช่น “mindfulness”, “meditation”)
+- **เป้าหมายความยาว:** Title 60-70 ตัวอักษร, Description 500-1000 ตัวอักษร, วิดีโอ 5-10 นาที
+- **โฟกัสผู้ชม:** ผู้ชมทั่วไปที่สนใจพุทธเชิงปฏิบัติและการเจริญสติ
 
-### 4. Business Logic
-- **Topic Scoring:** Uses impact × feasibility × alignment formula
-- **SEO Optimization:** Generates searchable keywords, thumbnail suggestions, hashtags
-- **Compliance:** Content adheres to Buddhist doctrine and YouTube policies
-- **Single-Channel Focus:** All outputs optimized for one Thai Buddhist mindfulness channel
+### 4. ตรรกะทางธุรกิจ
+- **การให้คะแนนหัวข้อ:** สูตร impact × feasibility × alignment
+- **SEO Optimization:** สร้างคำค้นหา hashtag และแนวทาง thumbnail
+- **Compliance:** เนื้อหาสอดคล้องหลักธรรมและนโยบาย YouTube
+- **Single-Channel Focus:** ทุกผลลัพธ์ปรับให้เหมาะกับช่องเดียว
 
-### 5. Voiceover Metadata (TTS)
-- **Location:** `data/voiceovers/<run_id>/<slug>_<sha256[:12]>.json`
-- **Required fields (stable):**
-  - `run_id` (string)
-  - `slug` (string)
-  - `input_sha256` (string, 64 hex chars)
-  - `output_wav_path` (string, relative path)
-  - `duration_seconds` (number)
-  - `engine_name` (string)
-- **Optional fields (informational only):**
-  - `voice` (string)
-  - `style` (string)
-  - `created_utc` (string, not used for naming)
+### 5. เมทาดาทาเสียงบรรยาย (TTS)
+- **ตำแหน่งไฟล์:** `data/voiceovers/<run_id>/<slug>_<sha256[:12]>.json`
+- **การตั้งชื่อแบบ deterministic:** ใช้แฮชจากข้อความที่ normalize แล้วเท่านั้น (CRLF/LF → `\n`, ตัดช่องว่างท้ายบรรทัดแบบ deterministic)
+- **พาธในเมทาดาทา:** ต้องเป็นพาธแบบ relative เท่านั้น
+- **ตัวอย่างอ้างอิง:** ดูที่ `samples/reference/tts/voiceover_v1_example.json`
 
-## Included Reference Items
+### 6. สัญญาเมทาดาทาเสียงบรรยาย (คงที่)
 
-The `samples/reference/` directory contains 3 baseline artifacts:
+**สคีมาเมทาดาทานี้ถือว่า STABLE** และเป็นสัญญาหลักของระบบ TTS
+
+**ฟิลด์ที่ต้องมี (required):**
+- `schema_version` (string)
+- `run_id` (string)
+- `slug` (string)
+- `input_sha256` (string, 64 hex)
+- `output_wav_path` (string, relative path)
+- `duration_seconds` (number)
+- `engine_name` (string)
+
+**ฟิลด์เสริม (optional):**
+- `voice` (string)
+- `style` (string)
+- `created_utc` (string)
+
+**นโยบาย schema_version:**
+- การเปลี่ยนแปลงที่ **breaking** ต้อง bump `schema_version` และใส่ migration note
+- การเพิ่มฟิลด์แบบ **additive** ทำได้ ถ้าคง backward compatibility
+- การเปลี่ยนชื่อ/ลบฟิลด์แบบเงียบๆ **ห้ามทำ**
+
+## รายการอ้างอิงที่รวมไว้ (samples/reference)
+
+โฟลเดอร์ `samples/reference/` มี baseline artifacts สำหรับตรวจจับ drift:
 
 ### 1. `metadata.json` (SEO Metadata)
-- **Represents:** Final YouTube metadata output
-- **Key Stability Points:**
-  - Title format: engaging question/benefit + specifics (60-70 chars)
-  - Description sections: emoji hook, overview, table of contents, benefits, hashtags
-  - Tag mix: 8-15 tags, Thai/English blend, topically relevant
-  - Thumbnail suggestions: 3 creative ideas with specific visual elements
-  - SEO keywords: 4-7 audience-focused search terms
+- **แทนอะไร:** เมทาดาทา YouTube ขั้นสุดท้าย
+- **จุดที่ต้องคงที่:**
+  - รูปแบบ title (60-70 ตัวอักษร มีประโยชน์ชัดเจน)
+  - โครงสร้าง description (emoji hook, overview, สารบัญ, benefits, hashtags)
+  - รายการ tags 8-15 รายการ ไทย/อังกฤษผสม
+  - แนวคิด thumbnail 3 แบบพร้อมรายละเอียด
+  - SEO keywords 4-7 คำที่ค้นหาได้จริง
 
 ### 2. `topics_ranked.json` (Topic Prioritization)
-- **Represents:** Ranked topic list from TrendScout/TopicPrioritizer
-- **Key Stability Points:**
-  - Score structure: impact (1-10), feasibility (1-10), alignment (1-10), total (calculated)
-  - Ranking order: descending by total score
-  - Reasoning: trend awareness, audience fit, timing considerations
-  - Risk assessment: difficulty level, risk level, target audience
+- **แทนอะไร:** รายการหัวข้อที่จัดอันดับจาก TrendScout/TopicPrioritizer
+- **จุดที่ต้องคงที่:**
+  - โครงสร้างคะแนน impact/feasibility/alignment/total
+  - อันดับตาม total score
+  - เหตุผลและความเสี่ยงที่ชัดเจน
 
 ### 3. `outline_sample.md` (Script Outline)
-- **Represents:** Structured content outline for scriptwriting
-- **Key Stability Points:**
-  - Section flow: Hook (0-0.5min) → Intro (0.5-1.5min) → Main (3-4min) → CTA (0.5min)
-  - Timing estimates: Realistic for 5-7 minute video
-  - Tone guidance: Accessible, warm, friendly
-  - Content depth: Practical, actionable, doctrinally sound
+- **แทนอะไร:** โครงสร้าง outline สำหรับเขียนสคริปต์
+- **จุดที่ต้องคงที่:**
+  - Flow: Hook → Intro → Main → CTA
+  - เวลาโดยรวมเหมาะกับวิดีโอ 5-7 นาที
+  - โทนอบอุ่นและเป็นกันเอง
 
-## Comparison Procedure
+### 4. `samples/reference/tts/voiceover_v1_example.json`
+- **แทนอะไร:** สัญญาเมทาดาทาเสียงบรรยายเวอร์ชัน 1
+- **จุดที่ต้องคงที่:** ฟิลด์และชนิดข้อมูลตามสัญญาในหัวข้อ เมทาดาทาเสียงบรรยาย (คงที่)
 
-### Step 1: Run the Pipeline
+## ขั้นตอนเปรียบเทียบ (Comparison Procedure)
 
-Run the pipeline locally with a test configuration:
+### ขั้นที่ 1: รัน Pipeline
 
 ```bash
 # Using orchestrator (full pipeline)
@@ -97,18 +112,18 @@ python orchestrator.py --pipeline pipeline.web.yml --run-id baseline_check_$(dat
 python -m cli.main trend-scout --input data/mock_input.json --out output/test_topics.json
 ```
 
-### Step 2: Locate New Outputs
+### ขั้นที่ 2: ตรวจสอบผลลัพธ์
 
 ```bash
 cd output/baseline_check_YYYYMMDD/
 ls -la
 ```
 
-Expected files: `metadata.json`, `topics_ranked.json`, `outline.md`, `script.md`, etc.
+ไฟล์ที่คาดหวัง: `metadata.json`, `topics_ranked.json`, `outline.md`, `script.md` ฯลฯ
 
-### Step 3: Compare Against Baseline
+### ขั้นที่ 3: เปรียบเทียบกับ Baseline
 
-**Option A: Manual Visual Diff**
+**ทางเลือก A: diff แบบ manual**
 ```bash
 # JSON files
 diff -u samples/reference/metadata.json output/baseline_check_YYYYMMDD/metadata.json
@@ -117,114 +132,110 @@ diff -u samples/reference/metadata.json output/baseline_check_YYYYMMDD/metadata.
 diff -u samples/reference/outline_sample.md output/baseline_check_YYYYMMDD/outline.md
 ```
 
-**Option B: Structured JSON Comparison**
+**ทางเลือก B: diff แบบโครงสร้าง JSON**
 ```bash
-# Normalize and compare JSON
 jq -S . samples/reference/topics_ranked.json > /tmp/baseline.json
 jq -S . output/baseline_check_YYYYMMDD/topics_ranked.json > /tmp/current.json
 diff -u /tmp/baseline.json /tmp/current.json
 ```
 
-**Option C: Field-by-Field Validation (Python)**
+**ทางเลือก C: ตรวจสอบด้วย Python**
 ```python
 import json
 
-# Load files
 with open('samples/reference/metadata.json') as f:
     baseline = json.load(f)
 with open('output/baseline_check_YYYYMMDD/metadata.json') as f:
     current = json.load(f)
 
-# Check structure
 assert set(baseline.keys()) == set(current.keys()), "Top-level keys changed"
 assert isinstance(current['tags'], list), "Tags should be a list"
 assert 60 <= len(current['title']) <= 80, "Title length out of range"
-# Add more checks as needed
 ```
 
-### Step 4: Evaluate Differences
+### ขั้นที่ 4: ประเมินความแตกต่าง
 
-**Acceptable Differences:**
-- Dynamic values: `generated_at`, `prioritized_at`, `run_id`, timestamps
-- Content specifics: Actual topic titles, specific trends, current events
-- Ordering: Minor variations in list ordering (if not explicitly ranked)
+**ยอมรับได้:**
+- ค่าที่เปลี่ยนตามเวลา เช่น `generated_at`, `prioritized_at`, `run_id`, timestamps
+- เนื้อหาที่เปลี่ยนตามเหตุการณ์ เช่น หัวข้อเทรนด์จริง
+- ลำดับรายการที่ต่างเล็กน้อย (ถ้าไม่มีกติกาจัดอันดับแน่ชัด)
 
-**Investigate These:**
-- Missing or extra top-level fields
-- Type changes (string → number, list → dict)
-- Format shifts (title length, description structure)
-- Tone changes (formal → casual, clinical → warm)
-- Logic changes (scoring formula, ranking criteria)
+**ต้องตรวจสอบ:**
+- ฟิลด์หาย/เพิ่มแบบไม่ตั้งใจ
+- ชนิดข้อมูลเปลี่ยน (string → number, list → dict)
+- รูปแบบเปลี่ยน (title length, description structure)
+- โทนเปลี่ยน (ทางการ → กันเอง หรือกลับกัน)
+- กฎคำนวณเปลี่ยน (สูตรคะแนน, ranking)
 
-**Immediate Action Required:**
-- Security issues (exposed credentials, PII leaks)
-- Schema breaking changes (downstream systems broken)
-- Compliance violations (doctrine errors, policy violations)
+**ต้องจัดการทันที:**
+- ความเสี่ยงด้านความปลอดภัย (credentials/PII หลุด)
+- Schema แตกจนระบบ downstream ใช้ไม่ได้
+- ผิดหลักคำสอนหรือผิดนโยบายแพลตฟอร์ม
 
-### Step 5: Document and Decide
+### ขั้นที่ 5: บันทึกและตัดสินใจ
 
-If drift is detected:
-1. **Document:** Record what changed, when, and potential cause
-2. **Classify:** Intentional change vs. accidental drift
-3. **Decide:**
-   - **Intentional:** Update baseline references, document in CHANGELOG
-   - **Accidental:** Fix the code, re-test, validate baseline still holds
-   - **Acceptable:** Note in comments, monitor for future occurrences
+ถ้าพบ drift:
+1. **บันทึก:** อะไรเปลี่ยน เมื่อไร และสาเหตุที่เป็นไปได้
+2. **จัดประเภท:** ตั้งใจเปลี่ยน vs เปลี่ยนโดยไม่ตั้งใจ
+3. **ตัดสินใจ:**
+   - **ตั้งใจ:** อัปเดต baseline references และบันทึกใน CHANGELOG
+   - **ไม่ตั้งใจ:** แก้โค้ด ทดสอบใหม่ และยืนยัน baseline
+   - **ยอมรับได้:** จดบันทึกและเฝ้าระวัง
 
-## Updating the Baseline
+## การอัปเดต Baseline
 
-The baseline should be updated when:
-- **Intentional changes:** New features, improved algorithms, strategic pivots
-- **Format improvements:** Better output structure, enhanced metadata
-- **Periodic refresh:** Quarterly review to reflect evolved standards
+ควรอัปเดต baseline เมื่อ:
+- มีฟีเจอร์ใหม่หรือเปลี่ยน logic แบบตั้งใจ
+- ปรับปรุงโครงสร้างผลลัพธ์ให้ดีขึ้น
+- รอบรีวิวรายไตรมาส
 
-**Update Process:**
-1. Verify changes are intentional and reviewed
-2. Run pipeline to generate new reference outputs
-3. Copy new outputs to `samples/reference/` (trimmed if needed)
-4. Update `samples/reference/README.md` to explain changes
-5. Update this document (`docs/BASELINE.md`) if stability guarantees change
-6. Commit with clear message: "Update baseline: [reason]"
+**ขั้นตอนอัปเดต:**
+1. ยืนยันว่าการเปลี่ยนแปลงตั้งใจและผ่านการรีวิว
+2. รัน pipeline เพื่อสร้างผลลัพธ์ใหม่
+3. คัดลอกผลลัพธ์ไปไว้ที่ `samples/reference/` (ตัดให้เหลือส่วนจำเป็น)
+4. อัปเดต `samples/reference/README.md` ให้สอดคล้อง
+5. อัปเดตเอกสารนี้ถ้ามีการเปลี่ยนความเสถียรของ schema
+6. Commit ด้วยข้อความที่ชัดเจน
 
-## Testing Strategy
+## กลยุทธ์การทดสอบ
 
-### Manual Testing (Current)
-- Run pipeline before major releases
-- Compare outputs against `samples/reference/`
-- Visual inspection of key fields
+### การทดสอบด้วยมือ (ปัจจุบัน)
+- รัน pipeline ก่อนปล่อยเวอร์ชันใหญ่
+- เปรียบเทียบกับ `samples/reference/`
+- ตรวจสอบด้วยสายตาในฟิลด์สำคัญ
 
-### Future Automated Testing
-- **Schema validation:** JSON Schema tests for all outputs
-- **Structure tests:** Pytest assertions on field presence/types
-- **Tone analysis:** NLP-based consistency checks (future)
-- **Regression suite:** Golden file tests comparing current vs. baseline
+### การทดสอบอัตโนมัติ (อนาคต)
+- **Schema validation:** ทดสอบด้วย JSON Schema
+- **Structure tests:** Pytest ตรวจฟิลด์และชนิดข้อมูล
+- **Tone analysis:** ตรวจโทนด้วย NLP (อนาคต)
+- **Regression suite:** Golden file tests
 
-## Relationship to Global Kill Switch
+## ความสัมพันธ์กับ Global Kill Switch
 
-The baseline and kill switch serve complementary purposes:
+Baseline และ Kill Switch มีหน้าที่ต่างกัน:
 
-- **Baseline:** Detects *what* changed (drift detection)
-- **Kill Switch:** Controls *when* pipeline runs (operational safety)
+- **Baseline:** บอกว่า *อะไร* เปลี่ยน
+- **Kill Switch:** บอกว่า *เมื่อไร* ให้หยุดรัน
 
-When the kill switch is enabled (`PIPELINE_ENABLED=false`), the pipeline stops before producing outputs, ensuring no drift can occur during maintenance or policy pauses.
+เมื่อ Kill Switch ถูกปิด (`PIPELINE_ENABLED=false`) ระบบต้องหยุดก่อนสร้างผลลัพธ์ เพื่อป้องกัน side effects และ drift
 
-## Notes for Developers
+## หมายเหตุสำหรับนักพัฒนา
 
-- **Do not modify baseline files casually:** They represent agreed-upon behavior
-- **Test changes against baseline:** Before merging, validate no unintended drift
-- **Update docs with code:** If output format changes, update baseline documentation
-- **Keep samples small:** Trim reference files to essential structure (non-PII)
-- **Version baselines:** Track baseline changes in git for auditability
-- **AGENTS.md:** Repo has no AGENTS.md; followed existing conventions instead
+- **อย่าแก้ baseline โดยไม่จำเป็น:** เพราะเป็นข้อตกลงร่วมของทีม
+- **ทดสอบกับ baseline เสมอ:** เพื่อยืนยันว่าไม่มี drift โดยไม่ตั้งใจ
+- **อัปเดตเอกสารควบคู่กับโค้ด:** เมื่อมีการเปลี่ยน format หรือ schema
+- **เก็บตัวอย่างให้เล็ก:** ตัดเฉพาะโครงสร้างสำคัญและไม่ใช้ข้อมูลอ่อนไหว
+- **ติดตามเวอร์ชัน baseline ใน git:** เพื่อ audit ได้
+- **AGENTS.md:** Repo นี้ไม่มี AGENTS.md ให้ยึดตามข้อตกลงเดิมแทน
 
-## Contact
+## ติดต่อ
 
-Questions about baseline behavior or drift detection:
-- Repository maintainer
-- Review `samples/reference/README.md` for detailed comparison guidance
+หากมีคำถามเกี่ยวกับ baseline หรือ drift detection:
+- ผู้ดูแล repository
+- ดูรายละเอียดเพิ่มเติมใน `samples/reference/README.md`
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025-12-26  
-**Applies to:** Dhamma Channel Automation v1.x (Client Product Mode)
+**เวอร์ชันเอกสาร:** 1.0  
+**อัปเดตล่าสุด:** 2025-12-26  
+**ใช้กับ:** Dhamma Channel Automation v1.x (Client Product Mode)

@@ -1,0 +1,2 @@
+Sample voiceover script for the stable metadata contract.
+Second line for normalization checks.
