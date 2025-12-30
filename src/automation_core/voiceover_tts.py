@@ -114,9 +114,7 @@ def _validate_identifier(value: str, field_name: str) -> str:
             raise ValueError(f"{field_name} must not contain path separators")
 
     if not _IDENTIFIER_RE.fullmatch(value):
-        raise ValueError(
-            f"{field_name} must match [a-z0-9][a-z0-9-_]{{0,63}}"
-        )
+        raise ValueError(f"{field_name} must match [a-z0-9][a-z0-9-_]{{0,63}}")
 
     return value
 
@@ -291,6 +289,36 @@ def _relative_to_root(path: Path, root_dir: Path) -> str:
     return path.resolve().relative_to(root_dir).as_posix()
 
 
+def _prepare_voiceover_data(
+    script_text: str,
+    run_id: str,
+    slug: str,
+    *,
+    root_dir: Path | None = None,
+    base_dir: Path | None = None,
+) -> tuple[str, str, Path, Path, Path]:
+    """เตรียมข้อมูลที่จำเป็นสำหรับสร้าง voiceover แบบ deterministic (ไม่มี side effects)
+
+    ฟังก์ชันนี้รวม logic ที่ generate_voiceover และ cli_main(--dry-run)
+    ต้องใช้ร่วมกัน ได้แก่ normalize/validate, hash, และ path planning
+    โดยตั้งใจให้ไม่มีการสร้างโฟลเดอร์/ไฟล์ เพื่อให้ใช้กับ dry-run ได้ปลอดภัย
+    """
+    normalized_text = _validate_script_text(script_text)
+
+    resolved_root_dir = _resolve_root_dir(root_dir)
+    resolved_base_dir = _resolve_base_dir(resolved_root_dir, base_dir)
+    try:
+        resolved_base_dir.relative_to(resolved_root_dir)
+    except ValueError as exc:
+        raise ValueError("base_dir must be within root_dir") from exc
+
+    input_sha256 = _hash_text(normalized_text)
+    wav_path, metadata_path = build_voiceover_paths(
+        run_id, slug, input_sha256, base_dir=resolved_base_dir
+    )
+    return normalized_text, input_sha256, wav_path, metadata_path, resolved_root_dir
+
+
 def generate_voiceover(
     script_text: str,
     run_id: str,
@@ -340,18 +368,14 @@ def generate_voiceover(
             log(PIPELINE_DISABLED_MESSAGE)
         return None
 
-    normalized_text = _validate_script_text(script_text)
-
-    root_dir = _resolve_root_dir(root_dir)
-    base_dir = _resolve_base_dir(root_dir, base_dir)
-    try:
-        base_dir.relative_to(root_dir)
-    except ValueError as exc:
-        raise ValueError("base_dir must be within root_dir") from exc
-
-    input_sha256 = _hash_text(normalized_text)
-    wav_path, metadata_path = build_voiceover_paths(
-        run_id, slug, input_sha256, base_dir=base_dir
+    normalized_text, input_sha256, wav_path, metadata_path, root_dir = (
+        _prepare_voiceover_data(
+            script_text,
+            run_id,
+            slug,
+            root_dir=root_dir,
+            base_dir=base_dir,
+        )
     )
     wav_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -449,15 +473,19 @@ def cli_main(argv: list[str] | None = None) -> int:
             return 0
         script_text = _read_script(args.script)
         if args.dry_run:
-            normalized_text = _validate_script_text(script_text)
-            input_sha256 = _hash_text(normalized_text)
-            wav_path, metadata_path = build_voiceover_paths(
-                args.run_id, args.slug, input_sha256
+            _, input_sha256, wav_path, metadata_path, root_dir = (
+                _prepare_voiceover_data(
+                    script_text,
+                    args.run_id,
+                    args.slug,
+                    root_dir=REPO_ROOT,
+                    base_dir=DEFAULT_VOICEOVER_DIR,
+                )
             )
             print("Dry run: no files will be created.")
             print(f"  Input SHA-256: {input_sha256}")
-            print(f"  WAV: {_relative_to_root(wav_path, REPO_ROOT)}")
-            print(f"  Metadata: {_relative_to_root(metadata_path, REPO_ROOT)}")
+            print(f"  WAV: {_relative_to_root(wav_path, root_dir)}")
+            print(f"  Metadata: {_relative_to_root(metadata_path, root_dir)}")
             return 0
 
         metadata = generate_voiceover(
