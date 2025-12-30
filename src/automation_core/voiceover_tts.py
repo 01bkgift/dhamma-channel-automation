@@ -69,8 +69,8 @@ def build_voiceover_paths(
     run_id = _validate_identifier(run_id, "run_id")
     slug = _validate_identifier(slug, "slug")
 
-    if not input_sha256 or len(input_sha256) < SHA_PREFIX_LENGTH:
-        raise ValueError("input_sha256 must be a full sha256 hex string")
+    if not input_sha256 or len(input_sha256) != 64:
+        raise ValueError("input_sha256 must be a full 64-character sha256 hex string")
 
     base_dir = base_dir or DEFAULT_VOICEOVER_DIR
     base_name = f"{slug}_{input_sha256[:SHA_PREFIX_LENGTH]}"
