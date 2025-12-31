@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -2268,6 +2268,194 @@ def agent_video_render(step, run_dir: Path):
     return summary_rel
 
 
+def agent_quality_gate(step, run_dir: Path):
+    """Deterministic quality gate checks for rendered MP4 outputs."""
+    run_id = run_dir.name
+    root_dir = ROOT.resolve()
+
+    summary_rel = (
+        Path("output") / run_id / "artifacts" / "video_render_summary.json"
+    ).as_posix()
+    summary_path = root_dir / summary_rel
+
+    try:
+        summary = read_json(summary_path)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"Video render summary not found: {summary_rel}"
+        ) from exc
+
+    if not isinstance(summary, dict):
+        raise TypeError("video_render_summary must be a JSON object")
+
+    schema_version = summary.get("schema_version")
+    if schema_version != "v1":
+        raise ValueError("video_render_summary.schema_version must be 'v1'")
+
+    summary_run_id = summary.get("run_id")
+    if summary_run_id is not None and summary_run_id != run_id:
+        raise ValueError("video_render_summary.run_id does not match run_id")
+
+    output_mp4_value = summary.get("output_mp4_path")
+    if not isinstance(output_mp4_value, str) or not output_mp4_value.strip():
+        raise ValueError("video_render_summary.output_mp4_path is required")
+
+    output_mp4_rel = Path(output_mp4_value).as_posix()
+    output_mp4_path_value = Path(output_mp4_rel)
+    if output_mp4_path_value.is_absolute():
+        raise ValueError("video_render_summary.output_mp4_path must be a relative path")
+    if ".." in output_mp4_path_value.parts:
+        raise ValueError(
+            "video_render_summary.output_mp4_path must not contain path traversal"
+        )
+    output_mp4_abs = (root_dir / output_mp4_path_value).resolve()
+    try:
+        output_mp4_abs.relative_to(root_dir)
+    except ValueError as exc:
+        raise ValueError(
+            "video_render_summary.output_mp4_path must be within repository root"
+        ) from exc
+
+    checked_at = datetime.now(tz=UTC).isoformat().replace("+00:00", "Z")
+    reasons = []
+    checks = {
+        "mp4_exists": False,
+        "mp4_size_bytes": None,
+        "ffprobe_ok": None,
+        "duration_seconds": None,
+        "has_audio_stream": None,
+    }
+
+    def _add_reason(code: str, message: str, severity: str):
+        reasons.append(
+            {
+                "code": code,
+                "message": message,
+                "severity": severity,
+                "engine": "quality.gate",
+                "checked_at": checked_at,
+            }
+        )
+
+    if not output_mp4_abs.is_file():
+        _add_reason("mp4_missing", f"MP4 file not found: {output_mp4_rel}", "error")
+    else:
+        checks["mp4_exists"] = True
+        mp4_size = output_mp4_abs.stat().st_size
+        checks["mp4_size_bytes"] = mp4_size
+        if mp4_size == 0:
+            _add_reason("mp4_empty", f"MP4 file is empty: {output_mp4_rel}", "error")
+        else:
+            ffprobe_cmd = [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration:stream=codec_type",
+                "-of",
+                "json",
+                str(output_mp4_abs),
+            ]
+            ffprobe_data = None
+            try:
+                completed = subprocess.run(
+                    ffprobe_cmd, check=False, capture_output=True, text=True
+                )
+            except OSError:
+                _add_reason("ffprobe_failed", "ffprobe execution failed", "error")
+                checks["ffprobe_ok"] = False
+            else:
+                if completed.returncode != 0:
+                    _add_reason(
+                        "ffprobe_failed",
+                        f"ffprobe returned non-zero exit code: {completed.returncode}",
+                        "error",
+                    )
+                    checks["ffprobe_ok"] = False
+                else:
+                    try:
+                        ffprobe_data = json.loads(completed.stdout or "{}")
+                    except json.JSONDecodeError:
+                        _add_reason(
+                            "ffprobe_failed",
+                            "ffprobe output was not valid JSON",
+                            "error",
+                        )
+                        checks["ffprobe_ok"] = False
+                    else:
+                        checks["ffprobe_ok"] = True
+
+            if checks["ffprobe_ok"]:
+                duration_raw = (
+                    ffprobe_data.get("format", {}).get("duration")
+                    if isinstance(ffprobe_data, dict)
+                    else None
+                )
+                duration_seconds = None
+                if duration_raw is not None:
+                    try:
+                        duration_seconds = float(duration_raw)
+                    except (TypeError, ValueError):
+                        duration_seconds = None
+
+                if duration_seconds is None or duration_seconds <= 0:
+                    _add_reason(
+                        "duration_zero_or_missing",
+                        "MP4 duration is missing or zero",
+                        "error",
+                    )
+                else:
+                    checks["duration_seconds"] = duration_seconds
+
+                streams = (
+                    ffprobe_data.get("streams", [])
+                    if isinstance(ffprobe_data, dict)
+                    else []
+                )
+                has_audio = any(
+                    isinstance(stream, dict) and stream.get("codec_type") == "audio"
+                    for stream in streams
+                )
+                checks["has_audio_stream"] = has_audio
+                if not has_audio:
+                    _add_reason(
+                        "audio_stream_missing",
+                        "No audio stream detected in MP4",
+                        "error",
+                    )
+
+    decision = "pass"
+    if any(reason.get("severity") == "error" for reason in reasons):
+        decision = "fail"
+
+    gate_summary = {
+        "schema_version": "v1",
+        "run_id": run_id,
+        "input_video_render_summary": summary_rel,
+        "output_mp4_path": output_mp4_rel,
+        "decision": decision,
+        "reasons": reasons,
+        "checked_at": checked_at,
+        "engine": "quality.gate",
+        "checks": checks,
+    }
+
+    summary_out = (
+        root_dir / "output" / run_id / "artifacts" / "quality_gate_summary.json"
+    )
+    write_json(summary_out, gate_summary)
+    log(f"Quality gate summary created: {summary_out.relative_to(root_dir)}")
+
+    if decision == "fail":
+        codes = [reason.get("code", "unknown") for reason in reasons]
+        top_codes = ", ".join(codes[:3])
+        raise RuntimeError(
+            f"Quality gate failed for run_id={run_id}; reasons={top_codes}"
+        )
+
+    return summary_out.relative_to(root_dir).as_posix()
+
+
 def agent_localization(step, run_dir: Path):
     """Localization & Subtitle - สร้างคำบรรยายและแปลภาษา"""
     in_path = run_dir / step["input_from"]
@@ -2877,6 +3065,7 @@ AGENTS = {
     "Voiceover": agent_voiceover,
     "voiceover.tts": agent_voiceover_tts,
     "video.render": agent_video_render,
+    "quality.gate": agent_quality_gate,
     "Localization": agent_localization,
     "ThumbnailGenerator": agent_thumbnail_generator,
     "SEOAndMetadata": agent_seo_metadata,
