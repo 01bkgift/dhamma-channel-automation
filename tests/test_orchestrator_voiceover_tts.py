@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from automation_core.voiceover_tts import compute_input_sha256
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import orchestrator
 
 
 def _snapshot_paths(root: Path) -> list[str]:
@@ -13,11 +17,6 @@ def _snapshot_paths(root: Path) -> list[str]:
 def test_orchestrator_voiceover_tts_kill_switch_no_side_effects(
     tmp_path, monkeypatch, capsys
 ):
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    import orchestrator
-
     slug = "demo"
     script_path = tmp_path / "scripts" / "voiceover.txt"
     script_path.parent.mkdir(parents=True, exist_ok=True)
@@ -63,11 +62,6 @@ steps:
 
 
 def test_orchestrator_voiceover_tts_dry_run_no_writes(tmp_path, monkeypatch):
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    import orchestrator
-
     slug = "dryrun"
     script_text = "Line one\nLine two\n"
     script_path = tmp_path / "scripts" / "voiceover.txt"
@@ -112,11 +106,6 @@ steps:
 
 
 def test_orchestrator_voiceover_tts_real_run_creates_artifacts(tmp_path, monkeypatch):
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    import orchestrator
-
     slug = "realrun"
     script_text = "Hello voiceover\nSecond line\n"
     script_path = tmp_path / "scripts" / "voiceover.txt"
@@ -173,11 +162,6 @@ steps:
 def test_orchestrator_voiceover_tts_script_path_traversal_blocked(
     tmp_path, monkeypatch
 ):
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    import orchestrator
-
     pipeline_path = tmp_path / "pipeline.yml"
     pipeline_path.write_text(
         """pipeline: voiceover_tts_traversal

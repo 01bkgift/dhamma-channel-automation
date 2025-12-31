@@ -1903,10 +1903,6 @@ def agent_voiceover_tts(step, run_dir: Path):
     summary_rel = (
         Path("output") / run_id / "artifacts" / "voiceover_summary.json"
     ).as_posix()
-    pipeline_enabled = parse_pipeline_enabled(os.environ.get("PIPELINE_ENABLED"))
-    if not pipeline_enabled:
-        log("Pipeline disabled by PIPELINE_ENABLED=false", "INFO")
-        return summary_rel
 
     from automation_core import voiceover_tts
 
@@ -2655,16 +2651,14 @@ def run_pipeline(pipeline_path: Path, run_id: str):
 
     log(f"Output directory: {run_dir}")
 
-    def _is_voiceover_tts_dry_run(step_cfg: dict) -> bool:
-        if step_cfg.get("uses") != "voiceover.tts":
-            return False
+    def _is_dry_run_step(step_cfg: dict) -> bool:
         config = step_cfg.get("config")
         if not isinstance(config, dict):
             return False
         return bool(config.get("dry_run", False))
 
     dry_run_only_pipeline = bool(steps) and all(
-        _is_voiceover_tts_dry_run(step_cfg) for step_cfg in steps
+        _is_dry_run_step(step_cfg) for step_cfg in steps
     )
 
     results = {}
