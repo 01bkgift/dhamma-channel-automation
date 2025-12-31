@@ -22,6 +22,7 @@
 - **การตั้งชื่อไฟล์:** ชื่อไฟล์ต้องเป็นไปตามกติกาเดิม (เช่น `metadata.json`, `topics_ranked.json`, `outline.md`)
 - **โครงสร้างไดเรกทอรี:** Pipeline ต้องสร้าง `output/{run_id}/` พร้อมไฟล์ที่คาดหวัง
 - **Voiceover Artifacts:** ไฟล์เสียงและเมทาดาทาเก็บใน `data/voiceovers/<run_id>/` และชื่อไฟล์แบบ `<slug>_<sha256[:12]>.wav` และ `<slug>_<sha256[:12]>.json`
+- **Video Render Artifacts:** ผลลัพธ์วิดีโอเก็บใน `output/<run_id>/artifacts/` โดยมีไฟล์ `video_render_summary.json` และไฟล์ MP4 แบบ `<slug>_<sha256[:12]>.mp4`
 
 ### 2. รูปแบบเนื้อหา
 - **Metadata Format:** เมทาดาทา YouTube ต้องมีโครงสร้างเดิม (title, description, tags, SEO keywords)
@@ -69,6 +70,25 @@
 - การเพิ่มฟิลด์แบบ **additive** ทำได้ ถ้าคง backward compatibility
 - การเปลี่ยนชื่อ/ลบฟิลด์แบบเงียบๆ **ห้ามทำ**
 
+### 7. สัญญา Video Render Summary (คงที่)
+
+**สคีมาไฟล์ `output/<run_id>/artifacts/video_render_summary.json` ถือว่า STABLE** สำหรับขั้น `uses: video.render`
+
+**ฟิลด์ที่ต้องมี (required):**
+- `schema_version` (string, ปัจจุบัน `v1`)
+- `run_id` (string)
+- `slug` (string)
+- `text_sha256_12` (string, 12 chars)
+- `input_voiceover_summary` (string, relative path)
+- `input_wav_path` (string, relative path)
+- `output_mp4_path` (string, relative path)
+- `engine` (string)
+- `ffmpeg_cmd` (list[string], ต้องไม่มี absolute paths)
+
+**หมายเหตุ schema_version:**
+- `data/voiceovers/<run_id>/<slug>_<sha12>.json` (TTS metadata) ใช้ `schema_version` แบบตัวเลข (เช่น `1`) ตามสัญญา TTS
+- `output/<run_id>/artifacts/*_summary.json` (pipeline summaries) ใช้ `schema_version` แบบมี prefix (เช่น `v1`) เพื่อแยกชัดเจนว่าเป็น summary artifact
+
 ## รายการอ้างอิงที่รวมไว้ (samples/reference)
 
 โฟลเดอร์ `samples/reference/` มี baseline artifacts สำหรับตรวจจับ drift:
@@ -99,6 +119,10 @@
 ### 4. `samples/reference/tts/voiceover_v1_example.json`
 - **แทนอะไร:** สัญญาเมทาดาทาเสียงบรรยายเวอร์ชัน 1
 - **จุดที่ต้องคงที่:** ฟิลด์และชนิดข้อมูลตามสัญญาในหัวข้อ เมทาดาทาเสียงบรรยาย (คงที่)
+
+### 5. `samples/reference/video/video_render_summary_v1_example.json`
+- **แทนอะไร:** สัญญา video render summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `video_render_summary.json`)
+- **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + `ffmpeg_cmd` ต้องไม่หลุด absolute path
 
 ## ขั้นตอนเปรียบเทียบ (Comparison Procedure)
 

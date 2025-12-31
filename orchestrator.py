@@ -2012,8 +2012,10 @@ def agent_video_render(step, run_dir: Path):
         raise TypeError("config must be a mapping")
 
     slug = config.get("slug")
-    if not isinstance(slug, str):
-        raise TypeError("slug must be a string")
+    if slug is None:
+        raise ValueError("config.slug is required")
+    if not isinstance(slug, str) or not slug.strip():
+        raise TypeError("slug must be a non-empty string")
 
     voiceover_tts._validate_identifier(run_id, "run_id")
     slug = voiceover_tts._validate_identifier(slug, "slug")
@@ -2030,10 +2032,10 @@ def agent_video_render(step, run_dir: Path):
     if not isinstance(resolution, str) or not resolution.strip():
         raise TypeError("resolution must be a non-empty string")
     if not re.fullmatch(r"\d+x\d+", resolution):
-        raise ValueError("resolution must be in WxH digits")
+        raise ValueError("resolution must be in WxH digits (e.g. 1920x1080)")
     width_str, height_str = resolution.split("x")
     if int(width_str) <= 0 or int(height_str) <= 0:
-        raise ValueError("resolution must be in WxH digits")
+        raise ValueError("resolution must be in WxH digits (e.g. 1920x1080)")
 
     bg_color = config.get("bg_color", "black")
     if not isinstance(bg_color, str) or not bg_color.strip():
@@ -2062,11 +2064,9 @@ def agent_video_render(step, run_dir: Path):
     image_abs = None
     image_rel = None
     if image_path_value is not None:
-        _, image_rel = _resolve_relative_path(image_path_value, "image_path")
-        try:
-            image_abs = _resolve_script_path(image_rel, root_dir)
-        except ValueError as exc:
-            raise ValueError("image_path must be within scripts/") from exc
+        image_abs, image_rel = _resolve_relative_path(image_path_value, "image_path")
+        if not image_abs.is_file():
+            raise FileNotFoundError(f"Image input not found: {image_rel}")
 
     voiceover_summary_value = config.get("voiceover_summary_path")
     if voiceover_summary_value is None:
@@ -2086,7 +2086,12 @@ def agent_video_render(step, run_dir: Path):
                 "voiceover_summary_path must be within output/<run_id>/artifacts"
             ) from exc
 
-    summary = read_json(voiceover_summary_path)
+    try:
+        summary = read_json(voiceover_summary_path)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"Voiceover summary not found: {voiceover_summary_rel}"
+        ) from exc
     if not isinstance(summary, dict):
         raise TypeError("voiceover_summary must be a JSON object")
 
@@ -2246,7 +2251,7 @@ def agent_video_render(step, run_dir: Path):
         raise RuntimeError(message) from exc
 
     render_summary = {
-        "schema_version": "1",
+        "schema_version": "v1",
         "run_id": run_id,
         "slug": slug,
         "text_sha256_12": text_sha,
