@@ -137,7 +137,7 @@
 - `publish_at` (string)
 - `pipeline_path` (string)
 - `run_id` (string)
-- `code` (string, one of: `scheduler_disabled`, `pipeline_disabled`, `entry_not_due`, `already_enqueued`, `plan_parse_error`, `job_invalid`)
+- `code` (string, one of: `scheduler_disabled`, `entry_not_due`, `already_enqueued`, `plan_parse_error`, `job_invalid`)
 - `message` (string)
 
 ### 10. สัญญา Worker Summary (คงที่)
