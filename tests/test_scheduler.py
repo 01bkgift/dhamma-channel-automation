@@ -1,17 +1,18 @@
 """ทดสอบการคัดเลือกงานตามแผนเวลา"""
 
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from automation_core.queue import FileQueue
-from automation_core.scheduler import schedule_due_jobs
+from automation_core.scheduler import SchedulePlanError, schedule_due_jobs
 
 
 def _utc_iso(value: datetime) -> str:
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _write_plan(path: Path) -> None:
@@ -39,7 +40,7 @@ def test_scheduler_due_selection_deterministic(tmp_path):
     _write_plan(plan_path)
 
     queue = FileQueue(tmp_path / "queue")
-    now_utc = datetime(2026, 1, 1, 3, 0, tzinfo=timezone.utc)
+    now_utc = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
 
     result = schedule_due_jobs(
         plan_path=plan_path,
@@ -55,7 +56,7 @@ def test_scheduler_due_selection_deterministic(tmp_path):
     assert any(skip.code == "entry_not_due" for skip in result.skipped_entries)
 
     tz = ZoneInfo("Asia/Bangkok")
-    scheduled_utc = datetime(2026, 1, 1, 3, 0, tzinfo=timezone.utc)
+    scheduled_utc = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
     run_id_base = scheduled_utc.astimezone(tz).strftime("%Y%m%d_%H%M")
     seed = f"{_utc_iso(scheduled_utc)}|pipeline.web.yml|{run_id_base}"
     expected_job_id = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
@@ -72,3 +73,124 @@ def test_scheduler_due_selection_deterministic(tmp_path):
         created_at_utc=now_utc + timedelta(minutes=1),
     )
     assert repeat.enqueued_job_ids == result.enqueued_job_ids
+
+
+def test_scheduler_invalid_timezone(tmp_path):
+    """ทดสอบการจัดการ timezone ที่ไม่ถูกต้อง"""
+    plan_path = tmp_path / "schedule_plan.yaml"
+    plan_path.write_text(
+        "\n".join(
+            [
+                'schema_version: "v1"',
+                'timezone: "Invalid/Timezone"',
+                "entries:",
+                '  - publish_at: "2026-01-01T10:00"',
+                '    pipeline_path: "pipeline.web.yml"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    queue = FileQueue(tmp_path / "queue")
+    now_utc = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
+
+    with pytest.raises(SchedulePlanError):
+        schedule_due_jobs(
+            plan_path=plan_path,
+            queue=queue,
+            now_utc=now_utc,
+            window_minutes=10,
+            dry_run=True,
+            scheduler_enabled=True,
+            created_at_utc=now_utc,
+        )
+
+
+def test_scheduler_invalid_publish_at(tmp_path):
+    """ทดสอบการจัดการรูปแบบ publish_at ที่ไม่ถูกต้อง"""
+    plan_path = tmp_path / "schedule_plan.yaml"
+    plan_path.write_text(
+        "\n".join(
+            [
+                'schema_version: "v1"',
+                'timezone: "Asia/Bangkok"',
+                "entries:",
+                '  - publish_at: "invalid-datetime"',
+                '    pipeline_path: "pipeline.web.yml"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    queue = FileQueue(tmp_path / "queue")
+    now_utc = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
+
+    result = schedule_due_jobs(
+        plan_path=plan_path,
+        queue=queue,
+        now_utc=now_utc,
+        window_minutes=10,
+        dry_run=True,
+        scheduler_enabled=True,
+        created_at_utc=now_utc,
+    )
+
+    # ควรจะข้ามงานที่มี publish_at ไม่ถูกต้อง
+    assert len(result.enqueued_job_ids) == 0
+    assert len(result.skipped_entries) == 1
+    assert result.skipped_entries[0].code == "job_invalid"
+
+
+def test_scheduler_missing_required_fields(tmp_path):
+    """ทดสอบการจัดการเมื่อขาดฟิลด์ที่จำเป็น"""
+    plan_path = tmp_path / "schedule_plan.yaml"
+    plan_path.write_text(
+        "\n".join(
+            [
+                'schema_version: "v1"',
+                'timezone: "Asia/Bangkok"',
+                "entries:",
+                '  - publish_at: "2026-01-01T10:00"',
+                # ขาด pipeline_path
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    queue = FileQueue(tmp_path / "queue")
+    now_utc = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
+
+    result = schedule_due_jobs(
+        plan_path=plan_path,
+        queue=queue,
+        now_utc=now_utc,
+        window_minutes=10,
+        dry_run=True,
+        scheduler_enabled=True,
+        created_at_utc=now_utc,
+    )
+
+    # ควรจะข้ามงานที่ขาดฟิลด์จำเป็น
+    assert len(result.enqueued_job_ids) == 0
+    assert len(result.skipped_entries) == 1
+    assert result.skipped_entries[0].code == "job_invalid"
+
+
+def test_scheduler_malformed_yaml(tmp_path):
+    """ทดสอบการจัดการ YAML ที่ไม่ถูกต้อง"""
+    plan_path = tmp_path / "schedule_plan.yaml"
+    plan_path.write_text("invalid: yaml: [content", encoding="utf-8")
+
+    queue = FileQueue(tmp_path / "queue")
+    now_utc = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
+
+    with pytest.raises(SchedulePlanError):
+        schedule_due_jobs(
+            plan_path=plan_path,
+            queue=queue,
+            now_utc=now_utc,
+            window_minutes=10,
+            dry_run=True,
+            scheduler_enabled=True,
+            created_at_utc=now_utc,
+        )

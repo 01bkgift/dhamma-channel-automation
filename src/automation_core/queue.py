@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -53,12 +53,12 @@ def _parse_iso_datetime(value: str) -> datetime:
         value = value[:-1] + "+00:00"
     dt = datetime.fromisoformat(value)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
 def _format_compact_utc(value: str) -> str:
-    dt = _parse_iso_datetime(value).astimezone(timezone.utc)
+    dt = _parse_iso_datetime(value).astimezone(UTC)
     return dt.strftime("%Y%m%dT%H%M%SZ")
 
 
@@ -150,6 +150,7 @@ class FileQueue:
             os.close(fd)
             self._write_job(target_path, pending_job)
             return True
+
     def list_pending(self) -> list[QueueItem]:
         """คืนรายการงานในสถานะ pending ตามลำดับ FIFO"""
 
@@ -183,7 +184,11 @@ class FileQueue:
         item = pending[0]
         self._ensure_dirs()
         dest_path = self.running_dir / item.filename
-        os.replace(item.path, dest_path)
+        try:
+            os.replace(item.path, dest_path)
+        except FileNotFoundError:
+            # งานถูก dequeue โดย worker ตัวอื่นไปแล้ว
+            return None
         job = item.job
         if job is not None:
             job = job.model_copy(
