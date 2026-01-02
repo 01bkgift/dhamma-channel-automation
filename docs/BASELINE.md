@@ -184,6 +184,7 @@
   - `platform` (string)
   - `template_short` (string, relative path)
   - `template_long` (string, relative path)
+<<<<<<< HEAD
   - `sources` (list[string], relative paths และ/หรือ `env:PIPELINE_PARAMS_JSON`)
 - `outputs` (object)
   - `short` (string, เนื้อหาโพสต์แบบสั้น)
@@ -199,6 +200,17 @@
 - การเปลี่ยนแปลงที่ **breaking** ต้อง bump `schema_version` และใส่ migration note
 - การเพิ่มฟิลด์แบบ **additive** ทำได้ ถ้าคง backward compatibility
 - การเปลี่ยนชื่อ/ลบฟิลด์แบบเงียบๆ **ห้ามทำ**
+=======
+  - `sources` (list[string], relative paths หรือ `env:PIPELINE_PARAMS_JSON`)
+- `outputs` (object)
+  - `short` (string)
+  - `long` (string)
+
+**หมายเหตุสำคัญ:**
+- ทุกพาธใน `inputs.template_*` และ `inputs.sources` ต้องเป็น relative เท่านั้น (ห้าม absolute)
+- `checked_at` ยอมให้ไม่ deterministic (audit time)
+- `inputs.sources` หมายถึง “แหล่งที่ถูกใช้เติมค่า (used)” เท่านั้น ไม่ใช่แหล่งที่ถูกอ่านเฉย ๆ
+>>>>>>> 7aaa096 (PR10: align post summary baseline samples)
 
 ## Assets Baseline v1
 
@@ -265,7 +277,7 @@ Policy source-of-truth: `docs/ASSETS_POLICY.md`
 
 ### 10. `samples/reference/post/post_content_summary_v1_example.json`
 - **แทนอะไร:** สัญญา post content summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `post_content_summary.json`)
-- **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + แฮชแท็กต้อง sorted + โครงสร้าง inputs/outputs ต้องไม่ drift
+- **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + แฮชแท็กต้อง normalize แบบ deterministic + โครงสร้าง inputs/outputs ต้องไม่ drift + `inputs.sources` เป็นรายการ used sources เท่านั้น
 
 ## ขั้นตอนเปรียบเทียบ (Comparison Procedure)
 

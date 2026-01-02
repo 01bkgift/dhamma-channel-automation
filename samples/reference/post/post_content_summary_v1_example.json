@@ -5,12 +5,12 @@
   "checked_at": "2026-01-02T14:30:00Z",
   "inputs": {
     "lang": "th",
-    "platform": "youtube",
-    "template_short": "templates/post/short.txt",
-    "template_long": "templates/post/long.txt",
+    "platform": "youtube_community",
+    "template_short": "templates/post/short.md",
+    "template_long": "templates/post/long.md",
     "sources": [
-      "output/20260102_example_run/metadata.json",
-      "env:PIPELINE_PARAMS_JSON"
+      "env:PIPELINE_PARAMS_JSON",
+      "output/20260102_example_run/metadata.json"
     ]
   },
   "outputs": {
