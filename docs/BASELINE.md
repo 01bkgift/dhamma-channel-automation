@@ -169,6 +169,16 @@
 - `code` (string, one of: `worker_disabled`, `queue_empty`, `job_invalid`, `orchestrator_failed`)
 - `message` (string)
 
+## Assets Baseline v1
+
+นโยบาย assets เป็น baseline ที่ต้องคงที่สำหรับ repo สาธารณะ เพื่อความปลอดภัย
+ด้านลิขสิทธิ์ ขนาดไฟล์ และความ deterministic ของพาธ
+
+- "Font binaries are intentionally excluded from baseline."
+- "Any presence of forbidden font extensions is a policy violation and must fail tests."
+- "assets/fonts/ is locked to README.md only."
+- โครงสร้าง assets/ ต้องตรงตาม skeleton ที่กำหนดใน policy และไฟล์ภายในต้องมีขนาดเล็ก
+
 ## รายการอ้างอิงที่รวมไว้ (samples/reference)
 
 โฟลเดอร์ `samples/reference/` มี baseline artifacts สำหรับตรวจจับ drift:
