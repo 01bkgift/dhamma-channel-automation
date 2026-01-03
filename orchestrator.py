@@ -2504,12 +2504,12 @@ def agent_quality_gate(step, run_dir: Path):
     return summary_out.relative_to(root_dir).as_posix()
 
 
-def agent_post_templates(step, run_dir: Path):
+def agent_post_templates(_step, run_dir: Path):
     """
     รันเอเจนต์ post templates เพื่อสร้างสรุปเนื้อหาโพสต์แบบ deterministic
 
     Args:
-        step: ข้อมูลการตั้งค่าของสเต็ปจากไฟล์ pipeline YAML
+        _step: ข้อมูลการตั้งค่าของสเต็ปจากไฟล์ pipeline YAML
             (ไม่ได้ถูกใช้งานโดยตรงในฟังก์ชันนี้ แต่คงพารามิเตอร์ไว้ให้มีรูปแบบ
             สอดคล้องกับเอเจนต์ตัวอื่นใน orchestrator)
         run_dir: โฟลเดอร์รันของ pipeline สำหรับ run_id นั้น ๆ
