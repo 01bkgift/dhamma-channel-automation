@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from automation_core.voiceover_tts import compute_input_sha256
-from tests.helpers import write_post_templates, write_metadata
+from tests.helpers import write_metadata, write_post_templates
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import orchestrator

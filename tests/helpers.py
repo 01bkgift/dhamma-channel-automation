@@ -28,7 +28,7 @@ def write_metadata(
 ) -> Path:
     """
     Write metadata.json for testing purposes.
-    
+
     Args:
         base_dir: Base directory (usually tmp_path in tests)
         run_id: Run identifier
@@ -37,13 +37,13 @@ def write_metadata(
         tags: List of tags (default: ["#test"])
         language: Language code (default: "en")
         platform: Platform name (default: "youtube")
-    
+
     Returns:
         Path to the created metadata.json file
     """
     if tags is None:
         tags = ["#test"]
-    
+
     metadata_path = base_dir / "output" / run_id / "metadata.json"
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata = {

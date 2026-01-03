@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 
-from tests.helpers import write_post_templates, write_metadata
+from tests.helpers import write_metadata, write_post_templates
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import orchestrator
