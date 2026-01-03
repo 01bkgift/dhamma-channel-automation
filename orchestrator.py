@@ -24,6 +24,8 @@ if str(SRC_ROOT) not in sys.path:
 from automation_core import post_templates, youtube_upload  # noqa: E402
 from automation_core.utils.env import parse_pipeline_enabled  # noqa: E402
 
+POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
+
 
 def ensure_dir(p: Path):
     """สร้างโฟลเดอร์ถ้ายังไม่มี"""
@@ -85,22 +87,29 @@ def _run_post_templates_step(run_id: str, root_dir: Path) -> str:
         - เมื่อเปิดใช้งานจะมีการเขียนไฟล์ลง output/<run_id>/artifacts/
     """
     log(f"Post templates: start run_id={run_id}")
+    output_rel = _post_templates_output_rel(run_id)
+    script_cmd = (
+        f"{sys.executable} scripts/post_templates_runner.py render --run-id {run_id}"
+    )
+    log(f"Post templates: invoking {script_cmd}")
     if not parse_pipeline_enabled(os.environ.get("PIPELINE_ENABLED")):
         log("Post templates: disabled (PIPELINE_ENABLED=false)")
-        output_rel = _post_templates_output_rel(run_id)
-        log(f"Post templates: would write {output_rel}")
+        log(f"Post templates: complete (skipped) -> {output_rel}")
         return output_rel
 
-    _, output_path = post_templates.generate_post_content_summary(
-        run_id, base_dir=root_dir
-    )
+    previous_repo_root = post_templates.REPO_ROOT
     try:
-        output_rel = output_path.relative_to(root_dir).as_posix()
-    except ValueError as exc:
-        raise ValueError(
-            f"Output path {output_path} is not within the root directory {root_dir}"
-        ) from exc
-    log(f"Post templates: wrote {output_rel}")
+        post_templates.REPO_ROOT = root_dir
+        exit_code = post_templates.cli_main(["render", "--run-id", run_id])
+    finally:
+        post_templates.REPO_ROOT = previous_repo_root
+
+    if exit_code != 0:
+        raise RuntimeError(
+            f"post_templates failed with exit code {exit_code} for run_id={run_id}"
+        )
+
+    log(f"Post templates: completed -> {output_rel}")
     return output_rel
 
 
@@ -3591,6 +3600,7 @@ AGENTS = {
     "video.render": agent_video_render,
     "quality.gate": agent_quality_gate,
     "post_templates": agent_post_templates,
+    "post.templates": agent_post_templates,
     "youtube.upload": agent_youtube_upload,
     "Localization": agent_localization,
     "ThumbnailGenerator": agent_thumbnail_generator,
@@ -3630,15 +3640,18 @@ def run_pipeline(pipeline_path: Path, run_id: str):
     pipeline_name = cfg.get("pipeline", "unknown")
     steps = cfg.get("steps", [])
 
-    def _pipeline_has_step(step_name: str) -> bool:
+    def _pipeline_has_step(step_name: str, *, aliases: set[str] | None = None) -> bool:
         """ตรวจสอบว่า step ที่มีค่า uses ตามที่กำหนดมีอยู่ใน pipeline หรือไม่"""
+        allowed = aliases or {step_name}
         return any(
-            isinstance(step_cfg, dict) and step_cfg.get("uses") == step_name
+            isinstance(step_cfg, dict) and step_cfg.get("uses") in allowed
             for step_cfg in steps
         )
 
     has_quality_gate = _pipeline_has_step("quality.gate")
-    has_post_templates = _pipeline_has_step("post_templates")
+    has_post_templates = _pipeline_has_step(
+        "post_templates", aliases=POST_TEMPLATES_ALIASES
+    )
 
     log(f"Pipeline: {pipeline_name} ({len(steps)} steps)")
 
