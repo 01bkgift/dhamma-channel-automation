@@ -169,8 +169,8 @@ steps:
 
     monkeypatch.setattr(orchestrator, "_run_post_templates_step", wrapped)
 
-    def fake_quality_gate(_step, run_dir: Path):
-        return run_dir / "artifacts" / "quality_gate_summary.json"
+    def fake_quality_gate(_step, run_dir: Path) -> str:
+        return "artifacts/quality_gate_summary.json"
 
     monkeypatch.setitem(orchestrator.AGENTS, "quality.gate", fake_quality_gate)
 
