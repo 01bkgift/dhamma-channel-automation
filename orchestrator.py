@@ -53,10 +53,6 @@ def log(msg: str, level="INFO"):
     print(f"[{timestamp}] [{level}] {msg}")
 
 
-_PIPELINE_HAS_QUALITY_GATE = False
-_PIPELINE_HAS_POST_TEMPLATES = False
-
-
 def _post_templates_output_rel(run_id: str) -> str:
     return (
         Path("output") / run_id / "artifacts" / "post_content_summary.json"
@@ -76,8 +72,10 @@ def _run_post_templates_step(run_id: str, root_dir: Path) -> str:
     )
     try:
         output_rel = output_path.relative_to(root_dir).as_posix()
-    except ValueError:
-        output_rel = output_path.as_posix()
+    except ValueError as exc:
+        raise ValueError(
+            f"Output path {output_path} is not within the root directory {root_dir}"
+        ) from exc
     print(f"Post templates: wrote {output_rel}")
     return output_rel
 
@@ -2279,8 +2277,6 @@ def agent_video_render(step, run_dir: Path):
     summary_path = root_dir / summary_rel
     write_json(summary_path, render_summary)
     log(f"Video render summary created: {summary_rel}")
-    if not _PIPELINE_HAS_QUALITY_GATE and not _PIPELINE_HAS_POST_TEMPLATES:
-        _run_post_templates_step(run_id, root_dir)
     return summary_rel
 
 
@@ -2494,9 +2490,6 @@ def agent_quality_gate(step, run_dir: Path):
         raise RuntimeError(
             f"Quality gate failed for run_id={run_id}; reasons={top_codes}"
         )
-
-    if not _PIPELINE_HAS_POST_TEMPLATES:
-        _run_post_templates_step(run_id, root_dir)
 
     return summary_out.relative_to(root_dir).as_posix()
 
@@ -3573,12 +3566,8 @@ def run_pipeline(pipeline_path: Path, run_id: str):
     """รัน pipeline ตามไฟล์ YAML"""
     log(f"Loading pipeline: {pipeline_path}")
 
-    global _PIPELINE_HAS_QUALITY_GATE, _PIPELINE_HAS_POST_TEMPLATES
-
     pipeline_enabled = parse_pipeline_enabled(os.environ.get("PIPELINE_ENABLED"))
     if not pipeline_enabled:
-        _PIPELINE_HAS_QUALITY_GATE = False
-        _PIPELINE_HAS_POST_TEMPLATES = False
         log("Pipeline disabled by PIPELINE_ENABLED=false", "INFO")
         print("Pipeline disabled by PIPELINE_ENABLED=false")
         return {
@@ -3599,14 +3588,15 @@ def run_pipeline(pipeline_path: Path, run_id: str):
     pipeline_name = cfg.get("pipeline", "unknown")
     steps = cfg.get("steps", [])
 
-    _PIPELINE_HAS_QUALITY_GATE = any(
-        isinstance(step_cfg, dict) and step_cfg.get("uses") == "quality.gate"
-        for step_cfg in steps
-    )
-    _PIPELINE_HAS_POST_TEMPLATES = any(
-        isinstance(step_cfg, dict) and step_cfg.get("uses") == "post_templates"
-        for step_cfg in steps
-    )
+    def _pipeline_has_step(step_name: str) -> bool:
+        """Check if a step with the given uses name exists in the pipeline."""
+        return any(
+            isinstance(step_cfg, dict) and step_cfg.get("uses") == step_name
+            for step_cfg in steps
+        )
+
+    has_quality_gate = _pipeline_has_step("quality.gate")
+    has_post_templates = _pipeline_has_step("post_templates")
 
     log(f"Pipeline: {pipeline_name} ({len(steps)} steps)")
 
@@ -3625,6 +3615,22 @@ def run_pipeline(pipeline_path: Path, run_id: str):
     )
 
     results = {}
+    root_dir = ROOT.resolve()
+    post_templates_ran = False
+
+    def _maybe_run_post_templates(step_uses: str, step_result: object) -> None:
+        nonlocal post_templates_ran
+        if post_templates_ran or has_post_templates:
+            return
+        if isinstance(step_result, PlannedArtifacts) and step_result.dry_run:
+            return
+        if step_uses == "quality.gate" or (
+            step_uses == "video.render" and not has_quality_gate
+        ):
+            # If no explicit post_templates step exists, run it implicitly after
+            # quality gate (preferred) or after video render as a fallback.
+            _run_post_templates_step(run_id, root_dir)
+            post_templates_ran = True
 
     for i, step in enumerate(steps, 1):
         step_id = step["id"]
@@ -3650,6 +3656,7 @@ def run_pipeline(pipeline_path: Path, run_id: str):
                 entry["planned_paths"] = planned_paths
             results[step_id] = entry
             log(f"[{i}/{len(steps)}] ✓ {step_id} completed", "SUCCESS")
+            _maybe_run_post_templates(uses, result)
         except Exception as e:
             log(f"ERROR in {step_id}: {e}", "ERROR")
             results[step_id] = {"status": "error", "error": str(e)}

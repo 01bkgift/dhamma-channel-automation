@@ -4,20 +4,10 @@ import json
 import sys
 from pathlib import Path
 
+from tests.helpers import write_post_templates
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import orchestrator
-
-
-def _write_templates(base_dir: Path) -> None:
-    templates_dir = base_dir / "templates" / "post"
-    templates_dir.mkdir(parents=True, exist_ok=True)
-    (templates_dir / "short.md").write_text(
-        "{{hook}}\n{{summary}}\n\n{{cta}}\n{{hashtags}}\n", encoding="utf-8"
-    )
-    (templates_dir / "long.md").write_text(
-        "{{title}}\n\n{{hook}}\n\n{{summary}}\n\n{{cta}}\n\n{{hashtags}}\n",
-        encoding="utf-8",
-    )
 
 
 def _write_metadata(base_dir: Path, run_id: str) -> None:
@@ -54,7 +44,7 @@ def _assert_relative(value: str) -> None:
 
 def test_orchestrator_post_templates_enabled(tmp_path, monkeypatch):
     run_id = "run_post_templates"
-    _write_templates(tmp_path)
+    write_post_templates(tmp_path)
     _write_metadata(tmp_path, run_id)
     _write_video_render_summary(tmp_path, run_id)
 
