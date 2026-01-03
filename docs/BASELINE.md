@@ -184,23 +184,18 @@
   - `platform` (string)
   - `template_short` (string, relative path)
   - `template_long` (string, relative path)
-  - `sources` (list[string], relative paths และ/หรือ `env:PIPELINE_PARAMS_JSON`)
+  - `sources` (list[string], relative paths หรือ `env:PIPELINE_PARAMS_JSON`)
 - `outputs` (object)
   - `short` (string, เนื้อหาโพสต์แบบสั้น)
   - `long` (string, เนื้อหาโพสต์แบบยาว)
 
 **หมายเหตุสำคัญ:**
-- ทุกพาธใน `inputs.template_*` และ `inputs.sources` ต้องเป็น relative เท่านั้น (ห้าม absolute paths)
+- ทุกพาธใน `inputs.template_*` และ `inputs.sources` ต้องเป็น relative เท่านั้น (ห้าม absolute)
 - `checked_at` ยอมให้ไม่ deterministic (audit time)
-- `inputs.sources` หมายถึง "แหล่งที่ถูกใช้เติมค่า (used)" เท่านั้น ไม่ใช่แหล่งที่ถูกอ่านเฉย ๆ
-- แฮชแท็กใน outputs ต้องเรียงลำดับตัวอักษร (sorted) เพื่อความ deterministic
-- sources อาจมีค่าพิเศษ `env:PIPELINE_PARAMS_JSON` ที่แทนการอ่านค่าจาก environment variable
+- แฮชแท็กใน outputs ต้อง normalize แบบ deterministic (เช่น list ต้อง sorted)
+- `inputs.sources` หมายถึง “แหล่งที่ถูกใช้เติมค่า (used)” เท่านั้น ไม่ใช่แหล่งที่ถูกอ่านเฉย ๆ
+- `inputs.sources` อาจมีค่าพิเศษ `env:PIPELINE_PARAMS_JSON` ที่แทนการอ่านค่าจาก environment variable
 - ตัวอย่างอ้างอิง: `samples/reference/post/post_content_summary_v1_example.json`
-
-**นโยบาย schema_version:**
-- การเปลี่ยนแปลงที่ **breaking** ต้อง bump `schema_version` และใส่ migration note
-- การเพิ่มฟิลด์แบบ **additive** ทำได้ ถ้าคง backward compatibility
-- การเปลี่ยนชื่อ/ลบฟิลด์แบบเงียบๆ **ห้ามทำ**
 
 ## Assets Baseline v1
 
@@ -218,7 +213,7 @@ Policy source-of-truth: `docs/ASSETS_POLICY.md`
 
 โฟลเดอร์ `samples/reference/` มี baseline artifacts สำหรับตรวจจับ drift:
 
-### 1. `metadata.json` (SEO Metadata)
+### 12. `metadata.json` (SEO Metadata)
 - **แทนอะไร:** เมทาดาทา YouTube ขั้นสุดท้าย
 - **จุดที่ต้องคงที่:**
   - รูปแบบ title (60-70 ตัวอักษร มีประโยชน์ชัดเจน)
@@ -227,45 +222,45 @@ Policy source-of-truth: `docs/ASSETS_POLICY.md`
   - แนวคิด thumbnail 3 แบบพร้อมรายละเอียด
   - SEO keywords 4-7 คำที่ค้นหาได้จริง
 
-### 2. `topics_ranked.json` (Topic Prioritization)
+### 13. `topics_ranked.json` (Topic Prioritization)
 - **แทนอะไร:** รายการหัวข้อที่จัดอันดับจาก TrendScout/TopicPrioritizer
 - **จุดที่ต้องคงที่:**
   - โครงสร้างคะแนน impact/feasibility/alignment/total
   - อันดับตาม total score
   - เหตุผลและความเสี่ยงที่ชัดเจน
 
-### 3. `outline_sample.md` (Script Outline)
+### 14. `outline_sample.md` (Script Outline)
 - **แทนอะไร:** โครงสร้าง outline สำหรับเขียนสคริปต์
 - **จุดที่ต้องคงที่:**
   - Flow: Hook → Intro → Main → CTA
   - เวลาโดยรวมเหมาะกับวิดีโอ 5-7 นาที
   - โทนอบอุ่นและเป็นกันเอง
 
-### 4. `samples/reference/tts/voiceover_v1_example.json`
+### 15. `samples/reference/tts/voiceover_v1_example.json`
 - **แทนอะไร:** สัญญาเมทาดาทาเสียงบรรยายเวอร์ชัน 1
 - **จุดที่ต้องคงที่:** ฟิลด์และชนิดข้อมูลตามสัญญาในหัวข้อ เมทาดาทาเสียงบรรยาย (คงที่)
 
-### 5. `samples/reference/video/video_render_summary_v1_example.json`
+### 16. `samples/reference/video/video_render_summary_v1_example.json`
 - **แทนอะไร:** สัญญา video render summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `video_render_summary.json`)
 - **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + `ffmpeg_cmd` ต้องไม่หลุด absolute path
 
-### 6. `samples/reference/quality/quality_gate_summary_v1_example.json`
+### 17. `samples/reference/quality/quality_gate_summary_v1_example.json`
 - **แทนอะไร:** สัญญา quality gate summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `quality_gate_summary.json`)
 - **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + reasons ต้องมี `engine` และ `checked_at`
 
-### 7. `samples/reference/youtube/youtube_upload_summary_v1_example.json`
+### 18. `samples/reference/youtube/youtube_upload_summary_v1_example.json`
 - **แทนอะไร:** สัญญา YouTube upload summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `youtube_upload_summary.json`)
 - **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + โครงสร้าง `error` และ `metadata` ต้องไม่ drift
 
-### 8. `samples/reference/scheduler/schedule_summary_v1_example.json`
+### 19. `samples/reference/scheduler/schedule_summary_v1_example.json`
 - **แทนอะไร:** สัญญา schedule summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `schedule_summary.json`)
 - **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + โค้ดการข้ามต้องคงที่
 
-### 9. `samples/reference/scheduler/worker_summary_v1_example.json`
+### 20. `samples/reference/scheduler/worker_summary_v1_example.json`
 - **แทนอะไร:** สัญญา worker summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `worker_summary.json`)
 - **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + โครงสร้าง `error` ต้องไม่ drift
 
-### 10. `samples/reference/post/post_content_summary_v1_example.json`
+### 21. `samples/reference/post/post_content_summary_v1_example.json`
 - **แทนอะไร:** สัญญา post content summary เวอร์ชัน 1 (ไฟล์อ้างอิงสำหรับ `post_content_summary.json`)
 - **จุดที่ต้องคงที่:** ฟิลด์สำคัญ + พาธแบบ relative เท่านั้น + แฮชแท็กต้อง normalize แบบ deterministic + โครงสร้าง inputs/outputs ต้องไม่ drift + `inputs.sources` เป็นรายการ used sources เท่านั้น
 
