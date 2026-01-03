@@ -88,25 +88,18 @@ def _run_post_templates_step(run_id: str, root_dir: Path) -> str:
     """
     log(f"Post templates: start run_id={run_id}")
     output_rel = _post_templates_output_rel(run_id)
-    script_cmd = (
-        f"{sys.executable} scripts/post_templates_runner.py render --run-id {run_id}"
-    )
-    log(f"Post templates: invoking {script_cmd}")
+    cli_args = ["render", "--run-id", run_id]
+    log(f"Post templates: invoking post_templates CLI with args: {cli_args}")
     if not parse_pipeline_enabled(os.environ.get("PIPELINE_ENABLED")):
         log("Post templates: disabled (PIPELINE_ENABLED=false)")
         log(f"Post templates: complete (skipped) -> {output_rel}")
         return output_rel
 
-    previous_repo_root = post_templates.REPO_ROOT
-    try:
-        post_templates.REPO_ROOT = root_dir
-        exit_code = post_templates.cli_main(["render", "--run-id", run_id])
-    finally:
-        post_templates.REPO_ROOT = previous_repo_root
-
+    exit_code = post_templates.cli_main(cli_args, base_dir=root_dir)
     if exit_code != 0:
         raise RuntimeError(
-            f"post_templates failed with exit code {exit_code} for run_id={run_id}"
+            "post_templates failed with "
+            f"exit code {exit_code} for run_id={run_id}; args={cli_args}"
         )
 
     log(f"Post templates: completed -> {output_rel}")

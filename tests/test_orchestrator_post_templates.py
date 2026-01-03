@@ -131,8 +131,8 @@ steps:
 
 def test_explicit_post_templates_step_disables_fallback(tmp_path, monkeypatch):
     """
-    เมื่อมี step post_templates ระบุไว้อย่างชัดเจนจะไม่ควร auto-run ซ้ำ
-    และต้องไม่เขียนไฟล์เมื่อ PIPELINE_ENABLED=false
+    เมื่อระบุขั้นตอน post_templates อย่างชัดเจนต้องไม่เรียกซ้ำแบบอัตโนมัติ
+    และต้องไม่เขียนไฟล์เมื่อปิด PIPELINE_ENABLED
     """
     run_id = "explicit_post_templates_once"
     write_post_templates(tmp_path)
