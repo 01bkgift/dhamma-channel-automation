@@ -136,8 +136,12 @@ def validate_dispatch_audit(audit: dict[str, Any], run_id: str) -> dict[str, Any
         or ".." in summary_path_obj.parts
     ):
         raise ValueError("inputs.post_content_summary must be relative without '..'")
-    if not summary_path_obj.parts or summary_path_obj.parts[0] != "output":
-        raise ValueError("inputs.post_content_summary must be under output/")
+
+    expected_summary_path = _post_summary_rel_path(run_id)
+    if summary_path_obj.as_posix() != expected_summary_path:
+        raise ValueError(
+            "inputs.post_content_summary must be 'output/<run_id>/artifacts/post_content_summary.json'"
+        )
     dispatch_enabled = inputs.get("dispatch_enabled")
     if not isinstance(dispatch_enabled, bool):
         raise ValueError("inputs.dispatch_enabled must be a boolean")
@@ -195,7 +199,6 @@ def validate_dispatch_audit(audit: dict[str, Any], run_id: str) -> dict[str, Any
         if err.get("step") != "dispatch.v0":
             raise ValueError("error.step must be 'dispatch.v0'")
         # detail is intentionally flexible; accept any type (including None)
-        err.get("detail")
     return audit
 
 
@@ -304,7 +307,7 @@ def generate_dispatch_audit(
     dispatch_mode: str | None = None,
     dispatch_target: str | None = None,
     checked_at: datetime | None = None,
-) -> tuple[dict[str, Any] | None, Path | None]:
+) -> tuple[dict[str, Any], Path | None]:
     """
     สร้างและเขียน dispatch_audit.json จาก post_content_summary.json
     """
@@ -383,6 +386,8 @@ def generate_dispatch_audit(
             error_code = "file_not_found"
         elif isinstance(exc, json.JSONDecodeError):
             error_code = "invalid_json"
+        elif isinstance(exc, ValueError) and str(exc).startswith("Invalid JSON in "):
+            error_code = "invalid_json"
         else:
             # ใช้สำหรับโหมดหรือค่าพารามิเตอร์ที่ไม่ถูกต้อง
             error_code = "invalid_argument"
@@ -414,9 +419,8 @@ def generate_dispatch_audit(
             if audit_path is not None
             else ""
         )
-        print(
-            f"Dispatch v0: status=failed audit={audit_rel or 'skipped'}; raising for visibility"
-        )
+        print(f"Dispatch v0: status=failed audit={audit_rel or 'skipped'}")
+        print("Dispatch v0: wrote failure audit then raising (fail-fast)")
         raise
 
 
