@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import copy
 import hashlib
 import json
 import os
@@ -95,8 +94,8 @@ def _normalize_dispatch_audit(
     target_value = inputs.get("target")
     if not isinstance(target_value, str) or not target_value.strip():
         target = platform
-        patched = copy.deepcopy(audit)
-        patched_inputs = dict(inputs)
+        patched = audit.copy()
+        patched_inputs = inputs.copy()
         patched_inputs["target"] = target
         patched["inputs"] = patched_inputs
         validate_dispatch_audit(patched, run_id)

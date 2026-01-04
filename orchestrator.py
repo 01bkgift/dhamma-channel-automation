@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -140,24 +141,38 @@ def _run_dispatch_v0_step(run_id: str, root_dir: Path) -> str:
     """
     รัน dispatch_v0 เพื่อสร้าง dispatch_audit.json
     """
-    _, audit_path = dispatch_v0.generate_dispatch_audit(run_id, base_dir=root_dir)
-    if audit_path is None:
-        log("Dispatch v0: skipped (PIPELINE_ENABLED=false)")
-        return "skipped"
-    return audit_path.relative_to(root_dir).as_posix()
+    return _run_artifact_generation_step(
+        run_id,
+        root_dir,
+        dispatch_v0.generate_dispatch_audit,
+        "Dispatch v0",
+    )
 
 
 def _run_publish_request_v0_step(run_id: str, root_dir: Path) -> str:
     """
     รัน publish_request_v0 เพื่อสร้าง publish_request.json
     """
-    _, request_path = publish_request_v0.generate_publish_request(
-        run_id, base_dir=root_dir
+    return _run_artifact_generation_step(
+        run_id,
+        root_dir,
+        publish_request_v0.generate_publish_request,
+        "Publish request v0",
     )
-    if request_path is None:
-        log("Publish request v0: skipped (PIPELINE_ENABLED=false)")
+
+
+def _run_artifact_generation_step(
+    run_id: str,
+    root_dir: Path,
+    generation_func: Callable[..., tuple[object, Path | None]],
+    step_label: str,
+) -> str:
+    """Generic runner for artifact generation steps."""
+    _, artifact_path = generation_func(run_id, base_dir=root_dir)
+    if artifact_path is None:
+        log(f"{step_label}: skipped (PIPELINE_ENABLED=false)")
         return "skipped"
-    return request_path.relative_to(root_dir).as_posix()
+    return artifact_path.relative_to(root_dir).as_posix()
 
 
 def _resolve_script_path(script_path: str | Path, root_dir: Path) -> Path:
@@ -3757,8 +3772,6 @@ def run_pipeline(pipeline_path: Path, run_id: str):
         """เรียก publish_request_v0 หลัง dispatch_v0 เมื่อยังไม่ได้รันและไม่มี step ระบุไว้"""
         nonlocal publish_request_ran
         if publish_request_ran or has_publish_request_v0:
-            return
-        if not dispatch_ran:
             return
         dispatch_audit_path = root_dir / _dispatch_audit_output_rel(run_id)
         if not dispatch_audit_path.is_file():
