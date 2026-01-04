@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from automation_core.dispatch.adapters import DispatchAdapterError, get_adapter
 from automation_core.utils.env import parse_pipeline_enabled
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +17,13 @@ AUDIT_NAME = "dispatch_audit.json"
 MAX_PREVIEW_CHARS = 500
 TRUE_VALUES = {"true", "1", "yes", "on", "enabled"}
 ALLOWED_MODES = {"dry_run", "print_only"}
+
+
+class DispatchModeError(ValueError):
+    def __init__(self, *, code: str, requested_mode: str, message: str):
+        super().__init__(message)
+        self.code = code
+        self.requested_mode = requested_mode
 
 
 def parse_dispatch_enabled(value: str | None) -> bool:
@@ -49,9 +57,19 @@ def _validate_dispatch_mode(raw_mode: str | None) -> str:
     if raw_mode is None or not raw_mode.strip():
         return "dry_run"
     mode = raw_mode.strip().lower()
-    if mode not in ALLOWED_MODES:
-        raise ValueError("DISPATCH_MODE must be one of: dry_run, print_only")
-    return mode
+    if mode in ALLOWED_MODES:
+        return mode
+    if mode == "publish":
+        raise DispatchModeError(
+            code="publish_not_supported",
+            requested_mode=mode,
+            message="DISPATCH_MODE=publish is not supported (audit-only)",
+        )
+    raise DispatchModeError(
+        code="invalid_argument",
+        requested_mode=mode,
+        message="DISPATCH_MODE must be one of: dry_run, print_only",
+    )
 
 
 def _bounded_preview(text: str, limit: int = MAX_PREVIEW_CHARS) -> str:
@@ -273,14 +291,37 @@ def build_dispatch_audit(
 
 
 def _build_actions(
-    short_bytes: int, long_bytes: int, publish_reason: str
+    short_bytes: int,
+    long_bytes: int,
+    publish_reason: str,
+    *,
+    target: str,
+    adapter: str,
 ) -> list[dict[str, Any]]:
     short_b = short_bytes if short_bytes >= 0 else 0
     long_b = long_bytes if long_bytes >= 0 else 0
     return [
-        {"type": "print", "label": "short", "bytes": short_b},
-        {"type": "print", "label": "long", "bytes": long_b},
-        {"type": "noop", "label": "publish", "reason": publish_reason},
+        {
+            "type": "print",
+            "label": "short",
+            "bytes": short_b,
+            "adapter": adapter,
+            "target": target,
+        },
+        {
+            "type": "print",
+            "label": "long",
+            "bytes": long_b,
+            "adapter": adapter,
+            "target": target,
+        },
+        {
+            "type": "noop",
+            "label": "publish",
+            "reason": publish_reason,
+            "adapter": adapter,
+            "target": target,
+        },
     ]
 
 
@@ -327,6 +368,7 @@ def generate_dispatch_audit(
     platform = ""
     short_bytes = 0
     long_bytes = 0
+    adapter = None
     # defaults above are reused for failure audit paths
     try:
         post_summary_rel, post_summary = load_post_content_summary(run_id, base_dir)
@@ -358,7 +400,13 @@ def generate_dispatch_audit(
             message = "Dispatch dry-run (no external publish)"
             publish_reason = "dry_run default"
 
-        actions = _build_actions(short_bytes, long_bytes, publish_reason)
+        adapter = get_adapter(target, platform)
+        actions = adapter.build_actions(
+            short_bytes=short_bytes,
+            long_bytes=long_bytes,
+            publish_reason=publish_reason,
+            target=target,
+        )
         audit = build_dispatch_audit(
             run_id=run_id,
             post_content_summary=post_summary_rel,
@@ -381,35 +429,69 @@ def generate_dispatch_audit(
         )
         print(f"Dispatch v0: status={status} audit={audit_rel or 'skipped'}")
         return audit, audit_path
-    except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
+    except (
+        FileNotFoundError,
+        json.JSONDecodeError,
+        ValueError,
+        DispatchAdapterError,
+    ) as exc:
         if isinstance(exc, FileNotFoundError):
             error_code = "file_not_found"
         elif isinstance(exc, json.JSONDecodeError):
             error_code = "invalid_json"
+        elif isinstance(exc, DispatchModeError):
+            error_code = exc.code
+        elif isinstance(exc, DispatchAdapterError):
+            error_code = exc.code
         elif isinstance(exc, ValueError) and str(exc).startswith("Invalid JSON in "):
             error_code = "invalid_json"
         else:
             # ใช้สำหรับโหมดหรือค่าพารามิเตอร์ที่ไม่ถูกต้อง
             error_code = "invalid_argument"
 
+        if isinstance(exc, DispatchModeError):
+            detail: Any = {"requested_mode": exc.requested_mode}
+        elif isinstance(exc, DispatchAdapterError):
+            detail = {"target": target or "unknown", "platform": platform or "unknown"}
+        else:
+            detail = {"type": type(exc).__name__, "message": str(exc)}
+
         errors = [
             {
                 "code": error_code,
                 "message": "Dispatch failed - see detail",
                 "step": "dispatch.v0",
-                "detail": f"{type(exc).__name__}: {exc}",
+                "detail": detail,
             }
         ]
+        adapter_name = adapter.name if adapter is not None else "unknown"
+        failure_target = target or "unknown"
+        failure_actions = (
+            adapter.build_actions(
+                short_bytes=short_bytes,
+                long_bytes=long_bytes,
+                publish_reason="failure",
+                target=failure_target,
+            )
+            if adapter is not None
+            else _build_actions(
+                short_bytes,
+                long_bytes,
+                "failure",
+                target=failure_target,
+                adapter=adapter_name,
+            )
+        )
         failure_audit = build_dispatch_audit(
             run_id=run_id,
             post_content_summary=post_summary_rel,
             dispatch_enabled=enabled,
             dispatch_mode="dry_run",
-            target=target or "unknown",
+            target=failure_target,
             platform=platform or "unknown",
             status="failed",
             message="Dispatch failed - see errors",
-            actions=_build_actions(short_bytes, long_bytes, "failure"),
+            actions=failure_actions,
             errors=errors,
             checked_at=checked_at,
         )
