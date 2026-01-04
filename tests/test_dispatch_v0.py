@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from automation_core.dispatch.adapters import DispatchAdapterError
 from automation_core.dispatch_v0 import (
     MAX_PREVIEW_CHARS,
     _validate_run_id,
@@ -140,6 +141,7 @@ def test_dispatch_dry_run_enabled(tmp_path, monkeypatch):
     assert audit["inputs"]["dispatch_enabled"] is True
     assert audit["inputs"]["target"] == "youtube_community"
     assert audit["result"]["actions"][-1]["reason"] == "dry_run default"
+    assert audit["result"]["actions"][0]["adapter"] == "youtube_community"
 
 
 def test_dispatch_target_env_override(tmp_path, monkeypatch):
@@ -149,9 +151,14 @@ def test_dispatch_target_env_override(tmp_path, monkeypatch):
     monkeypatch.setenv("DISPATCH_ENABLED", "true")
     monkeypatch.setenv("DISPATCH_TARGET", "line")
 
-    audit, _ = generate_dispatch_audit(run_id, base_dir=tmp_path)
-
+    with pytest.raises(DispatchAdapterError):
+        generate_dispatch_audit(run_id, base_dir=tmp_path)
+    audit_path = tmp_path / "output" / run_id / "artifacts" / "dispatch_audit.json"
+    assert audit_path.exists()
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    assert audit["result"]["status"] == "failed"
     assert audit["inputs"]["target"] == "line"
+    assert audit["errors"][0]["code"] == "unknown_target"
 
 
 def test_dispatch_print_only_mode(tmp_path, monkeypatch):
@@ -193,7 +200,26 @@ def test_dispatch_mode_invalid_fails_and_writes_failed_audit(tmp_path, monkeypat
     assert audit_path.exists()
     audit = json.loads(audit_path.read_text(encoding="utf-8"))
     assert audit["result"]["status"] == "failed"
-    assert audit["errors"]
+    assert audit["inputs"]["dispatch_mode"] == "dry_run"
+    assert audit["errors"][0]["code"] == "publish_not_supported"
+    assert audit["errors"][0]["detail"]["requested_mode"] == "publish"
+
+
+def test_dispatch_mode_other_invalid_maps_to_invalid_argument(tmp_path, monkeypatch):
+    run_id = "run_invalid_mode_other"
+    _write_post_summary(tmp_path, run_id)
+    monkeypatch.setenv("PIPELINE_ENABLED", "true")
+    monkeypatch.setenv("DISPATCH_ENABLED", "true")
+    monkeypatch.setenv("DISPATCH_MODE", "weird")
+
+    with pytest.raises(ValueError, match="DISPATCH_MODE"):
+        generate_dispatch_audit(run_id, base_dir=tmp_path)
+    audit_path = tmp_path / "output" / run_id / "artifacts" / "dispatch_audit.json"
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    assert audit["result"]["status"] == "failed"
+    assert audit["inputs"]["dispatch_mode"] == "dry_run"
+    assert audit["errors"][0]["code"] == "invalid_argument"
+    assert audit["errors"][0]["detail"]["requested_mode"] == "weird"
 
 
 @pytest.mark.parametrize(
