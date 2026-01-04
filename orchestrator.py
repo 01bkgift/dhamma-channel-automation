@@ -21,7 +21,12 @@ SRC_ROOT = ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from automation_core import dispatch_v0, post_templates, youtube_upload  # noqa: E402
+from automation_core import (  # noqa: E402
+    dispatch_v0,
+    post_templates,
+    publish_request_v0,
+    youtube_upload,
+)
 from automation_core.utils.env import parse_pipeline_enabled  # noqa: E402
 
 POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
@@ -140,6 +145,19 @@ def _run_dispatch_v0_step(run_id: str, root_dir: Path) -> str:
         log("Dispatch v0: skipped (PIPELINE_ENABLED=false)")
         return "skipped"
     return audit_path.relative_to(root_dir).as_posix()
+
+
+def _run_publish_request_v0_step(run_id: str, root_dir: Path) -> str:
+    """
+    รัน publish_request_v0 เพื่อสร้าง publish_request.json
+    """
+    _, request_path = publish_request_v0.generate_publish_request(
+        run_id, base_dir=root_dir
+    )
+    if request_path is None:
+        log("Publish request v0: skipped (PIPELINE_ENABLED=false)")
+        return "skipped"
+    return request_path.relative_to(root_dir).as_posix()
 
 
 def _resolve_script_path(script_path: str | Path, root_dir: Path) -> Path:
@@ -2588,6 +2606,13 @@ def agent_dispatch_v0(_step, run_dir: Path):
     return _run_dispatch_v0_step(run_id, root_dir)
 
 
+def agent_publish_request_v0(_step, run_dir: Path):
+    """รันเอเจนต์ publish_request_v0 เพื่อสร้าง publish_request.json"""
+    run_id = run_dir.name
+    root_dir = ROOT.resolve()
+    return _run_publish_request_v0_step(run_id, root_dir)
+
+
 def _youtube_upload_parse_int_env(name: str, default: int) -> int:
     raw = os.environ.get(name)
     if raw is None or not raw.strip():
@@ -3638,6 +3663,7 @@ AGENTS = {
     "post_templates": agent_post_templates,
     "post.templates": agent_post_templates,
     "dispatch.v0": agent_dispatch_v0,
+    "publish_request.v0": agent_publish_request_v0,
     "youtube.upload": agent_youtube_upload,
     "Localization": agent_localization,
     "ThumbnailGenerator": agent_thumbnail_generator,
@@ -3690,6 +3716,7 @@ def run_pipeline(pipeline_path: Path, run_id: str):
         "post_templates", aliases=POST_TEMPLATES_ALIASES
     )
     has_dispatch_v0 = _pipeline_has_step("dispatch.v0")
+    has_publish_request_v0 = _pipeline_has_step("publish_request.v0")
 
     log(f"Pipeline: {pipeline_name} ({len(steps)} steps)")
 
@@ -3711,6 +3738,7 @@ def run_pipeline(pipeline_path: Path, run_id: str):
     root_dir = ROOT.resolve()
     post_templates_ran = False
     dispatch_ran = False
+    publish_request_ran = False
 
     def _run_dispatch_once() -> None:
         """เรียก dispatch_v0 หนึ่งครั้งเมื่อยังไม่ได้รันและไม่มี step dispatch.v0 ระบุไว้"""
@@ -3720,8 +3748,27 @@ def run_pipeline(pipeline_path: Path, run_id: str):
         try:
             _run_dispatch_v0_step(run_id, root_dir)
             dispatch_ran = True
+            _run_publish_request_once()
         except Exception as e:
             log(f"ERROR in dispatch_v0: {e}", "ERROR")
+            raise
+
+    def _run_publish_request_once() -> None:
+        """เรียก publish_request_v0 หลัง dispatch_v0 เมื่อยังไม่ได้รันและไม่มี step ระบุไว้"""
+        nonlocal publish_request_ran
+        if publish_request_ran or has_publish_request_v0:
+            return
+        if not dispatch_ran:
+            return
+        dispatch_audit_path = root_dir / _dispatch_audit_output_rel(run_id)
+        if not dispatch_audit_path.is_file():
+            log("Publish request v0: skipped (dispatch_audit missing)")
+            return
+        try:
+            _run_publish_request_v0_step(run_id, root_dir)
+            publish_request_ran = True
+        except Exception as e:
+            log(f"ERROR in publish_request_v0: {e}", "ERROR")
             raise
 
     def _mark_post_templates_complete() -> None:
@@ -3795,6 +3842,9 @@ def run_pipeline(pipeline_path: Path, run_id: str):
                 _mark_post_templates_complete()
             if uses == "dispatch.v0":
                 dispatch_ran = True
+                _run_publish_request_once()
+            if uses == "publish_request.v0":
+                publish_request_ran = True
             log(f"[{i}/{len(steps)}] ✓ {step_id} completed", "SUCCESS")
             _maybe_run_post_templates(uses, result)
         except Exception as e:
