@@ -312,10 +312,10 @@ def generate_dispatch_audit(
         print("Pipeline disabled by PIPELINE_ENABLED=false")
         return None, None
 
-    # pre-compute for failure audit paths
+    # pre-compute defaults for failure audit paths
     post_summary_rel = _post_summary_rel_path(run_id, validate=False)
     mode = (
-        "dry_run"  # placeholder for failure audits; real validation happens after load
+        "dry_run"  # default dispatch mode; also used in failure audits if mode validation fails
     )
     enabled = (
         dispatch_enabled
