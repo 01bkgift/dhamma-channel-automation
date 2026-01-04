@@ -415,12 +415,12 @@ def generate_dispatch_audit(
             error_code = "file_not_found"
         elif isinstance(exc, json.JSONDecodeError):
             error_code = "invalid_json"
-        elif isinstance(exc, ValueError) and str(exc).startswith("Invalid JSON in "):
-            error_code = "invalid_json"
-        elif isinstance(exc, DispatchAdapterError):
-            error_code = exc.code
         elif isinstance(exc, DispatchModeError):
             error_code = exc.code
+        elif isinstance(exc, DispatchAdapterError):
+            error_code = exc.code
+        elif isinstance(exc, ValueError) and str(exc).startswith("Invalid JSON in "):
+            error_code = "invalid_json"
         else:
             # ใช้สำหรับโหมดหรือค่าพารามิเตอร์ที่ไม่ถูกต้อง
             error_code = "invalid_argument"
