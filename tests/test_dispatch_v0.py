@@ -73,7 +73,7 @@ def test_validate_dispatch_audit_happy_path(tmp_path, monkeypatch):
     validated = validate_dispatch_audit(audit, run_id)
     actions = validated["result"]["actions"]
     assert [a["label"] for a in actions] == ["short", "long", "publish"]
-    assert actions[0]["bytes"] == len("short content")
+    assert actions[0]["bytes"] == len("short content".encode("utf-8"))
     assert actions[2]["type"] == "noop"
 
 
