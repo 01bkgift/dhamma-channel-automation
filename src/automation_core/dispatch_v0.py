@@ -136,6 +136,8 @@ def validate_dispatch_audit(audit: dict[str, Any], run_id: str) -> dict[str, Any
         or ".." in summary_path_obj.parts
     ):
         raise ValueError("inputs.post_content_summary must be relative without '..'")
+    if not summary_path_obj.parts or summary_path_obj.parts[0] != "output":
+        raise ValueError("inputs.post_content_summary must be under output/")
     dispatch_enabled = inputs.get("dispatch_enabled")
     if not isinstance(dispatch_enabled, bool):
         raise ValueError("inputs.dispatch_enabled must be a boolean")
@@ -193,7 +195,7 @@ def validate_dispatch_audit(audit: dict[str, Any], run_id: str) -> dict[str, Any
         if err.get("step") != "dispatch.v0":
             raise ValueError("error.step must be 'dispatch.v0'")
         # detail is intentionally flexible; accept any type (including None)
-        detail = err.get("detail")
+        err.get("detail")
     return audit
 
 
@@ -309,7 +311,7 @@ def generate_dispatch_audit(
     run_id = _validate_run_id(run_id)
     if not parse_pipeline_enabled(os.environ.get("PIPELINE_ENABLED")):
         print("Pipeline disabled by PIPELINE_ENABLED=false")
-        return None, None
+        return {}, None
 
     # pre-compute defaults for failure audit paths
     post_summary_rel = _post_summary_rel_path(run_id, validate=False)
@@ -412,7 +414,9 @@ def generate_dispatch_audit(
             if audit_path is not None
             else ""
         )
-        print(f"Dispatch v0: status=failed audit={audit_rel or 'skipped'}")
+        print(
+            f"Dispatch v0: status=failed audit={audit_rel or 'skipped'}; raising for visibility"
+        )
         raise
 
 
