@@ -214,10 +214,10 @@ def _run_preview_step(run_id: str, root_dir: Path) -> str:
         raise ValueError("publish_request must be a JSON object")
 
     preview = preview_from_publish_request(payload, registry=_build_preview_registry())
-    preview_json = json.dumps(preview, ensure_ascii=False, indent=2)
-    print(preview_json)
     if preview.get("errors"):
         raise PreviewError(preview)
+    preview_json = json.dumps(preview, ensure_ascii=False, indent=2)
+    print(preview_json)
     return "preview"
 
 
