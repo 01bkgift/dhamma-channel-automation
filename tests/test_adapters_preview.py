@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
-
-from automation_core.adapters.base import AdapterPreview
+from automation_core.adapters.noop import NoopAdapter
 from automation_core.adapters.preview import (
     MAX_PREVIEW_CHARS,
-    build_bounded_preview,
     preview_from_publish_request,
 )
 from automation_core.adapters.registry import AdapterRegistry, get_default_registry
@@ -62,47 +59,11 @@ def _make_publish_request(
     }
 
 
-class PreviewAdapter:
-    def __init__(self, target: str) -> None:
-        self._target = target
-
-    def target(self) -> str:
-        return self._target
-
-    def validate(self, publish_request: dict[str, Any]) -> None:
-        pass
-
-    def build_preview(self, publish_request: dict[str, Any]) -> AdapterPreview:
-        short_text = publish_request["request"]["content_short"]
-        long_text = publish_request["request"]["content_long"]
-        return {
-            "target": publish_request["inputs"]["target"],
-            "platform": publish_request["inputs"]["platform"],
-            "mode": "dry_run",
-            "actions": [
-                {
-                    "type": "print",
-                    "label": "short",
-                    "bytes": len(short_text.encode("utf-8")),
-                    "preview": build_bounded_preview(short_text),
-                },
-                {
-                    "type": "print",
-                    "label": "long",
-                    "bytes": len(long_text.encode("utf-8")),
-                    "preview": build_bounded_preview(long_text),
-                },
-                {"type": "noop", "label": "publish", "reason": "no_publish_in_v0"},
-            ],
-            "errors": [],
-        }
-
-
 def test_preview_happy_path_returns_bounded_actions():
     long_text = "x" * 600
     payload = _make_publish_request(long=long_text)
     registry = AdapterRegistry()
-    registry.register(PreviewAdapter("youtube"))
+    registry.register(NoopAdapter("youtube"))
 
     preview = preview_from_publish_request(payload, registry=registry)
 
@@ -180,6 +141,7 @@ def test_preview_end_to_end_with_default_registry_success():
 
 
 def test_preview_unknown_target_returns_structured_error():
+    # NOTE: "tiktok" is intentionally not in ALLOWED_TARGETS_V0; verify safe errors.
     payload = _make_publish_request(target="tiktok")
     registry = get_default_registry()
 

@@ -7,11 +7,19 @@ from .preview import PUBLISH_REASON, build_bounded_preview
 
 
 class NoopAdapter:
+    """Deterministic adapter for dry-run previews.
+
+    Produces bounded `print` actions and a `noop` publish action; never publishes.
+    """
+
+    def __init__(self, target: str = "youtube_community") -> None:
+        self._target = target
+
     def target(self) -> str:
-        return "youtube_community"
+        return self._target
 
     def validate(self, publish_request: dict[str, Any]) -> None:
-        return None
+        pass
 
     def build_preview(self, publish_request: dict[str, Any]) -> AdapterPreview:
         short_text = publish_request["request"]["content_short"]
