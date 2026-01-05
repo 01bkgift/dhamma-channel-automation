@@ -63,35 +63,25 @@ def _raise_invalid_preview(message: str, *, detail: object | None = None) -> Non
 
 def _validate_actions(actions: list[dict[str, Any]]) -> None:
     if len(actions) != 3:
-        _raise_invalid_preview("invalid_preview: actions must have 3 items")
+        _raise_invalid_preview("actions must have 3 items")
 
     def require_print(action: dict[str, Any], label: str) -> None:
         if action.get("type") != "print" or action.get("label") != label:
-            _raise_invalid_preview(
-                f"invalid_preview: action {label} must be print/{label}"
-            )
+            _raise_invalid_preview(f"action {label} must be print/{label}")
         bytes_value = action.get("bytes")
         if not isinstance(bytes_value, int) or bytes_value < 0:
-            _raise_invalid_preview(
-                f"invalid_preview: action {label} bytes must be >= 0"
-            )
+            _raise_invalid_preview(f"action {label} bytes must be >= 0")
         preview = action.get("preview")
         if not isinstance(preview, str):
-            _raise_invalid_preview(
-                f"invalid_preview: action {label} preview must be string"
-            )
+            _raise_invalid_preview(f"action {label} preview must be string")
         if len(preview) > MAX_PREVIEW_CHARS:
-            _raise_invalid_preview(f"invalid_preview: action {label} preview too long")
+            _raise_invalid_preview(f"action {label} preview too long")
 
     def require_publish(action: dict[str, Any]) -> None:
         if action.get("type") != "noop" or action.get("label") != "publish":
-            _raise_invalid_preview(
-                "invalid_preview: action publish must be noop/publish"
-            )
+            _raise_invalid_preview("action publish must be noop/publish")
         if action.get("reason") != PUBLISH_REASON:
-            _raise_invalid_preview(
-                "invalid_preview: action publish reason must be no_publish_in_v0"
-            )
+            _raise_invalid_preview("action publish reason must be no_publish_in_v0")
 
     require_print(actions[0], "short")
     require_print(actions[1], "long")
@@ -102,21 +92,21 @@ def _validate_preview(
     preview: AdapterPreview, *, expected_target: str, expected_platform: str
 ) -> None:
     if not isinstance(preview, dict):
-        _raise_invalid_preview("invalid_preview: preview must be a dict")
+        _raise_invalid_preview("preview must be a dict")
     if preview.get("target") != expected_target:
-        _raise_invalid_preview("invalid_preview: target mismatch")
+        _raise_invalid_preview("target mismatch")
     if preview.get("platform") != expected_platform:
-        _raise_invalid_preview("invalid_preview: platform mismatch")
+        _raise_invalid_preview("platform mismatch")
     if preview.get("mode") != "dry_run":
-        _raise_invalid_preview("invalid_preview: mode must be dry_run")
+        _raise_invalid_preview("mode must be dry_run")
     errors = preview.get("errors")
     if not isinstance(errors, list):
-        _raise_invalid_preview("invalid_preview: errors must be a list")
+        _raise_invalid_preview("errors must be a list")
     if errors:
-        _raise_invalid_preview("invalid_preview: errors must be empty on success")
+        _raise_invalid_preview("errors must be empty on success")
     actions = preview.get("actions")
     if not isinstance(actions, list):
-        _raise_invalid_preview("invalid_preview: actions must be a list")
+        _raise_invalid_preview("actions must be a list")
     _validate_actions(actions)
 
 
@@ -124,11 +114,8 @@ def preview_from_publish_request(
     publish_request: dict[str, Any], *, registry: AdapterRegistry
 ) -> AdapterPreview:
     target, platform = _extract_target_platform(publish_request)
-    run_id = ""
-    if isinstance(publish_request, dict):
-        run_id_value = publish_request.get("run_id")
-        if isinstance(run_id_value, str):
-            run_id = run_id_value
+    run_id_value = publish_request.get("run_id")
+    run_id = run_id_value if isinstance(run_id_value, str) else ""
     try:
         validate_publish_request(publish_request, run_id)
     except Exception as exc:
@@ -139,7 +126,6 @@ def preview_from_publish_request(
         )
         return _error_preview(target=target, platform=platform, error=error)
 
-    target, platform = _extract_target_platform(publish_request)
     try:
         adapter = registry.get(target)
         adapter.validate(publish_request)

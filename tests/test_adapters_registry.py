@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from automation_core.adapters.base import AdapterError, AdapterPreview
@@ -13,10 +15,10 @@ class StubAdapter:
     def target(self) -> str:
         return self._target
 
-    def validate(self, publish_request: dict) -> None:
+    def validate(self, publish_request: dict[str, Any]) -> None:
         return None
 
-    def build_preview(self, publish_request: dict) -> AdapterPreview:
+    def build_preview(self, publish_request: dict[str, Any]) -> AdapterPreview:
         raise NotImplementedError
 
 

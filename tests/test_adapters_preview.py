@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Any
 
-from automation_core.adapters.base import AdapterError, AdapterPreview
+from automation_core.adapters.base import AdapterPreview
 from automation_core.adapters.preview import (
     build_bounded_preview,
     preview_from_publish_request,
@@ -64,14 +65,10 @@ class PreviewAdapter:
     def target(self) -> str:
         return self._target
 
-    def validate(self, publish_request: dict) -> None:
-        if not isinstance(publish_request, dict):
-            raise AdapterError(
-                code="invalid_publish_request",
-                message="invalid_publish_request: payload must be dict",
-            )
+    def validate(self, publish_request: dict[str, Any]) -> None:
+        pass
 
-    def build_preview(self, publish_request: dict) -> AdapterPreview:
+    def build_preview(self, publish_request: dict[str, Any]) -> AdapterPreview:
         short_text = publish_request["request"]["content_short"]
         long_text = publish_request["request"]["content_long"]
         return {
