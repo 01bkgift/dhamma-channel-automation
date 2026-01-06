@@ -40,7 +40,7 @@ Summary:
 - <what changed>
 
 Testing:
-- ran: <command> / not ran: <reason>
+- ran: <command> / not run: <reason>
 
 Security assertions:
 - No secrets
