@@ -48,7 +48,7 @@ This document defines a deterministic, docs-governed prompt standard for opening
 - Summary:
   - <item>
 - Testing:
-  - ran/not ran: <reason>
+  - ran/not run: <reason>
 - Security:
   - no secrets
   - no external calls
