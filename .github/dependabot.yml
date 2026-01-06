@@ -4,15 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    reviewers:
+    reviewers: &reviewers
       - "01bkgift"
-    assignees:
+    assignees: &assignees
       - "01bkgift"
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    reviewers:
-      - "01bkgift"
-    assignees:
-      - "01bkgift"
+    reviewers: *reviewers
+    assignees: *assignees
