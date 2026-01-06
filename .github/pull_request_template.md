@@ -11,6 +11,7 @@
 - [ ] Refactoring (no functional changes)
 - [ ] Performance improvement
 - [ ] Test coverage improvement
+## Why
 
 ## Testing
 
@@ -66,6 +67,9 @@ curl http://127.0.0.1:3007/v1/meta
 - [ ] Linter passes (ruff check)
 - [ ] Formatter passes (ruff format)
 - [ ] Type checking passes (mypy)
+- [ ] ruff format --check .
+- [ ] ruff check .
+- [ ] pytest -q
 
 ## Security
 
@@ -133,7 +137,7 @@ Closes #<!-- issue number -->
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published
+- [ ] No secrets committed
+## Evidence (optional)
 
-## Additional Notes
-
-<!-- Any additional information that reviewers should know -->
+<!-- Provide any screenshots, logs, or other evidence to support your changes. -->
