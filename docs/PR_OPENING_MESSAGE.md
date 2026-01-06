@@ -14,7 +14,7 @@ Summary:
 - <what changed>
 
 Testing:
-- ran: <command> / not ran: <reason>
+- ran: <command> / not run: <reason>
 
 Security:
 - No secrets
