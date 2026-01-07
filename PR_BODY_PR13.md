@@ -14,6 +14,7 @@ Added `notify.webhook` step to the pipeline. This step sends a lean, determinist
 ## Security
 
 - ✅ **No Secrets Committed**: Webhook URLs are sourced STRICTLY from `NOTIFY_WEBHOOKS_JSON` environment variable.
+  Example: `[{"name":"ops","url":"https://discord.com/api/webhooks/..."}]` (Raw URL only)
 - ✅ **Redaction**: All URLs in logs and artifacts are redacted (e.g., `https://discord.com/***oken`).
 - ✅ **Safe Defaults**: `NOTIFY_ENABLED` defaults to `false`.
 

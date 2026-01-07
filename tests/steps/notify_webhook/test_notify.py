@@ -273,4 +273,37 @@ def test_invalid_timeout_config(mock_run_dir, mock_decision_artifact):
             notify_step.run({}, mock_run_dir)
 
     summary = get_summary(mock_run_dir)
+    summary = get_summary(mock_run_dir)
     assert summary["notification_status"] == "sent"
+
+
+def test_invalid_markdown_url(mock_run_dir):
+    with mock.patch.dict(
+        os.environ,
+        {
+            "NOTIFY_ENABLED": "true",
+            "NOTIFY_WEBHOOKS_JSON": '[{"name": "bad_link", "url": "[link](http://bad.com)"}]',
+        },
+        clear=True,
+    ):
+        notify_step.run({}, mock_run_dir)
+        
+    summary = get_summary(mock_run_dir)
+    assert "INVALID_CONFIG" in summary["reason_codes"]
+    assert summary["notification_status"] == "skipped"
+
+
+def test_invalid_template_placeholders(mock_run_dir, mock_decision_artifact, basic_env):
+    with mock.patch.dict(
+        os.environ,
+        {
+            "NOTIFY_ENABLED": "true",
+            "NOTIFY_MESSAGE_TEMPLATE": "Hello {unsafe_var}",
+        },
+        clear=True,
+    ):
+         notify_step.run({}, mock_run_dir)
+         
+    summary = get_summary(mock_run_dir)
+    assert "INVALID_CONFIG" in summary["reason_codes"]
+    assert summary["notification_status"] == "skipped"

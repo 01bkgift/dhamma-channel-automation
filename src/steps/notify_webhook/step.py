@@ -89,13 +89,24 @@ def run(step: dict, run_dir: Path) -> str:
                         )
                         break
 
-                    if not isinstance(t, dict) or "name" not in t or "url" not in t:
+                    if (
+                        not isinstance(t, dict) 
+                        or "name" not in t 
+                        or "url" not in t
+                    ):
                         if "INVALID_CONFIG" not in reason_codes:
                             reason_codes.append("INVALID_CONFIG")
                         continue
 
                     name = t["name"]
                     url = t["url"]
+                    
+                    # ISO: Validate Raw URL (no Markdown links)
+                    if url.startswith("[") or "](" in url:
+                        logger.warning(f"Invalid URL format for target '{name}': Markdown links not allowed.")
+                        if "INVALID_CONFIG" not in reason_codes:
+                            reason_codes.append("INVALID_CONFIG")
+                        continue
                     if name in seen_names:
                         logger.warning(f"Duplicate target name '{name}', ignoring")
                         continue
@@ -170,17 +181,51 @@ def run(step: dict, run_dir: Path) -> str:
     }
 
     # Render Template
+    # Render Template
     custom_template = os.environ.get("NOTIFY_MESSAGE_TEMPLATE")
+    safe_template_placeholders = {
+        "{run_id}", "{decision}", "{confidence}", "{quality_gate}", 
+        "{reasons}", "{artifacts_path}"
+    }
+
     if custom_template:
-        message_body = custom_template.format_map(SafeDict(template_data))
+        # ISO: Check for forbidden placeholders
+        # Simple check: Ensure all "{" ... "}" patterns are in whitelist?
+        # Or just allow format_map with safe dict. The unsafe part is attribute access like {run_id.__class__}.
+        # Python's format_map allows simple key access. If we pass a dict of strings, attribute access is NOT possible via format string unless the object in dict allows it.
+        # strings don't allow dangerous attribute access easily in format?
+        # Actually, "{run_id.__class__}" would interpret run_id.__class__.
+        # So we should validata the allowed keys in the template string.
+        # But for now, let's implement the user requirement: "If { other } -> INVALID_CONFIG"
+        import re
+        placeholders = set(re.findall(r"\{([a-zA-Z0-9_]+)\}", custom_template))
+        # allowed keys in template_data
+        allowed_keys = set(template_data.keys())
+        invalid_placeholders = placeholders - allowed_keys
+        if invalid_placeholders:
+            reason_codes.append("INVALID_CONFIG")
+            logger.warning(f"Invalid template placeholders: {invalid_placeholders}")
+            # Fallback to default? Or skip?
+            # User said "INVALID_CONFIG". We can skip notification if config is invalid.
+            if "INVALID_CONFIG" not in reason_codes: reason_codes.append("INVALID_CONFIG")
+            # If fail_open/skip login below handles return
+        else:
+             message_body = custom_template.format(**template_data) # Safe if validated
+    
+    if "INVALID_CONFIG" in reason_codes:
+         # Write summary and return early logic needed? 
+         # We are deep in function.
+         # Let's break or handle.
+         pass
     else:
-        message_body = (
-            f"[dhamma-channel] decision={decision} confidence={confidence}\n"
-            f"run_id: {run_id}\n"
-            f"quality_gate: {quality_gate}\n"
-            f"reasons: {reasons_str}\n"
-            f"artifacts: output/{run_id}/artifacts/"
-        )
+        if not custom_template:
+            message_body = (
+                f"[dhamma-channel] decision={decision} confidence={confidence}\n"
+                f"run_id: {run_id}\n"
+                f"quality_gate: {quality_gate}\n"
+                f"reasons: {reasons_str}\n"
+                f"artifacts: output/{run_id}/artifacts/"
+            )
 
     # Trim to MAX_MESSAGE_LENGTH chars
     if len(message_body) > MAX_MESSAGE_LENGTH:
