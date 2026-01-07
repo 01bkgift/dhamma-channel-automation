@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Optional
 
 from automation_core.base_agent import BaseAgent
-from .model import AnalyticsInput, AnalyticsOutput, VideoStats, DailyStat
+
 from .adapter import YouTubeAnalyticsAdapter
+from .model import AnalyticsInput, AnalyticsOutput, DailyStat, VideoStats
+
 
 class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
     """
     Agent for fetching and analyzing YouTube Channel Performance.
     """
-    
-    def __init__(self, adapter: Optional[YouTubeAnalyticsAdapter] = None):
+
+    def __init__(self, adapter: YouTubeAnalyticsAdapter | None = None):
         super().__init__(
             name="AnalyticsAgent",
             version="1.0.0",
@@ -22,7 +22,7 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
     def _parse_date_range(self, date_range: str):
         """Parse date range string into start and end dates (YYYY-MM-DD)"""
         today = datetime.now()
-        
+
         if date_range == "7d":
             start_date = today - timedelta(days=7)
             end_date = today
@@ -39,29 +39,29 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
             # Default to 30d
             start_date = today - timedelta(days=30)
             end_date = today
-            
+
         return start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")
 
     def run(self, input_data: AnalyticsInput) -> AnalyticsOutput:
         """Run the analysis"""
         if not self.adapter:
             raise RuntimeError("Adapter not initialized")
-            
+
         start_date, end_date = self._parse_date_range(input_data.date_range)
-        
+
         # 1. Fetch Daily Stats (Views, Subs, Watch Time)
         report = self.adapter.get_channel_stats(start_date, end_date)
-        
+
         total_views = 0
         total_watch_minutes = 0
         total_subs_gained = 0
         daily_stats = []
-        
+
         if "rows" in report:
             for row in report["rows"]:
                 # API returns [day, views, estimatedMinutesWatched, subscribersGained, subscribersLost]
                 day, views, watch_min, subs_gain, subs_lost = row
-                
+
                 daily_stats.append(DailyStat(
                     date=day,
                     views=int(views),
@@ -69,7 +69,7 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
                     subscribers_gained=int(subs_gain),
                     subscribers_lost=int(subs_lost)
                 ))
-                
+
                 total_views += int(views)
                 total_watch_minutes += int(watch_min)
                 total_subs_gained += (int(subs_gain) - int(subs_lost))
@@ -77,11 +77,11 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
         # 2. Fetch Top Videos (Recent 10)
         recent_videos = self.adapter.get_recent_videos(max_results=10)
         top_videos = []
-        
+
         for vid in recent_videos:
             snippet = vid["snippet"]
             stats = vid["statistics"]
-            
+
             published_at_str = snippet.get("publishedAt")
             if not published_at_str:
                 print(f"⚠️ WARNING: Skipping video {vid.get('id')} due to missing 'publishedAt' field.")
@@ -95,10 +95,10 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
                 likes=int(stats.get("likeCount", 0)),
                 comments=int(stats.get("commentCount", 0))
             ))
-            
+
         # 3. Sort by views
         top_videos.sort(key=lambda x: x.views, reverse=True)
-        
+
         return AnalyticsOutput(
             start_date=start_date,
             end_date=end_date,

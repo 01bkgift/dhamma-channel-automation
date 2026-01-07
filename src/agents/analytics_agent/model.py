@@ -1,6 +1,7 @@
-from typing import List, Optional
 from datetime import datetime
+
 from pydantic import BaseModel, Field
+
 
 class VideoStats(BaseModel):
     """Statistics for a single video"""
@@ -24,7 +25,7 @@ class DailyStat(BaseModel):
 class AnalyticsInput(BaseModel):
     """Input for Analytics Agent"""
     date_range: str = Field(
-        default="30d", 
+        default="30d",
         description="Date range shortcut (7d, 30d, 90d) or custom range (YYYY-MM-DD:YYYY-MM-DD)"
     )
 
@@ -36,5 +37,5 @@ class AnalyticsOutput(BaseModel):
     total_views: int
     total_watch_time_minutes: int
     total_subscribers_gained: int
-    top_videos: List[VideoStats] = []
-    daily_stats: List[DailyStat] = []
+    top_videos: list[VideoStats] = []
+    daily_stats: list[DailyStat] = []
