@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from .model import DecisionEnum, DecisionSupportOutput
+
+# KPI Thresholds
+KPI_TOTAL_VIEWS_THRESHOLD = 1000
+KPI_WATCH_TIME_THRESHOLD = 5000
+KPI_SUBS_GAINED_THRESHOLD = 10
 
 
 def _read_json_safe(path: Path) -> dict[str, Any] | None:
@@ -15,9 +20,30 @@ def _read_json_safe(path: Path) -> dict[str, Any] | None:
         data = json.loads(path.read_text(encoding="utf-8"))
         if isinstance(data, dict):
             return data
-    except Exception:
+    except (json.JSONDecodeError, OSError):
         pass
     return None
+
+
+def _get_missing_kpi_fallback(
+    reasons: list[str], recommendations: list[str]
+) -> tuple[DecisionEnum, float]:
+    """Helper to populate reasons/recommendations for missing or incomplete KPI data."""
+    decision = DecisionEnum.RECOMMEND_PUBLISH
+    confidence = 0.60
+    reasons.append("MISSING_KPI_BASELINE")
+
+    # Avoid adding duplicate reasons if called multiple times (though logic flow prevents this usually)
+    if "INCOMPLETE_KPI_DATA" not in reasons and "MISSING_KPI_BASELINE" not in reasons:
+        pass  # Logic currently appends, caller handles specific reason codes additionally if needed
+
+    recommendations.append(
+        "Publish in the lowest-risk mode only (YouTube Community / safest adapter)."
+    )
+    recommendations.append(
+        "Collect KPI baseline for 7–14 days, then enable KPI-based decisions."
+    )
+    return decision, confidence
 
 
 def run_decision_support(step: dict[str, Any], run_dir: Path) -> Path:
@@ -26,23 +52,11 @@ def run_decision_support(step: dict[str, Any], run_dir: Path) -> Path:
 
     Generates a deterministic recommendation based on Quality Gate and KPI artifacts.
     """
-    # Resolve paths (run_dir is expected to be output/<run_id>/artifacts/..)
-    # Actually, based on orchestrator.py, run_dir might be output/<run_id>/ or output/<run_id>/artifacts/
-    # Let's assume standard layout. If run_dir has "artifacts" in it, use it.
-    # Otherwise, check if "artifacts" subdir exists.
-
-    # In orchestrator.py: out = run_dir / step["output"]
-    # Usually step["output"] is just filename.
-    # So run_dir seems to be the directory where artifacts should be written.
-
     artifacts_dir = run_dir
 
     # Define input paths
     quality_gate_path = artifacts_dir / "quality_gate_summary.json"
     kpi_summary_path = artifacts_dir / "kpi_summary.json"
-    # Fallback for KPI if missing in current run (from PR11)
-    # The prompt says: output/<run_id>/artifacts/kpi_summary.json OR the KPI artifact produced by PR11
-    # We will look for kpi_summary.json in the artifacts dir.
 
     # Read inputs
     quality_data = _read_json_safe(quality_gate_path)
@@ -80,20 +94,11 @@ def run_decision_support(step: dict[str, Any], run_dir: Path) -> Path:
 
     # R3: KPI Missing
     elif not kpi_data:
-        decision = DecisionEnum.RECOMMEND_PUBLISH
-        confidence = 0.60
-        reasons.append("MISSING_KPI_BASELINE")
-        recommendations.append(
-            "Publish in the lowest-risk mode only (YouTube Community / safest adapter)."
-        )
-        recommendations.append(
-            "Collect KPI baseline for 7–14 days, then enable KPI-based decisions."
-        )
+        decision, confidence = _get_missing_kpi_fallback(reasons, recommendations)
 
     # R4: Quality Pass + KPI Present
     else:
         # Compute simple KPI trend
-        # read total_views, total_watch_time_minutes, total_subscribers_gained
         total_views = kpi_data.get("total_views")
         watch_time = kpi_data.get("total_watch_time_minutes")
         subs_gained = kpi_data.get("total_subscribers_gained")
@@ -101,20 +106,15 @@ def run_decision_support(step: dict[str, Any], run_dir: Path) -> Path:
         # Check presence
         if total_views is None or watch_time is None or subs_gained is None:
             # Treat as missing KPI baseline (R3 fallback)
-            decision = DecisionEnum.RECOMMEND_PUBLISH
-            confidence = 0.60
-            reasons.append("MISSING_KPI_BASELINE")
-            reasons.append("INCOMPLETE_KPI_DATA")
-            recommendations.append(
-                "Publish in the lowest-risk mode only (YouTube Community / safest adapter)."
-            )
-            recommendations.append(
-                "Collect KPI baseline for 7–14 days, then enable KPI-based decisions."
-            )
+            decision, confidence = _get_missing_kpi_fallback(reasons, recommendations)
+            if "INCOMPLETE_KPI_DATA" not in reasons:
+                reasons.append("INCOMPLETE_KPI_DATA")
         else:
             # Thresholds
             kpi_up = (
-                (total_views >= 1000) or (watch_time >= 5000) or (subs_gained >= 10)
+                (total_views >= KPI_TOTAL_VIEWS_THRESHOLD)
+                or (watch_time >= KPI_WATCH_TIME_THRESHOLD)
+                or (subs_gained >= KPI_SUBS_GAINED_THRESHOLD)
             )
 
             if kpi_up:
@@ -132,29 +132,22 @@ def run_decision_support(step: dict[str, Any], run_dir: Path) -> Path:
                 recommendations.append("Consider re-editing opening sequence.")
 
     # Construct Output
-    run_id = step.get("run_id", "unknown_run_id")
-    # run_id might not be in step dict, but is required for schema.
-    # orchestrator often passes run_id separately?
-    # In orchestrator logic I saw earlier: run_id parameter in functions.
-    # But here the signature I guessed is `(step, run_dir)`.
-    # I will extract run_id from run_dir path if possible or optional.
-    # The output schema requires run_id.
+    final_run_id = step.get("run_id")
+    if not final_run_id:
+        # Fallback to inferring run_id from the run directory path.
+        try:
+            if run_dir.name == "artifacts":
+                final_run_id = run_dir.parent.name
+            else:
+                final_run_id = run_dir.name
+        except Exception:
+            final_run_id = "unknown_run_id"
 
-    # Try to extract from run_dir path (output/<run_id>/artifacts)
-    try:
-        # if run_dir is .../output/run-123/artifacts
-        if run_dir.name == "artifacts":
-            inferred_run_id = run_dir.parent.name
-        else:
-            inferred_run_id = run_dir.name
-    except Exception:
-        inferred_run_id = "unknown"
-
-    # Use run_id if available somehow, else inferred
-    final_run_id = inferred_run_id
+    if not final_run_id:
+        final_run_id = "unknown_run_id"
 
     output_model = DecisionSupportOutput(
-        generated_at=datetime.now(UTC).isoformat(),
+        generated_at=datetime.now(timezone.utc).isoformat(),
         run_id=final_run_id,
         decision=decision,
         confidence=confidence,
