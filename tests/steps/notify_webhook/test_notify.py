@@ -182,13 +182,13 @@ def test_determinism_message_digest(mock_run_dir, basic_env, mock_decision_artif
         mock_urlopen.return_value = mock_response
 
         # Run 1
-        with mock.patch("src.steps.notify_webhook.step.datetime") as mock_dt:
+        with mock.patch("steps.notify_webhook.step.datetime") as mock_dt:
             mock_dt.utcnow.return_value = datetime(2024, 1, 1, 12, 0, 0)
             notify_step.run({}, mock_run_dir)
         summary1 = get_summary(mock_run_dir)
 
         # Run 2 (different time)
-        with mock.patch("src.steps.notify_webhook.step.datetime") as mock_dt:
+        with mock.patch("steps.notify_webhook.step.datetime") as mock_dt:
             mock_dt.utcnow.return_value = datetime(2024, 1, 2, 12, 0, 0)
             notify_step.run({}, mock_run_dir)
         summary2 = get_summary(mock_run_dir)
@@ -306,6 +306,7 @@ def test_invalid_template_placeholders(mock_run_dir, mock_decision_artifact, bas
         os.environ,
         {
             "NOTIFY_ENABLED": "true",
+            "NOTIFY_WEBHOOKS_JSON": '[{"name": "test", "url": "http://example.com"}]',
             "NOTIFY_MESSAGE_TEMPLATE": "Hello {unsafe_var}",
         },
         clear=True,

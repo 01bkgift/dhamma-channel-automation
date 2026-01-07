@@ -179,7 +179,6 @@ def run(step: dict, run_dir: Path) -> str:
     }
 
     # Render Template
-    # Render Template
     custom_template = os.environ.get("NOTIFY_MESSAGE_TEMPLATE")
 
     if custom_template:
@@ -209,10 +208,16 @@ def run(step: dict, run_dir: Path) -> str:
             message_body = custom_template.format(**template_data)  # Safe if validated
 
     if "INVALID_CONFIG" in reason_codes:
-        # Write summary and return early logic needed?
-        # We are deep in function.
-        # Let's break or handle.
-        pass
+        logger.warning(f"Invalid configuration detected: {reason_codes}")
+        return _write_summary(
+            run_id,
+            timestamp_utc,
+            "skipped",
+            targets_attempted,
+            "",
+            reason_codes,
+            artifacts_dir,
+        )
     else:
         if not custom_template:
             message_body = (
@@ -336,8 +341,4 @@ def _write_summary(run_id, timestamp, status, targets, digest, reasons, artifact
     return str(path)
 
 
-class SafeDict(dict):
-    """Missing key safe formatter"""
 
-    def __missing__(self, key):
-        return "{" + key + "}"
