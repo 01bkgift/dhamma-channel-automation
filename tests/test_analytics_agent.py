@@ -1,4 +1,3 @@
-
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -15,7 +14,6 @@ from agents.analytics_agent.model import AnalyticsInput, AnalyticsOutput
 
 
 class TestAnalyticsAgent:
-
     @pytest.fixture
     def mock_adapter(self):
         return MockYouTubeAnalyticsAdapter()
@@ -60,10 +58,7 @@ class TestAnalyticsAgent:
 
         # Mock Channel Stats Response
         mock_instance.get_channel_stats.return_value = {
-            "rows": [
-                ["2025-01-01", 100, 500, 2, 0],
-                ["2025-01-02", 200, 600, 3, 1]
-            ]
+            "rows": [["2025-01-01", 100, 500, 2, 0], ["2025-01-02", 200, 600, 3, 1]]
         }
 
         # Mock Recent Videos Response (Batch Style)
@@ -73,22 +68,19 @@ class TestAnalyticsAgent:
         mock_instance.get_recent_videos.return_value = [
             {
                 "id": "vid1",
-                "snippet": {
-                    "title": "Video 1",
-                    "publishedAt": "2025-01-01T10:00:00Z"
-                },
+                "snippet": {"title": "Video 1", "publishedAt": "2025-01-01T10:00:00Z"},
                 "statistics": {
                     "viewCount": "1000",
                     "likeCount": "50",
-                    "commentCount": "10"
-                }
+                    "commentCount": "10",
+                },
             }
         ]
 
         agent = AnalyticsAgent(adapter=mock_instance)
         result = agent.run(AnalyticsInput(date_range="7d"))
 
-        assert result.total_views == 300 # 100 + 200
-        assert result.total_subscribers_gained == 4 # (2-0) + (3-1) = 2+2=4
+        assert result.total_views == 300  # 100 + 200
+        assert result.total_subscribers_gained == 4  # (2-0) + (3-1) = 2+2=4
         assert len(result.top_videos) == 1
         assert result.top_videos[0].video_id == "vid1"

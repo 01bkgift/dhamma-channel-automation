@@ -29,7 +29,7 @@ class MockYouTubeAnalyticsAdapter(YouTubeAnalyticsAdapter):
         return {
             "kind": "youtubeAnalytics#resultTable",
             "columnHeaders": [],
-            "rows": rows
+            "rows": rows,
         }
 
     def get_recent_videos(self, max_results: int = 10) -> list[dict[str, Any]]:
@@ -37,23 +37,27 @@ class MockYouTubeAnalyticsAdapter(YouTubeAnalyticsAdapter):
 
         videos = []
         for i in range(5):
-            videos.append({
-                "kind": "youtube#video",
-                "id": f"vid_00{i}",
-                "snippet": {
-                    "publishedAt": "2026-01-01T10:00:00Z",
-                    "title": f"Mock Video {i+1} - Dhamma Talk",
-                    "description": "Description...",
-                    "channelId": "channel_id",
-                    "thumbnails": {"default": {"url": "http://example.com/thumb.jpg"}}
-                },
-                "statistics": {
-                    "viewCount": str(1000 * (i + 1)),
-                    "likeCount": str(50 * (i + 1)),
-                    "dislikeCount": "0",
-                    "favoriteCount": "0",
-                    "commentCount": str(10 * (i + 1))
+            videos.append(
+                {
+                    "kind": "youtube#video",
+                    "id": f"vid_00{i}",
+                    "snippet": {
+                        "publishedAt": "2026-01-01T10:00:00Z",
+                        "title": f"Mock Video {i + 1} - Dhamma Talk",
+                        "description": "Description...",
+                        "channelId": "channel_id",
+                        "thumbnails": {
+                            "default": {"url": "http://example.com/thumb.jpg"}
+                        },
+                    },
+                    "statistics": {
+                        "viewCount": str(1000 * (i + 1)),
+                        "likeCount": str(50 * (i + 1)),
+                        "dislikeCount": "0",
+                        "favoriteCount": "0",
+                        "commentCount": str(10 * (i + 1)),
+                    },
                 }
-            })
+            )
 
         return videos

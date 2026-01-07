@@ -15,7 +15,7 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
         super().__init__(
             name="AnalyticsAgent",
             version="1.0.0",
-            description="Fetches and analyzes YouTube channel KPI data"
+            description="Fetches and analyzes YouTube channel KPI data",
         )
         self.adapter = adapter
 
@@ -62,17 +62,19 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
                 # API returns [day, views, estimatedMinutesWatched, subscribersGained, subscribersLost]
                 day, views, watch_min, subs_gain, subs_lost = row
 
-                daily_stats.append(DailyStat(
-                    date=day,
-                    views=int(views),
-                    estimated_minutes_watched=int(watch_min),
-                    subscribers_gained=int(subs_gain),
-                    subscribers_lost=int(subs_lost)
-                ))
+                daily_stats.append(
+                    DailyStat(
+                        date=day,
+                        views=int(views),
+                        estimated_minutes_watched=int(watch_min),
+                        subscribers_gained=int(subs_gain),
+                        subscribers_lost=int(subs_lost),
+                    )
+                )
 
                 total_views += int(views)
                 total_watch_minutes += int(watch_min)
-                total_subs_gained += (int(subs_gain) - int(subs_lost))
+                total_subs_gained += int(subs_gain) - int(subs_lost)
 
         # 2. Fetch Top Videos (Recent 10)
         recent_videos = self.adapter.get_recent_videos(max_results=10)
@@ -84,17 +86,23 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
 
             published_at_str = snippet.get("publishedAt")
             if not published_at_str:
-                print(f"⚠️ WARNING: Skipping video {vid.get('id')} due to missing 'publishedAt' field.")
+                print(
+                    f"⚠️ WARNING: Skipping video {vid.get('id')} due to missing 'publishedAt' field."
+                )
                 continue
 
-            top_videos.append(VideoStats(
-                video_id=vid.get("id", ""),
-                title=snippet.get("title", "Unknown"),
-                published_at=datetime.strptime(published_at_str, "%Y-%m-%dT%H:%M:%SZ"),
-                views=int(stats.get("viewCount", 0)),
-                likes=int(stats.get("likeCount", 0)),
-                comments=int(stats.get("commentCount", 0))
-            ))
+            top_videos.append(
+                VideoStats(
+                    video_id=vid.get("id", ""),
+                    title=snippet.get("title", "Unknown"),
+                    published_at=datetime.strptime(
+                        published_at_str, "%Y-%m-%dT%H:%M:%SZ"
+                    ),
+                    views=int(stats.get("viewCount", 0)),
+                    likes=int(stats.get("likeCount", 0)),
+                    comments=int(stats.get("commentCount", 0)),
+                )
+            )
 
         # 3. Sort by views
         top_videos.sort(key=lambda x: x.views, reverse=True)
@@ -106,5 +114,5 @@ class AnalyticsAgent(BaseAgent[AnalyticsInput, AnalyticsOutput]):
             total_watch_time_minutes=total_watch_minutes,
             total_subscribers_gained=total_subs_gained,
             top_videos=top_videos,
-            daily_stats=daily_stats
+            daily_stats=daily_stats,
         )

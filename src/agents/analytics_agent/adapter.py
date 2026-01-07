@@ -12,7 +12,7 @@ class YouTubeAnalyticsAdapter:
 
     SCOPES = [
         "https://www.googleapis.com/auth/yt-analytics.readonly",
-        "https://www.googleapis.com/auth/youtube.readonly"
+        "https://www.googleapis.com/auth/youtube.readonly",
     ]
 
     def __init__(self, credentials_json: Path, token_pickle: Path):
@@ -30,9 +30,12 @@ class YouTubeAnalyticsAdapter:
             try:
                 # Try loading as JSON first (new format)
                 from google.oauth2.credentials import Credentials
-                creds = Credentials.from_authorized_user_file(str(self.token_file), self.SCOPES)
+
+                creds = Credentials.from_authorized_user_file(
+                    str(self.token_file), self.SCOPES
+                )
             except Exception:
-                 # Fallback to pickle (migration path, but avoiding writes)
+                # Fallback to pickle (migration path, but avoiding writes)
                 with open(self.token_file, "rb") as token:
                     creds = pickle.load(token)
 
@@ -66,24 +69,29 @@ class YouTubeAnalyticsAdapter:
         if not self.analytics:
             raise RuntimeError("Not authenticated")
 
-        return self.analytics.reports().query(
-            ids="channel==MINE",
-            startDate=start_date,
-            endDate=end_date,
-            metrics="views,estimatedMinutesWatched,subscribersGained,subscribersLost",
-            dimensions="day",
-            sort="day"
-        ).execute()
+        return (
+            self.analytics.reports()
+            .query(
+                ids="channel==MINE",
+                startDate=start_date,
+                endDate=end_date,
+                metrics="views,estimatedMinutesWatched,subscribersGained,subscribersLost",
+                dimensions="day",
+                sort="day",
+            )
+            .execute()
+        )
 
     def get_video_stats(self, video_id: str) -> dict[str, Any]:
         """Get statistics for a specific video"""
         if not self.youtube:
             raise RuntimeError("Not authenticated")
 
-        response = self.youtube.videos().list(
-            part="snippet,statistics,contentDetails",
-            id=video_id
-        ).execute()
+        response = (
+            self.youtube.videos()
+            .list(part="snippet,statistics,contentDetails", id=video_id)
+            .execute()
+        )
 
         if not response["items"]:
             return {}
@@ -95,22 +103,27 @@ class YouTubeAnalyticsAdapter:
         if not self.youtube:
             raise RuntimeError("Not authenticated")
 
-        search_response = self.youtube.search().list(
-            part="snippet",
-            forMine=True,
-            type="video",
-            order="date",
-            maxResults=max_results
-        ).execute()
+        search_response = (
+            self.youtube.search()
+            .list(
+                part="snippet",
+                forMine=True,
+                type="video",
+                order="date",
+                maxResults=max_results,
+            )
+            .execute()
+        )
 
         video_ids = [item["id"]["videoId"] for item in search_response.get("items", [])]
 
         if not video_ids:
             return []
 
-        video_response = self.youtube.videos().list(
-            part="snippet,statistics,contentDetails",
-            id=",".join(video_ids)
-        ).execute()
+        video_response = (
+            self.youtube.videos()
+            .list(part="snippet,statistics,contentDetails", id=",".join(video_ids))
+            .execute()
+        )
 
         return video_response.get("items", [])

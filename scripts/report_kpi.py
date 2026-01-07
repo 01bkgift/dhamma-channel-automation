@@ -38,8 +38,12 @@ def generate_html_report(output_data, output_file: Path):
 def main():
     parser = argparse.ArgumentParser(description="Generate KPI Report")
     parser.add_argument("--days", default="30d", help="Date range (7d, 30d, 90d)")
-    parser.add_argument("--out", default="reports/kpi_report.html", help="Output file path")
-    parser.add_argument("--dry-run", action="store_true", help="Use mock data without API calls")
+    parser.add_argument(
+        "--out", default="reports/kpi_report.html", help="Output file path"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Use mock data without API calls"
+    )
 
     args = parser.parse_args()
 
@@ -51,13 +55,17 @@ def main():
     else:
         print("🔧 Mode: PRODUCTION (Real API)")
         # Load credentials setup
-        creds_json = Path(os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "client_secret.json")) # Default lookup
+        creds_json = Path(
+            os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "client_secret.json")
+        )  # Default lookup
         token_pickle = Path("youtube_token.pickle")
 
         # Check if secrets exist (simple check, adapter does more)
         if not creds_json.exists() and not token_pickle.exists():
             print(f"❌ Credentials not found at {creds_json}")
-            print("   Please enable YouTube Analytics API and download client_secret.json")
+            print(
+                "   Please enable YouTube Analytics API and download client_secret.json"
+            )
             return 1
 
         adapter = YouTubeAnalyticsAdapter(creds_json, token_pickle)
@@ -67,7 +75,7 @@ def main():
         except (RuntimeError, ValueError) as e:
             print(f"❌ Authentication failed: {e}")
             return 1
-        except Exception as e: # Catch unexpected errors
+        except Exception as e:  # Catch unexpected errors
             print(f"❌ Unexpected error during authentication: {e}")
             return 1
 
@@ -90,6 +98,7 @@ def main():
         return 1
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
