@@ -45,7 +45,7 @@ audit_classification: "SOC2-relevant"
 | **AI-Assisted** | ใช้ AI เป็นเครื่องมือในการสร้าง แต่มี Human oversight | AI ทำได้ ≤60% ของ content |
 | **Human-in-the-Loop** | มนุษย์มีส่วนร่วมตัดสินใจในทุกขั้นตอนสำคัญ | ≥2 human touchpoints ก่อน publish |
 | **Low-effort Content** | เนื้อหาที่ใช้ effort น้อยมาก ไม่มี unique value | <2 ชั่วโมง human effort ต่อวิดีโอ |
-| **Mass-produced** | ผลิตจำนวนมากแบบ template-based | >3 videos/วัน หรือ <4 ชั่วโมง gap |
+| **Mass-produced** | ผลิตจำนวนมากแบบ template-based | >2 videos/วัน หรือ <4 ชั่วโมง gap |
 
 ---
 
