@@ -329,7 +329,7 @@ def _write_summary(run_id, timestamp, status, targets, digest, reasons, artifact
     path = artifacts_dir / "notify_summary.json"
     try:
         with open(path, "w", encoding="utf-8") as f:
-            f.write(summary.json())
+            f.write(summary.model_dump_json())
     except Exception:
         with open(path, "w", encoding="utf-8") as f:
             f.write(json.dumps(summary.dict(), indent=2))

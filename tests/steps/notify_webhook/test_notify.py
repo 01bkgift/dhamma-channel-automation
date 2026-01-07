@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 import pytest
 
 # Import the step module
-from src.steps.notify_webhook import step as notify_step
+from steps.notify_webhook import step as notify_step
 
 
 @pytest.fixture
