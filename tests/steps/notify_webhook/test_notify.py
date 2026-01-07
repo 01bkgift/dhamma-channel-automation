@@ -15,7 +15,7 @@ if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
 # Import the step module
-from steps.notify_webhook import step as notify_step
+from steps.notify_webhook import step as notify_step  # noqa: E402
 
 
 @pytest.fixture
