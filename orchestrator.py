@@ -36,6 +36,7 @@ from automation_core.adapters import (  # noqa: E402
 from automation_core.adapters.noop import NoopAdapter  # noqa: E402
 from automation_core.utils.env import parse_pipeline_enabled  # noqa: E402
 from steps.decision_support import run_decision_support  # noqa: E402
+from src.steps.notify_webhook import step as notify_step
 
 POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
 
@@ -3756,6 +3757,7 @@ AGENTS = {
     "MultiChannelPublish": agent_multi_channel_publish,
     "SchedulingPublishing": agent_publish,
     "decision.support": run_decision_support,
+    "notify.webhook": notify_step.run,
 }
 
 

@@ -102,6 +102,11 @@ steps:
     needs: [seo_metadata]
     output: decision_support_summary.json
 
+  - id: notify_webhook
+    uses: notify.webhook
+    needs: [decision_support]
+    output: notify_summary.json
+
   - id: multi_channel
     uses: MultiChannelPublish
     needs: [seo_metadata]

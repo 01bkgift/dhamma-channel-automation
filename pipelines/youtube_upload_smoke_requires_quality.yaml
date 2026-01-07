@@ -5,6 +5,11 @@ steps:
     uses: decision.support
     output: decision_support_summary.json
 
+  - id: notify_webhook
+    uses: notify.webhook
+    needs: [decision_support]
+    output: notify_summary.json
+
   - id: youtube_upload
     uses: youtube.upload
     config:
