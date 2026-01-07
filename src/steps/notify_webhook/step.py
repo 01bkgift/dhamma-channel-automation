@@ -181,7 +181,7 @@ def run(step: dict, run_dir: Path) -> str:
     message_digest = hashlib.sha256(message_body.encode("utf-8")).hexdigest()
 
     # 5. Send Webhooks (Generic POST)
-    payload = json.dumps({"text": message_body}).encode("utf-8")
+    payload = json.dumps({"content": message_body}).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
         "User-Agent": "DhammaChannelAutomation/1.0",
