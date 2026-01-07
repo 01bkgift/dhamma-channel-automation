@@ -26,6 +26,7 @@ def test_decision_support_r1_quality_fail(tmp_path: Path):
     assert output_path.exists()
     data = json.loads(output_path.read_text())
 
+    assert data["run_id"] == "test_run"
     assert data["decision"] == DecisionEnum.RECOMMEND_HOLD
     assert data["confidence"] == 0.95
     assert "QUALITY_FAIL" in data["reasons"]
