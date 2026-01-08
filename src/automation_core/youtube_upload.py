@@ -73,7 +73,7 @@ def _extract_content_fingerprint(run_dir: Path | None) -> str | None:
                 if title or desc:
                     content = f"{title}|{desc}"
                     return hashlib.sha256(content.encode()).hexdigest()[:12]
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
 
     # Priority 3: script.json
