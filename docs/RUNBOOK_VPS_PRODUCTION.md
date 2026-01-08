@@ -233,7 +233,7 @@ sudo systemctl reload nginx
 
 ## 6. Standard Deploy (Manual)
 
-### 5.1 Commands
+### 6.1 Commands
 
 ```bash
 cd /opt/dhamma-channel-automation
