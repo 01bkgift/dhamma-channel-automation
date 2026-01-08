@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Mandatory checks
-if [ -z "${VPS_HOST:-}" ] || [ -z "${VPS_PORT:-}" ] || [ -z "${VPS_USER:-}" ] || [ -z "${VPS_SSH_KEY:-}" ]; then
-    echo "ERROR: Missing required secrets (VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY)."
+if [ -z "${VPS_HOST:-}" ] || [ -z "${VPS_PORT:-}" ] || [ -z "${VPS_USER:-}" ] || [ -z "${VPS_SSH_KEY:-}" ] || [ -z "${VPS_KNOWN_HOST:-}" ]; then
+    echo "ERROR: Missing required secrets (VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOST)."
     exit 1
 fi
 
@@ -31,13 +31,13 @@ cleanup() {
 trap cleanup EXIT
 
 # Host Verification
-echo "Scanning host keys..."
-ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" > known_hosts 2>/dev/null
-if [ ! -s known_hosts ]; then
-    echo "ERROR: Failed to capture host keys."
+echo "Setting up known hosts..."
+if [ -z "${VPS_KNOWN_HOST:-}" ]; then
+    echo "ERROR: VPS_KNOWN_HOST is empty."
     exit 1
 fi
-echo "Host Fingerprint:"
+echo "$VPS_KNOWN_HOST" > known_hosts
+echo "Verifying known host key:"
 ssh-keygen -l -f known_hosts
 
 # SSH Base Command
@@ -101,10 +101,8 @@ ssh $SSH_OPTS "$VPS_USER@$VPS_HOST" << EOF
     fi
     
     echo "--- REMOTE DEPLOYMENT SUCCESS ---"
-    git rev-parse HEAD
 EOF
 
-DEPLOYED_SHA=$(git rev-parse HEAD) # Fallback to target if ssh succeeded
 FINISHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Generate Report

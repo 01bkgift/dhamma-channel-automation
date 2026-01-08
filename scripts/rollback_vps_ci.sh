@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Mandatory checks
-if [ -z "${VPS_HOST:-}" ] || [ -z "${VPS_PORT:-}" ] || [ -z "${VPS_USER:-}" ] || [ -z "${VPS_SSH_KEY:-}" ]; then
+if [ -z "${VPS_HOST:-}" ] || [ -z "${VPS_PORT:-}" ] || [ -z "${VPS_USER:-}" ] || [ -z "${VPS_SSH_KEY:-}" ] || [ -z "${VPS_KNOWN_HOST:-}" ]; then
     echo "ERROR: Missing required secrets."
     exit 1
 fi
@@ -30,7 +30,13 @@ cleanup() {
 trap cleanup EXIT
 
 # Host Verification
-ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" > known_hosts 2>/dev/null
+echo "Setting up known hosts from secret..."
+if [ -z "${VPS_KNOWN_HOST:-}" ]; then
+    echo "ERROR: VPS_KNOWN_HOST is empty."
+    exit 1
+fi
+echo "$VPS_KNOWN_HOST" > known_hosts
+echo "Verifying known host key:"
 ssh-keygen -l -f known_hosts
 
 # SSH Base Command

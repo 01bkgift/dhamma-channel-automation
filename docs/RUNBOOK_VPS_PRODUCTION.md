@@ -19,7 +19,6 @@
 
 เอกสารนี้ **ไม่ครอบคลุม**:
 
-- CI/CD automation (GitHub Actions)
 - DNS/Domain configuration
 - Firewall rules
 - Log aggregation (ELK/Grafana)

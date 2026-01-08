@@ -51,6 +51,7 @@ jobs:
           VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOST: ${{ secrets.VPS_KNOWN_HOST }}
           ACTION: ${{ github.event.inputs.action }}
           TARGET_SHA: ${{ steps.resolve_sha.outputs.target_sha }}
           ROLLBACK_SHA: ${{ github.event.inputs.rollback_sha }}
