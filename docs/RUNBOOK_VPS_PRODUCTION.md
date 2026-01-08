@@ -141,7 +141,7 @@ cd /opt
 ### 4.2 Clone repo
 
 ```bash
-sudo git clone https://github.com/natbkgift/flowbiz-client-dhamma.git dhamma-channel-automation
+sudo git clone https://github.com/natbkgift/flowbiz-client-dhamma.git dhamma-channel-automation && sudo chown -R $(whoami):$(whoami) dhamma-channel-automation
 cd dhamma-channel-automation
 ```
 
