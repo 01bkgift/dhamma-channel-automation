@@ -1,0 +1,120 @@
+#!/bin/bash
+# ============================================================
+# Manual Deploy Script Template
+# FlowBiz Client: dhamma-channel-automation
+# ============================================================
+#
+# PURPOSE: Template for manual VPS deployment (for humans)
+# NOTE: This is documentation only, NOT executed by CI
+#
+# USAGE:
+#   1. Copy this file to a working location
+#   2. Review and customize if needed
+#   3. Run manually: bash deploy_manual.sh
+#
+# REQUIREMENTS:
+#   - SSH access to VPS
+#   - sudo privileges
+#   - Docker compose available
+#   - config/flowbiz_port.env exists
+#
+# ============================================================
+
+set -euo pipefail
+
+# Configuration
+APP_DIR="/opt/dhamma-channel-automation"
+PORT_ENV_FILE="config/flowbiz_port.env"
+
+echo "============================================================"
+echo "  Manual Deploy: dhamma-channel-automation"
+echo "  Started: $(date)"
+echo "============================================================"
+
+# Step 1: Navigate to app directory
+echo ""
+echo "[1/7] Navigating to application directory..."
+cd "${APP_DIR}"
+echo "  ✓ Current directory: $(pwd)"
+
+# Step 2: Fetch latest changes
+echo ""
+echo "[2/7] Fetching latest changes from remote..."
+git fetch --all --prune
+echo "  ✓ Fetch complete"
+
+# Step 3: Checkout main branch
+echo ""
+echo "[3/7] Checking out main branch..."
+git checkout main
+echo "  ✓ On branch main"
+
+# Step 4: Reset to origin/main
+echo ""
+echo "[4/7] Resetting to origin/main..."
+git reset --hard origin/main
+echo "  ✓ Reset complete"
+echo "  Current commit: $(git log -1 --oneline)"
+
+# Step 5: Run runtime verification
+echo ""
+echo "[5/7] Running runtime verification..."
+echo "  NOTE: Using runtime_verify.sh (not preflight.sh)"
+if bash scripts/runtime_verify.sh; then
+    echo "  ✓ Runtime verification passed"
+else
+    echo "  ✗ STOP: Runtime verification failed"
+    exit 1
+fi
+
+# Step 6: Start containers
+echo ""
+echo "[6/7] Starting Docker containers..."
+docker compose --env-file "${PORT_ENV_FILE}" up -d --remove-orphans
+echo "  ✓ Containers started"
+
+# Step 7: Verify deployment
+echo ""
+echo "[7/7] Verifying deployment..."
+
+# Check container status
+echo "  Checking container status..."
+docker compose --env-file "${PORT_ENV_FILE}" ps
+
+# Health check
+echo ""
+echo "  Running health check..."
+source "${PORT_ENV_FILE}"
+
+HEALTH_URL="http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/healthz"
+echo "  URL: ${HEALTH_URL}"
+
+if HEALTH_RESPONSE=$(curl -fsS "${HEALTH_URL}" 2>/dev/null); then
+    echo "  ✓ Health check passed"
+    echo "  Response: ${HEALTH_RESPONSE}"
+else
+    echo "  ✗ STOP: Health check failed"
+    echo "  Check logs: docker compose --env-file ${PORT_ENV_FILE} logs --tail 50"
+    exit 1
+fi
+
+# Port verification
+echo ""
+echo "  Verifying port binding..."
+if ss -lntp | grep -q "${FLOWBIZ_ALLOCATED_PORT}"; then
+    echo "  ✓ Port ${FLOWBIZ_ALLOCATED_PORT} is listening"
+else
+    echo "  ✗ STOP: Port ${FLOWBIZ_ALLOCATED_PORT} not listening"
+    exit 1
+fi
+
+echo ""
+echo "============================================================"
+echo "  Deploy Complete!"
+echo "  Finished: $(date)"
+echo "============================================================"
+echo ""
+echo "Next steps:"
+echo "  - Verify nginx: sudo nginx -t && sudo systemctl status nginx"
+echo "  - Check public URL: curl -I https://your-domain.com/healthz"
+echo "  - Monitor logs: docker compose --env-file ${PORT_ENV_FILE} logs -f"

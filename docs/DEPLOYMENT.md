@@ -4,15 +4,39 @@
 
 This guide covers production deployment of the Dhamma Channel Automation service as a FlowBiz Client Product on a VPS environment.
 
+## 🚀 VPS Production Docs
+
+> **สำหรับ production deployment บน VPS ให้ใช้เอกสารเหล่านี้:**
+
+| Document | Purpose |
+|----------|---------|
+| [**RUNBOOK_VPS_PRODUCTION.md**](./RUNBOOK_VPS_PRODUCTION.md) | Single source of truth สำหรับ deploy/operate/recover |
+| [DEPLOYMENT_FLOWBIZ_VPS.md](./DEPLOYMENT_FLOWBIZ_VPS.md) | VPS architecture overview |
+| [OPS_CHECKLIST.md](./OPS_CHECKLIST.md) | Daily/weekly ops checklist |
+| [SECURITY_DEPLOYMENT_NOTES.md](./SECURITY_DEPLOYMENT_NOTES.md) | SOC2/ISO security notes |
+
+### Templates
+
+| Template | Purpose |
+|----------|---------|
+| [env.production.example](./templates/env.production.example) | Production .env template |
+| [nginx.site.conf.example](./templates/nginx.site.conf.example) | Nginx config template |
+| [deploy_manual.sh.example](./templates/deploy_manual.sh.example) | Manual deploy script |
+| [rollback_manual.sh.example](./templates/rollback_manual.sh.example) | Rollback script |
+
+---
+
 ## Port Allocation
 
 **FLOWBIZ_ALLOCATED_PORT** is defined in `config/flowbiz_port.env` (single source of truth).
 
 This port is registered in the FlowBiz VPS port allocation registry:
+
 - [VPS Status Document](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/VPS_STATUS.md)
 
 **Port Conflict Check**:
 Before deploying, verify the allocated port is available:
+
 ```bash
 source config/flowbiz_port.env
 sudo lsof -i :"${FLOWBIZ_ALLOCATED_PORT}"
@@ -20,6 +44,7 @@ netstat -tulpn | grep "${FLOWBIZ_ALLOCATED_PORT}"
 ```
 
 If the allocated port is in use, select the nearest available port within range 3001-3099 and update:
+
 - `config/flowbiz_port.env` (single source of truth)
 - Run Docker Compose with `--env-file config/flowbiz_port.env` so port binding uses the same value
 - Update `nginx/dhamma-automation.conf` to proxy to the port from `config/flowbiz_port.env`
@@ -29,6 +54,7 @@ If the allocated port is in use, select the nearest available port within range 
 ### Overview
 
 This project follows the **System Nginx** architecture as defined in:
+
 - [ADR: System Nginx](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/ADR_SYSTEM_NGINX.md)
 - [System Nginx Operational Guide](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/CODEX_SYSTEM_NGINX_FIRST.md)
 
@@ -57,6 +83,7 @@ This project follows the **System Nginx** architecture as defined in:
 ## Prerequisites
 
 ### Server Requirements
+
 - Ubuntu 20.04+ or Debian 11+
 - Docker 20.10+ and Docker Compose
 - Nginx installed on host (`sudo apt install nginx`)
@@ -65,6 +92,7 @@ This project follows the **System Nginx** architecture as defined in:
 - 5GB disk space
 
 ### Domain Setup
+
 - Domain name pointed to VPS IP (A record)
 - Example: `dhamma.yourdomain.com`
 
@@ -124,6 +152,7 @@ curl "http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/healthz"
 ```
 
 Expected output:
+
 ```json
 {"status":"ok","service":"dhamma-automation","version":"1.0.0"}
 ```
@@ -281,6 +310,7 @@ fi
 ### Key Metrics
 
 Monitor these endpoints:
+
 - `/healthz` - Service health (should return 200)
 - `/v1/meta` - Service metadata and version
 

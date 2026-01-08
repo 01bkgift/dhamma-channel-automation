@@ -1,0 +1,132 @@
+#!/bin/bash
+# ============================================================
+# Manual Rollback Script Template
+# FlowBiz Client: dhamma-channel-automation
+# ============================================================
+#
+# PURPOSE: Template for manual rollback on VPS (for humans)
+# NOTE: This is documentation only, NOT executed by CI
+#
+# USAGE:
+#   1. Find last known good commit SHA
+#   2. Run: bash rollback_manual.sh <SHA>
+#   3. Verify deployment
+#
+# REQUIREMENTS:
+#   - SSH access to VPS
+#   - sudo privileges
+#   - Docker compose available
+#   - config/flowbiz_port.env exists
+#
+# ============================================================
+
+set -euo pipefail
+
+# Configuration
+APP_DIR="/opt/dhamma-channel-automation"
+PORT_ENV_FILE="config/flowbiz_port.env"
+
+# Validate input
+if [ $# -eq 0 ]; then
+    echo "Usage: bash rollback_manual.sh <COMMIT_SHA>"
+    echo ""
+    echo "To find last known good commit:"
+    echo "  git log -n 10 --oneline"
+    echo ""
+    echo "Example:"
+    echo "  bash rollback_manual.sh abc1234"
+    exit 1
+fi
+
+TARGET_SHA="$1"
+
+echo "============================================================"
+echo "  Manual Rollback: dhamma-channel-automation"
+echo "  Target SHA: ${TARGET_SHA}"
+echo "  Started: $(date)"
+echo "============================================================"
+
+# Step 1: Navigate to app directory
+echo ""
+echo "[1/5] Navigating to application directory..."
+cd "${APP_DIR}"
+echo "  ✓ Current directory: $(pwd)"
+
+# Step 2: Show current state
+echo ""
+echo "[2/5] Current state..."
+echo "  Current commit: $(git log -1 --oneline)"
+echo "  Rolling back to: ${TARGET_SHA}"
+
+# Confirm the target SHA exists
+if ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
+    echo ""
+    echo "  ✗ STOP: Commit ${TARGET_SHA} not found"
+    echo "  Run 'git log -n 20 --oneline' to see available commits"
+    exit 1
+fi
+
+# Show what we're rolling back to
+echo "  Target commit details:"
+git log -1 --oneline "${TARGET_SHA}"
+
+# Step 3: Reset to target SHA
+echo ""
+echo "[3/5] Resetting to ${TARGET_SHA}..."
+git reset --hard "${TARGET_SHA}"
+echo "  ✓ Reset complete"
+echo "  Current commit: $(git log -1 --oneline)"
+
+# Step 4: Restart containers
+echo ""
+echo "[4/5] Restarting Docker containers..."
+docker compose --env-file "${PORT_ENV_FILE}" up -d --remove-orphans
+echo "  ✓ Containers restarted"
+
+# Step 5: Verify rollback
+echo ""
+echo "[5/5] Verifying rollback..."
+
+# Run runtime verification
+echo "  Running runtime verification..."
+if bash scripts/runtime_verify.sh; then
+    echo "  ✓ Runtime verification passed"
+else
+    echo ""
+    echo "  ✗ STOP: Runtime verification failed after rollback"
+    echo ""
+    echo "  This is a critical failure. Options:"
+    echo "    1. Try rolling back to an earlier commit"
+    echo "    2. Check application logs for errors"
+    echo "    3. Contact development team"
+    echo ""
+    echo "  Logs: docker compose --env-file ${PORT_ENV_FILE} logs --tail 100"
+    exit 1
+fi
+
+# Health check
+echo ""
+echo "  Running health check..."
+source "${PORT_ENV_FILE}"
+
+HEALTH_URL="http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/healthz"
+if HEALTH_RESPONSE=$(curl -fsS "${HEALTH_URL}" 2>/dev/null); then
+    echo "  ✓ Health check passed"
+    echo "  Response: ${HEALTH_RESPONSE}"
+else
+    echo "  ✗ STOP: Health check failed"
+    exit 1
+fi
+
+echo ""
+echo "============================================================"
+echo "  Rollback Complete!"
+echo "  Rolled back to: $(git log -1 --oneline)"
+echo "  Finished: $(date)"
+echo "============================================================"
+echo ""
+echo "IMPORTANT: Document this rollback for audit:"
+echo "  - Date/time: $(date -Iseconds)"
+echo "  - Rolled back to: ${TARGET_SHA}"
+echo "  - Reason: <document the reason>"
+echo "  - Operator: <your name>"
