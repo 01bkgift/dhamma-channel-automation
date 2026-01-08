@@ -74,96 +74,22 @@ def run_approval_gate(
     human_actor = None
     human_reason = None
 
-    # --- PRIORITY 1: CHECK GATING ENABLED ---
-    if env_enabled != "true":
-        status = StatusEnum.APPROVED_BY_TIMEOUT
-        decision_source = DecisionSourceEnum.CONFIG
-        reason_codes.append("GATING_BYPASSED")
-        # Ensure we write artifact and return success immediately
-        # But we must respect idempotency if file exists (though result same)
-        pass
-
-    # --- PRIORITY 2: CHECK EXISTING TERMINAL STATE (Idempotency) ---
+    # --- PRIORITY 1: CHECK EXISTING TERMINAL STATE (Idempotency) ---
+    # Governance: Terminal state (REJECTED/APPROVED) always wins over config changes.
     existing_artifact: ApprovalGateSummary | None = None
     if summary_path.exists():
         try:
             data = json.loads(summary_path.read_text(encoding="utf-8"))
             existing_artifact = ApprovalGateSummary(**data)
-
-            # If we are effectively disabled via config, we still overwrite if previous was pending?
-            # Spec says: "If artifact exists AND status is 'approved_by_timeout' or 'rejected' => Do NOT overwrite"
-            # But if config disabled now, we should approve.
-            # Reviewer Note: Spec says "CHECK GATING ENABLED" is Priority 1, "CHECK EXISTING" is Priority 2.
-            # So if disabled, we approve regardless of previous state?
-            # Prompt Priority:
-            # 1. CHECK GATING ENABLED -> EXIT SUCCESS
-            # 2. CHECK EXISTING TERMINAL STATE -> Return same result
-            #
-            # If disabled, we enter block 1 and strictly exit.
-            # BUT we need to write the artifact if it doesn't exist.
-            pass
         except Exception:
-            # If existing artifact is corrupt, treat as new run (or failsafe depending on strictness)
-            # For robustness, ignore corrupt artifact effectively starting fresh, unless critical.
+            # Corrupt artifact -> ignore and treat as fresh run
             pass
 
-    # Logic for Priority 1 (Gating Disabled)
-    if env_enabled != "true":
-        # We need to construct the artifact if not exists, or update if exists but not terminal
-        # Spec says: "If APPROVAL_ENABLED != 'true' => status='approved_by_timeout' ... EXIT SUCCESS"
-        # It implies we don't care about previous state if currently disabled.
-        # BUT wait, Priority 2 says "If artifact exists... Do NOT overwrite".
-        # If I have a REJECTED state from previous run, and now I disable gating, do I un-reject?
-        # The prompt says Priority 1 is checked FIRST. So Config > Existing State.
-        # So if config says "disabled", we approve.
-
-        # However, to be "safe" and "deterministic", usually stored state wins.
-        # Let's look closely at prompt:
-        # "1. CHECK GATING ENABLED ... => EXIT SUCCESS"
-        # "2. CHECK EXISTING TERMINAL STATE ... => Do NOT overwrite"
-        # Since 1 is before 2, 1 wins.
-        # So if I change env var to disable, I can bypass a previous rejection?
-        # That seems like a feature "Emergency Bypass". Acceptable.
-
-        opened_at = now_iso
-        if existing_artifact:
-            opened_at = existing_artifact.opened_at_utc
-            eval_count = existing_artifact.evaluation_count + 1
-        else:
-            eval_count = 1
-
-        try:
-            grace_int = int(env_grace)  # For recording purposes
-        except:
-            grace_int = 120
-
-        summary = ApprovalGateSummary(
-            run_id=run_id,
-            opened_at_utc=opened_at,
-            resolved_at_utc=now_iso,
-            status=StatusEnum.APPROVED_BY_TIMEOUT,  # Map to approve as per spec
-            decision_source=DecisionSourceEnum.CONFIG,
-            grace_period_minutes=grace_int,
-            reason_codes=["GATING_BYPASSED"],
-            evaluation_count=eval_count,
-        )
-
-        # Write and Exit
-        summary_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
-        return summary_path
-
-    # From here on, Gating is ENABLED.
-
-    # Priority 2: CHECK EXISTING TERMINAL STATE
     if existing_artifact and existing_artifact.status in [
         StatusEnum.APPROVED_BY_TIMEOUT,
         StatusEnum.REJECTED,
     ]:
-        # Do not overwrite. Just increment count?
-        # Spec: "Return same result as stored => INCREMENT evaluation_count only"
-
-        # We must write the update count back?
-        # "Only evaluation_count and resolved_at_utc update on re-runs of terminal state"
+        # Return same result as stored => INCREMENT evaluation_count only
         updated_summary = existing_artifact.model_copy(
             update={
                 "evaluation_count": existing_artifact.evaluation_count + 1,
@@ -175,10 +101,46 @@ def run_approval_gate(
         )
 
         if updated_summary.status == StatusEnum.REJECTED:
-            raise ApprovalRejectedError(
-                f"Approval previously rejected: {updated_summary.reason_codes}"
+            # Re-raise rejection to keep blocking
+            reason = (
+                " ".join(updated_summary.reason_codes) or updated_summary.human_reason
             )
+            raise ApprovalRejectedError(f"Approval previously rejected: {reason}")
+
         return summary_path
+
+    # --- PRIORITY 2: CHECK GATING ENABLED ---
+    if env_enabled != "true":
+        status = StatusEnum.APPROVED_BY_TIMEOUT
+        decision_source = DecisionSourceEnum.CONFIG
+        reason_codes.append("GATING_BYPASSED")
+
+        opened_at = now_iso
+        if existing_artifact:
+            opened_at = existing_artifact.opened_at_utc
+            eval_count = existing_artifact.evaluation_count + 1
+        else:
+            eval_count = 1
+
+        try:
+            grace_int = int(env_grace)
+        except Exception:
+            grace_int = 120
+
+        summary = ApprovalGateSummary(
+            run_id=run_id,
+            opened_at_utc=opened_at,
+            resolved_at_utc=now_iso,
+            status=StatusEnum.APPROVED_BY_TIMEOUT,
+            decision_source=DecisionSourceEnum.CONFIG,
+            grace_period_minutes=grace_int,
+            reason_codes=["GATING_BYPASSED"],
+            evaluation_count=eval_count,
+        )
+        summary_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
+        return summary_path
+
+    # From here on, Gating is ENABLED and no terminal state exists.
 
     # Prepare for active evaluation
     # Determine opened_at
@@ -199,7 +161,7 @@ def run_approval_gate(
             status = StatusEnum.REJECTED
             decision_source = DecisionSourceEnum.FAILSAFE
             reason_codes = ["FAILSAFE_REJECT", "INVALID_TIMESTAMP"]
-            raise ApprovalRejectedError("Invalid opened_at timestamp in artifact")
+            raise ApprovalRejectedError("Invalid opened_at timestamp in artifact") from None
 
         eval_count = existing_artifact.evaluation_count + 1
     else:
@@ -217,7 +179,7 @@ def run_approval_gate(
         try:
             config_grace_minutes = int(env_grace)
         except ValueError:
-            raise ValueError("Not an integer")
+            raise ValueError("Not an integer") from None
 
         if not (1 <= config_grace_minutes <= 1440):
             raise ValueError("Out of range")
@@ -271,7 +233,6 @@ def run_approval_gate(
                 reason_codes=[],
                 evaluation_count=eval_count,
             )
-            summary_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
             summary_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
 
         except Exception as e:

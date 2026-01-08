@@ -72,6 +72,7 @@ def test_pending_within_grace_period(run_dir, step_config, mock_clock):
     data = json.loads(path.read_text())
     assert data["status"] == "pending"
     assert data["evaluation_count"] == 1
+    assert data["resolved_at_utc"].endswith("Z")  # Check ISO format with Z
 
 
 def test_approved_after_grace_period(run_dir, step_config, mock_clock):
@@ -138,7 +139,7 @@ def test_cancel_file_missing_fields_failsafe_reject(run_dir, step_config, mock_c
     clock, _ = mock_clock
     control_dir = run_dir / "control"
     control_dir.mkdir(parents=True, exist_ok=True)
-    # Missing 'limit' or other fields
+    # Missing actor/reason
     (control_dir / "cancel_publish.json").write_text(
         json.dumps(
             {
@@ -341,19 +342,38 @@ def test_cancel_file_takes_priority_over_timeout(run_dir, step_config, mock_cloc
     assert data["decision_source"] == "human"
 
 
-def test_gating_disabled_skips_all_checks(run_dir, step_config, mock_clock):
-    clock, _ = mock_clock
-    # Even if cancel file is present (invalid or valid), if disabled -> approve
+def test_terminal_state_wins_over_config_change(run_dir, step_config, mock_clock):
+    clock, advance = mock_clock
+    # 1. Setup rejected state
+    artifacts_dir = run_dir / "artifacts"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    control_dir = run_dir / "control"
-    control_dir.mkdir(parents=True, exist_ok=True)
-    # Invalid cancel file
-    (control_dir / "cancel_publish.json").write_text("invalid")
+    rejected_summary = {
+        "schema_version": "v1",
+        "run_id": "run_999",
+        "opened_at_utc": "2025-01-01T12:00:00Z",
+        "resolved_at_utc": "2025-01-01T12:05:00Z",
+        "status": "rejected",
+        "decision_source": "human",
+        "grace_period_minutes": 120,
+        "evaluation_count": 1,
+        "reason_codes": [],
+        "human_action": "cancel_publish",
+        "human_actor": "admin",
+        "human_reason": "stop",
+    }
+    (artifacts_dir / "approval_gate_summary.json").write_text(
+        json.dumps(rejected_summary)
+    )
 
+    # 2. Run with gating DISABLED (should normally approve)
+    # BUT existing state is rejected (terminal), so it should stay rejected
     with mock.patch.dict(os.environ, {"APPROVAL_ENABLED": "false"}):
-        run_approval_gate(step_config, run_dir, clock=clock)
+        with pytest.raises(ApprovalRejectedError):
+            run_approval_gate(step_config, run_dir, clock=clock)
 
+    # Verify artifact unchanged except count
     path = run_dir / "artifacts" / "approval_gate_summary.json"
     data = json.loads(path.read_text())
-    assert data["status"] == "approved_by_timeout"
-    assert data["decision_source"] == "config"
+    assert data["status"] == "rejected"
+    assert data["evaluation_count"] == 2
