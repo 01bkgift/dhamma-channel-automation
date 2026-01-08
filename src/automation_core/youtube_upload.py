@@ -7,11 +7,20 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
 
 MOCK_VIDEO_ID_DRY_RUN = "soft-live-dry-run-video-id"
 MOCK_VIDEO_ID_FALLBACK = "soft-live-fallback-dry-run-id"
+
+
+def _generate_deterministic_fake_id(title: str, mode: str) -> str:
+    """Generate a deterministic fake video ID based on title and mode."""
+    # Create a stable digest
+    payload = f"{title}|{mode}".encode()
+    digest = hashlib.sha256(payload).hexdigest()[:16]
+    return f"soft-live-dry-{digest}"
 
 
 class YoutubeUploadError(Exception):
@@ -115,12 +124,18 @@ def upload_video(
         if soft_live_mode == "dry_run":
             print("[Soft-Live] Enforcing dry_run. Upload skipped.")
             print(f"[Soft-Live] Mocking upload for: {title} ({privacy_status})")
-            return MOCK_VIDEO_ID_DRY_RUN
+            return _generate_deterministic_fake_id(title, "dry_run")
 
         # Map modes to severity: private=0, unlisted=1, public=2
         severity_map = {"private": 0, "unlisted": 1, "public": 2}
 
-        # Validate configured mode
+        # Validate configured mode - STRICT: public is NOT allowed for Soft-Live
+        if soft_live_mode == "public":
+             print("[Soft-Live] SAFETY VIOLATION: 'public' is not allowed in Soft-Live mode!")
+             # If fail_closed is True (default logic of caller), this is critical.
+             # Here we enforce fallback to dry_run as immediate safety net if code reached here.
+             return MOCK_VIDEO_ID_FALLBACK
+
         if soft_live_mode not in severity_map:
              # Default to dry_run logic if invalid config in Soft-Live
             print(f"[Soft-Live] Invalid mode '{soft_live_mode}'. Fallback to dry_run.")

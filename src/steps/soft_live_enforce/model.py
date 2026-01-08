@@ -9,4 +9,5 @@ class SoftLiveSummary(BaseModel):
     timestamp_utc: str
     soft_live_status: Literal["enabled", "disabled", "failed"]
     enforced_mode: Literal["dry_run", "unlisted", "private"] | None = None
+    effective_privacy_status: str | None = None
     reason_codes: list[str] = Field(default_factory=list)

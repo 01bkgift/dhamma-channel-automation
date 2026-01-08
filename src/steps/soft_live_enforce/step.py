@@ -56,6 +56,7 @@ def run_soft_live_enforce(run_id: str, base_dir: Path | None = None) -> tuple[di
             timestamp_utc=timestamp_utc,
             soft_live_status="enabled",
             enforced_mode=enforced_mode,
+            effective_privacy_status=enforced_mode, # Since applied directly if valid
             reason_codes=[],
         )
         _write_summary(summary_path, summary)
@@ -73,6 +74,7 @@ def run_soft_live_enforce(run_id: str, base_dir: Path | None = None) -> tuple[di
             timestamp_utc=timestamp_utc,
             soft_live_status="enabled",
             enforced_mode="dry_run",
+            effective_privacy_status="dry_run",
             reason_codes=["INVALID_CONFIG", "FALLBACK_DRY_RUN"],
         )
         _write_summary(summary_path, summary)

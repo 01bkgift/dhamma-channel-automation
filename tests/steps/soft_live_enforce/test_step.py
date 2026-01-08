@@ -104,14 +104,61 @@ def mock_google_apis():
             yield mock_videos
 
 
-def test_upload_video_enforces_dry_run():
-    # Test that upload_video returns dummy ID when Soft-Live dry_run is on
+def test_upload_video_enforces_dry_run_deterministic():
+    # Test that upload_video returns deterministic ID based on title+mode
     with env_vars({
         SOFT_LIVE_ENABLED_VAR: "true",
         SOFT_LIVE_YOUTUBE_MODE_VAR: "dry_run"
     }):
         with patch("pathlib.Path.exists", return_value=True), \
              patch("pathlib.Path.is_file", return_value=True):
+
+            # Run 1
+            vid1 = upload_video(
+                mp4_path=Path("dummy.mp4"),
+                title="test_title_A",
+                description="desc",
+                tags=[],
+                privacy_status="public"
+            )
+
+            # Run 2 (Same title)
+            vid2 = upload_video(
+                mp4_path=Path("dummy.mp4"),
+                title="test_title_A",
+                description="desc",
+                tags=[],
+                privacy_status="public"
+            )
+
+            # Run 3 (Different title)
+            vid3 = upload_video(
+                mp4_path=Path("dummy.mp4"),
+                title="test_title_B",
+                description="desc",
+                tags=[],
+                privacy_status="public"
+            )
+
+            assert vid1 == vid2
+            assert vid1 != vid3
+            assert vid1.startswith("soft-live-dry-")
+
+
+def test_soft_live_rejects_public_mode_fail_closed():
+    # Test STRICT safety: public is NOT allowed in Soft-Live mode config
+    # fail_closed=true (default env assumption if not set,
+    # but here we test the enforcement inside video_upload which might return fallback ID)
+    # Actually, current impl returns FALLBACK ID.
+    # Let's verify it returns default FALLBACK ID and prints violation.
+
+    with env_vars({
+        SOFT_LIVE_ENABLED_VAR: "true",
+        SOFT_LIVE_YOUTUBE_MODE_VAR: "public" # ILLEGAL CONFIG
+    }):
+         with patch("pathlib.Path.exists", return_value=True), \
+             patch("pathlib.Path.is_file", return_value=True):
+
             vid = upload_video(
                 mp4_path=Path("dummy.mp4"),
                 title="test",
@@ -119,7 +166,8 @@ def test_upload_video_enforces_dry_run():
                 tags=[],
                 privacy_status="public"
             )
-            assert vid == "soft-live-dry-run-video-id"
+
+            assert vid == "soft-live-fallback-dry-run-id"
 
 
 def test_upload_video_overrides_public_to_unlisted(mock_google_apis):
