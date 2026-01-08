@@ -1,0 +1,5 @@
+{
+    "action": "cancel_publish",
+    "actor": "QA Tester",
+    "reason": "Verifying block logic"
+}
