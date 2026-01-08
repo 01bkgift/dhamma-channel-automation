@@ -36,6 +36,11 @@ def _normalize_title(title: str) -> str:
 def _extract_content_fingerprint(run_dir: Path | None) -> str | None:
     """Extract content fingerprint from existing artifacts.
 
+    NOTE:
+    Fingerprint is used only to prevent fake video ID collisions
+    when title is reused with different content.
+    This does NOT affect real publish behavior.
+
     Priority order:
     1. video_render_summary.json -> text_sha256_12
     2. metadata.json -> hash(title + description)
