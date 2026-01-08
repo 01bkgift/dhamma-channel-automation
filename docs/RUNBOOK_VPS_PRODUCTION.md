@@ -11,14 +11,15 @@
 เอกสารนี้ครอบคลุม:
 
 - การ deploy แบบ manual บน VPS
+- การ deploy อัตโนมัติผ่าน GitHub Actions (Gated)
 - การ operate และ monitor service
-- การ rollback และ recovery
+- การ rollback และ recovery (Manual & CI-trigger)
 - Approval gate operations
 - Soft-live mode operations
 
 เอกสารนี้ **ไม่ครอบคลุม**:
 
-- CI/CD automation
+- CI/CD automation (GitHub Actions)
 - DNS/Domain configuration
 - Firewall rules
 - Log aggregation (ELK/Grafana)
@@ -198,7 +199,39 @@ sudo systemctl reload nginx
 
 ---
 
-## 5. Standard Deploy (Manual)
+## 5. CI/CD Deployment (Automated & Gated)
+
+สิทธิ์การ deploy ถูกควบคุมผ่าน GitHub Actions และ GitHub Environment Protection
+
+### 5.1 Workflow Triggers
+
+- **Manual Trigger:** ผ่าน GitHub UI (Actions tab -> Deploy to VPS)
+- **Inputs:**
+  - `ref`: Branch หรือ SHA ที่ต้องการ deploy
+  - `action`: `deploy` หรือ `rollback`
+  - `rollback_sha`: SHA ที่ต้องการกลับไป (ใช้เฉพาะ action=rollback)
+
+### 5.2 Approval Gate
+
+- การ deploy ไปยัง `production` จะต้องได้รับการ approve จาก **Reviewer** ที่ระบุใน GitHub Environment settings เท่านั้น
+- Workflow จะ HOLD จนกว่าจะมีการ Approve หรือ Timeout (7 days)
+
+### 5.3 Deterministic Deployment
+
+- CI จะ resolve `ref` เป็น SHA-1 ก่อนเริ่ม deploy
+- CI จะเชื่อมต่อ VPS ผ่าน SSH (`StrictHostKeyChecking=yes`)
+- CI จะรัน `git reset --hard <SHA>` บน VPS เพื่อความถูกต้องแม่นยำ
+
+### 5.4 Rollback via CI
+
+1. ไปที่ GitHub Actions -> "Deploy to VPS (Gated)"
+2. เลือก Action: `rollback`
+3. ใส่ SHA ที่ต้องการกลับไปใน `rollback_sha`
+4. Approve และรอ CI ติตตั้งกลับคืน
+
+---
+
+## 6. Standard Deploy (Manual)
 
 ### 5.1 Commands
 
@@ -472,7 +505,10 @@ docker compose --env-file config/flowbiz_port.env logs --since 720h > container_
 
 ## Related Docs
 
-- [DEPLOYMENT.md](./DEPLOYMENT.md) — Deployment overview
-- [DEPLOYMENT_FLOWBIZ_VPS.md](./DEPLOYMENT_FLOWBIZ_VPS.md) — VPS-specific guide
-- [OPS_CHECKLIST.md](./OPS_CHECKLIST.md) — Daily/weekly ops checklist
-- [SECURITY_DEPLOYMENT_NOTES.md](./SECURITY_DEPLOYMENT_NOTES.md) — Security notes
+| Doc | Description |
+|---|---|
+| [**RUNBOOK_VPS_PRODUCTION.md**](./RUNBOOK_VPS_PRODUCTION.md) | Single source of truth สำหรับ deploy/operate/recover |
+| [DEPLOYMENT_FLOWBIZ_VPS.md](./DEPLOYMENT_FLOWBIZ_VPS.md) | VPS architecture overview |
+| [OPS_CHECKLIST.md](./OPS_CHECKLIST.md) | Daily/weekly ops checklist |
+| [SECURITY_DEPLOYMENT_NOTES.md](./SECURITY_DEPLOYMENT_NOTES.md) | SOC2/ISO security notes |
+| [.github/workflows/deploy-vps.yml](../.github/workflows/deploy-vps.yml) | GitHub Actions CI/CD workflow |

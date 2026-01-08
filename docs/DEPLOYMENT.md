@@ -14,6 +14,7 @@ This guide covers production deployment of the Dhamma Channel Automation service
 | [DEPLOYMENT_FLOWBIZ_VPS.md](./DEPLOYMENT_FLOWBIZ_VPS.md) | VPS architecture overview |
 | [OPS_CHECKLIST.md](./OPS_CHECKLIST.md) | Daily/weekly ops checklist |
 | [SECURITY_DEPLOYMENT_NOTES.md](./SECURITY_DEPLOYMENT_NOTES.md) | SOC2/ISO security notes |
+| [.github/workflows/deploy-vps.yml](../.github/workflows/deploy-vps.yml) | GitHub Actions CI/CD workflow |
 
 ### Templates
 
