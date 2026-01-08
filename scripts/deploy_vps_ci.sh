@@ -7,7 +7,10 @@ if [ -z "${VPS_HOST:-}" ] || [ -z "${VPS_PORT:-}" ] || [ -z "${VPS_USER:-}" ] ||
     exit 1
 fi
 
-TARGET_SHA=${TARGET_SHA:-$(git rev-parse HEAD)}
+if [ -z "${TARGET_SHA:-}" ]; then
+    echo "ERROR: TARGET_SHA is a required input for deterministic deployment."
+    exit 1
+fi
 REPORT_FILE="deploy_report.json"
 STARTED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
