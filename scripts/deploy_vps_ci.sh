@@ -46,7 +46,7 @@ SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=yes -o UserKnownHostsFil
 echo "Executing remote deployment steps..."
 ssh $SSH_OPTS "$VPS_USER@$VPS_HOST" << EOF
     set -euo pipefail
-    cd /opt/dhamma-channel-automation
+    cd /opt/flowbiz-client-dhamma
     
     echo "Fetching latest changes..."
     git fetch --all --prune

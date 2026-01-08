@@ -45,7 +45,7 @@ SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=yes -o UserKnownHostsFil
 echo "Executing remote rollback steps..."
 ssh $SSH_OPTS "$VPS_USER@$VPS_HOST" << EOF
     set -euo pipefail
-    cd /opt/dhamma-channel-automation
+    cd /opt/flowbiz-client-dhamma
     
     echo "Verifying Rollback SHA: $ROLLBACK_SHA"
     if ! git cat-file -e "$ROLLBACK_SHA"; then

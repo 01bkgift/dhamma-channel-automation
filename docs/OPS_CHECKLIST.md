@@ -9,7 +9,7 @@
 ### 1. Container Health
 
 ```bash
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 docker compose --env-file config/flowbiz_port.env ps
 ```
 
@@ -52,8 +52,8 @@ docker compose --env-file config/flowbiz_port.env logs --tail 50 | grep -iE "err
 
 ```bash
 df -h /opt
-du -sh /opt/dhamma-channel-automation/output
-du -sh /opt/dhamma-channel-automation/data
+du -sh /opt/flowbiz-client-dhamma/output
+du -sh /opt/flowbiz-client-dhamma/data
 ```
 
 - [ ] Disk usage < 80%
@@ -63,8 +63,8 @@ du -sh /opt/dhamma-channel-automation/data
 ### 2. Output Cleanup Assessment
 
 ```bash
-ls -la /opt/dhamma-channel-automation/output | head -20
-find /opt/dhamma-channel-automation/output -maxdepth 1 -type d -mtime +30 | wc -l
+ls -la /opt/flowbiz-client-dhamma/output | head -20
+find /opt/flowbiz-client-dhamma/output -maxdepth 1 -type d -mtime +30 | wc -l
 ```
 
 - [ ] Review old outputs (>30 days)
@@ -93,7 +93,7 @@ sudo grep -c "502" /var/log/nginx/dhamma-access.log
 ### 5. Guardrails Check
 
 ```bash
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 bash scripts/guardrails.sh
 ```
 
@@ -135,7 +135,7 @@ ls -la /path/to/backups/  # Replace with actual backup path
 ### 4. Audit Log Export
 
 ```bash
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 git log --since="30 days ago" --oneline > /tmp/deploy_history.txt
 docker compose --env-file config/flowbiz_port.env logs --since 720h > /tmp/container_logs.txt
 ```
@@ -164,7 +164,7 @@ docker compose --env-file config/flowbiz_port.env logs --since 720h > /tmp/conta
 #!/bin/bash
 # Run monthly for audit compliance
 DATE=$(date +%Y%m)
-EXPORT_DIR="/opt/dhamma-channel-automation/audit/${DATE}"
+EXPORT_DIR="/opt/flowbiz-client-dhamma/audit/${DATE}"
 mkdir -p "${EXPORT_DIR}"
 
 # Export git history

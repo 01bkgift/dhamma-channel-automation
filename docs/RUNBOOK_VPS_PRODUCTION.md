@@ -45,11 +45,11 @@
 
 | Purpose | Path |
 |---------|------|
-| Application | `/opt/dhamma-channel-automation` |
-| Data | `/opt/dhamma-channel-automation/data` |
-| Output | `/opt/dhamma-channel-automation/output` |
-| Control artifacts | `/opt/dhamma-channel-automation/output/<run_id>/control/` |
-| Approval artifacts | `/opt/dhamma-channel-automation/output/<run_id>/artifacts/` |
+| Application | `/opt/flowbiz-client-dhamma` |
+| Data | `/opt/flowbiz-client-dhamma/data` |
+| Output | `/opt/flowbiz-client-dhamma/output` |
+| Control artifacts | `/opt/flowbiz-client-dhamma/output/<run_id>/control/` |
+| Approval artifacts | `/opt/flowbiz-client-dhamma/output/<run_id>/artifacts/` |
 
 ### Ports
 
@@ -134,15 +134,15 @@
 ### 4.1 Create folder
 
 ```bash
-sudo mkdir -p /opt/dhamma-channel-automation
+sudo mkdir -p /opt/flowbiz-client-dhamma
 cd /opt
 ```
 
 ### 4.2 Clone repo
 
 ```bash
-sudo git clone https://github.com/natbkgift/flowbiz-client-dhamma.git dhamma-channel-automation && sudo chown -R $(whoami):$(whoami) dhamma-channel-automation
-cd dhamma-channel-automation
+sudo git clone https://github.com/01bkgift/flowbiz-client-dhamma.git flowbiz-client-dhamma && sudo chown -R $(whoami):$(whoami) flowbiz-client-dhamma
+cd flowbiz-client-dhamma
 ```
 
 ### 4.3 Create .env from template
@@ -235,7 +235,7 @@ sudo systemctl reload nginx
 ### 6.1 Commands
 
 ```bash
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 
 # Fetch latest
 git fetch --all --prune
@@ -296,7 +296,7 @@ ss -lntp | grep "${FLOWBIZ_ALLOCATED_PORT}"
 ### Command
 
 ```bash
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 python scripts/run_pipeline.py --pipeline pipelines/youtube_upload_smoke_requires_quality.yaml
 ```
 
@@ -447,7 +447,7 @@ du -sh /opt/dhamma-channel-automation/output/*
 
 # Clean old outputs (CAUTION: audit implications)
 # ลบเฉพาะหลังจาก backup/archive แล้วเท่านั้น
-cd /opt/dhamma-channel-automation/output && rm -rf ./<old_run_id>
+cd /opt/flowbiz-client-dhamma/output && rm -rf ./<old_run_id>
 ```
 
 ### Nginx Broken

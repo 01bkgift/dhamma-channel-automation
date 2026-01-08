@@ -12,8 +12,8 @@
 │                                                                          │
 │  ┌────────────────┐    ┌────────────────┐    ┌────────────────────────┐  │
 │  │   System       │    │   Docker       │    │   Application          │  │
-│  │   Nginx        │───▶│   Container    │───▶│   /opt/dhamma-channel- │  │
-│  │   :80/:443     │    │   :3007        │    │   automation           │  │
+│  │   Nginx        │───▶│   Container    │───▶│   /opt/flowbiz-client- │  │
+│  │   :80/:443     │    │   :3007        │    │   dhamma               │  │
 │  └────────────────┘    └────────────────┘    └────────────────────────┘  │
 │         │                     │                        │                  │
 │         │                     │                        ├── data/          │
@@ -51,7 +51,7 @@
 
 | Property | Value |
 |----------|-------|
-| Path | `/opt/dhamma-channel-automation` |
+| Path | `/opt/flowbiz-client-dhamma` |
 | Framework | FastAPI |
 | Health endpoint | `/healthz` |
 | Meta endpoint | `/v1/meta` |
@@ -74,7 +74,7 @@ FLOWBIZ_ALLOCATED_PORT=3007
 ## Directory Structure
 
 ```
-/opt/dhamma-channel-automation/
+/opt/flowbiz-client-dhamma/
 ├── .env                          # Production environment (ห้าม commit)
 ├── config/
 │   └── flowbiz_port.env          # Port allocation
@@ -147,7 +147,7 @@ Internet → Nginx (:443) → Docker (:3007) → App (:8000)
 ### Start Service
 
 ```bash
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 docker compose --env-file config/flowbiz_port.env up -d
 ```
 
