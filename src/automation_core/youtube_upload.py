@@ -10,6 +10,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+MOCK_VIDEO_ID_DRY_RUN = "soft-live-dry-run-video-id"
+MOCK_VIDEO_ID_FALLBACK = "soft-live-fallback-dry-run-id"
+
 
 class YoutubeUploadError(Exception):
     """ข้อผิดพลาดฐานสำหรับการอัปโหลดวิดีโอขึ้น YouTube"""
@@ -112,7 +115,7 @@ def upload_video(
         if soft_live_mode == "dry_run":
             print("[Soft-Live] Enforcing dry_run. Upload skipped.")
             print(f"[Soft-Live] Mocking upload for: {title} ({privacy_status})")
-            return "soft-live-dry-run-video-id"
+            return MOCK_VIDEO_ID_DRY_RUN
 
         # Map modes to severity: private=0, unlisted=1, public=2
         severity_map = {"private": 0, "unlisted": 1, "public": 2}
@@ -121,7 +124,7 @@ def upload_video(
         if soft_live_mode not in severity_map:
              # Default to dry_run logic if invalid config in Soft-Live
             print(f"[Soft-Live] Invalid mode '{soft_live_mode}'. Fallback to dry_run.")
-            return "soft-live-fallback-dry-run-id"
+            return MOCK_VIDEO_ID_FALLBACK
 
         current_severity = severity_map.get(privacy_status, 2) # default to public if unknown
         enforced_severity = severity_map[soft_live_mode]

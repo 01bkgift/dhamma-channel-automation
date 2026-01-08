@@ -8,6 +8,7 @@ SOFT_LIVE_ENABLED_VAR = "SOFT_LIVE_ENABLED"
 SOFT_LIVE_YOUTUBE_MODE_VAR = "SOFT_LIVE_YOUTUBE_MODE"
 SOFT_LIVE_FAIL_CLOSED_VAR = "SOFT_LIVE_FAIL_CLOSED"
 DEFAULT_YOUTUBE_MODE = "dry_run"
+VALID_YOUTUBE_MODES = {"dry_run", "unlisted", "private"}
 
 
 def run_soft_live_enforce(run_id: str, base_dir: Path | None = None) -> tuple[dict, Path]:
@@ -47,8 +48,7 @@ def run_soft_live_enforce(run_id: str, base_dir: Path | None = None) -> tuple[di
         return summary.model_dump(), summary_path
 
     # Enabled validation
-    valid_modes = {"dry_run", "unlisted", "private"}
-    enforced_mode = env_mode if env_mode in valid_modes else None
+    enforced_mode = env_mode if env_mode in VALID_YOUTUBE_MODES else None
 
     if enforced_mode:
         summary = SoftLiveSummary(
@@ -64,7 +64,7 @@ def run_soft_live_enforce(run_id: str, base_dir: Path | None = None) -> tuple[di
     # Invalid mode handling
     if env_fail_closed:
         raise ValueError(
-            f"Invalid SOFT_LIVE_YOUTUBE_MODE: '{env_mode}'. Allowed: {valid_modes}"
+            f"Invalid SOFT_LIVE_YOUTUBE_MODE: '{env_mode}'. Allowed: {VALID_YOUTUBE_MODES}"
         )
     else:
         # Fallback to dry_run
