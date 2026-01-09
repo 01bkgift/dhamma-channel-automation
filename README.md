@@ -1,6 +1,6 @@
 # 🙏 FlowBiz Client Dhamma
 
-[![CI](https://github.com/natbkgift/dhamma-channel-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/natbkgift/dhamma-channel-automation/actions/workflows/ci.yml)
+[![CI](https://github.com/01bkgift/flowbiz-client-dhamma/actions/workflows/ci.yml/badge.svg)](https://github.com/01bkgift/flowbiz-client-dhamma/actions/workflows/ci.yml)
 [![Docs: local only](https://img.shields.io/badge/docs-local_only-lightgrey.svg)](docs/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -64,8 +64,8 @@
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/natbkgift/dhamma-channel-automation.git
-cd dhamma-channel-automation
+git clone https://github.com/01bkgift/flowbiz-client-dhamma.git
+cd flowbiz-client-dhamma
 
 # 2. สร้าง virtual environment
 python -m venv venv
@@ -138,7 +138,7 @@ python -m cli.main config-info
 ## 📁 โครงสร้างโครงการ
 
 ```
-dhamma-channel-automation/
+flowbiz-client-dhamma/
 ├── 📄 README.md                    # เอกสารหลัก
 ├── ⚙️ pyproject.toml               # การตั้งค่าโครงการ
 ├── 📜 LICENSE                      # ใบอนุญาต MIT
@@ -401,8 +401,8 @@ touch tests/test_my_agent.py
 
 ## 📞 ติดต่อและสนับสนุน
 
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/natbkgift/dhamma-channel-automation/issues)
-- **💡 Feature Requests**: [GitHub Discussions](https://github.com/natbkgift/dhamma-channel-automation/discussions)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/01bkgift/flowbiz-client-dhamma/issues)
+- **💡 Feature Requests**: [GitHub Discussions](https://github.com/01bkgift/flowbiz-client-dhamma/discussions)
 - **📖 เอกสาร (ภายใน)**: ดูโฟลเดอร์ [docs/](docs/) หรือรัน `mkdocs serve`
 - **🔧 Troubleshooting**: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 

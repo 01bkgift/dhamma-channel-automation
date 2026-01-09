@@ -65,6 +65,8 @@
 
 ### Security
 
+- [ ] ยืนยันว่า `video_id` ไม่ใช่ NULL และไม่ใช่ Fake ID (ต้องทำ Video Injection ตาม Runbook)
+- [ ] ตรวจสอบว่าไม่มี Secrets หลุดใน Logs
 - [x] ไม่มี secrets ใน runbook
 - [x] ไม่มี credentials placeholders
 - [x] มีคำเตือนห้ามใช้ `public` mode

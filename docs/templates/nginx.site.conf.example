@@ -1,11 +1,11 @@
 # Nginx Site Configuration Template
-# FlowBiz Client: dhamma-channel-automation
+# FlowBiz Client: flowbiz-client-dhamma
 #
 # Usage:
-#   1. Copy to /etc/nginx/sites-available/dhamma-automation.conf
+#   1. Copy to /etc/nginx/sites-available/flowbiz-client-dhamma.conf
 #   2. Replace DOMAIN_NAME with your actual domain
 #   3. Replace <FLOWBIZ_ALLOCATED_PORT> with actual port (default: 3007)
-#   4. Create symlink: sudo ln -s /etc/nginx/sites-available/dhamma-automation.conf /etc/nginx/sites-enabled/
+#   4. Create symlink: sudo ln -s /etc/nginx/sites-available/flowbiz-client-dhamma.conf /etc/nginx/sites-enabled/
 #   5. Test: sudo nginx -t
 #   6. Reload: sudo systemctl reload nginx
 #   7. Setup SSL: sudo certbot --nginx -d your-domain.com
@@ -18,7 +18,7 @@
 # ============================================================
 
 # Upstream definition
-upstream dhamma_backend {
+upstream flowbiz_dhamma_backend {
     # REPLACE: <FLOWBIZ_ALLOCATED_PORT> with actual port
     server 127.0.0.1:<FLOWBIZ_ALLOCATED_PORT> max_fails=3 fail_timeout=30s;
 }
@@ -41,7 +41,7 @@ server {
     
     # Temporary: proxy to backend (before SSL setup)
     location / {
-        proxy_pass http://dhamma_backend;
+        proxy_pass http://flowbiz_dhamma_backend;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -75,12 +75,12 @@ server {
 #     client_max_body_size 100M;
 #     
 #     # Logging
-#     access_log /var/log/nginx/dhamma-access.log;
-#     error_log /var/log/nginx/dhamma-error.log warn;
+#     access_log /var/log/nginx/flowbiz-dhamma-access.log;
+#     error_log /var/log/nginx/flowbiz-dhamma-error.log warn;
 #     
 #     # Proxy to backend
 #     location / {
-#         proxy_pass http://dhamma_backend;
+#         proxy_pass http://flowbiz_dhamma_backend;
 #         
 #         proxy_set_header Host $host;
 #         proxy_set_header X-Real-IP $remote_addr;
@@ -104,7 +104,7 @@ server {
 #     
 #     # Health check endpoint
 #     location /healthz {
-#         proxy_pass http://dhamma_backend;
+#         proxy_pass http://flowbiz_dhamma_backend;
 #         proxy_set_header Host $host;
 #         proxy_set_header X-Real-IP $remote_addr;
 #         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -119,7 +119,7 @@ server {
 #     
 #     # Metadata endpoint
 #     location /v1/meta {
-#         proxy_pass http://dhamma_backend;
+#         proxy_pass http://flowbiz_dhamma_backend;
 #         proxy_set_header Host $host;
 #         proxy_set_header X-Real-IP $remote_addr;
 #         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -137,5 +137,5 @@ server {
 # - Backend MUST bind to 127.0.0.1:<port> (localhost only)
 # - DO NOT expose port directly to internet
 # - After SSL setup, uncomment HTTPS redirect
-# - Monitor: /var/log/nginx/dhamma-error.log
+# - Monitor: /var/log/nginx/flowbiz-dhamma-error.log
 # - Test config: sudo nginx -t

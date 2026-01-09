@@ -28,6 +28,7 @@ python scripts/production_orchestrator.py --input-dir output/production_complete
 ```
 
 **ผลลัพธ์:**
+
 - ✅ สคริปต์สำหรับบันทึกเสียง → `audio/production_complete_001/`
 - ✅ Template สำหรับ DaVinci Resolve → `templates/production_complete_001/`
 - ✅ คู่มือสร้าง Thumbnail ใน Canva → `templates/canva/`
@@ -43,6 +44,7 @@ python scripts/production_orchestrator.py --input-dir output/production_complete
 **เครื่องมือ:** Audacity + DaVinci Resolve + Canva (ฟรีทั้งหมด)
 
 **ขั้นตอน:**
+
 ```bash
 # 1. เตรียมสคริปต์และ templates
 python scripts/production_orchestrator.py --input-dir output/production_complete_001 --path A
@@ -77,6 +79,7 @@ python scripts/production_orchestrator.py --input-dir output/production_complete
 **ต้องการ:** OpenAI API key
 
 **ขั้นตอน:**
+
 ```bash
 # 1. ตั้งค่า API key
 export OPENAI_API_KEY="sk-..."  # หรือเพิ่มใน production_config.json
@@ -101,6 +104,7 @@ python scripts/production_orchestrator.py --input-dir output/production_complete
 **ต้องการ:** ElevenLabs + DALL-E + YouTube API
 
 **ขั้นตอน:**
+
 ```bash
 # 1. ตั้งค่า API keys ทั้งหมดใน production_config.json
 
@@ -123,7 +127,7 @@ python scripts/production_orchestrator.py --input-dir output/production_complete
 หลังรัน production orchestrator:
 
 ```
-dhamma-channel-automation/
+flowbiz-client-dhamma/
 ├── audio/
 │   └── production_complete_001/
 │       ├── recording_script_SIMPLE.txt       ← อ่านและบันทึกเสียง
@@ -161,22 +165,27 @@ dhamma-channel-automation/
 ## 🛠️ Scripts ที่มีให้ใช้
 
 ### 1. **Production Orchestrator** (Main)
+
 ```bash
 python scripts/production_orchestrator.py --input-dir OUTPUT_DIR --path [A|B|C]
 ```
+
 รันทุกอย่างในคำสั่งเดียว
 
 ---
 
 ### 2. **Voiceover Preparation** (Individual)
+
 ```bash
 python scripts/prepare_voiceover.py \
   --input-dir output/production_complete_001 \
   --output-dir audio/my_audio
 ```
+
 สร้างสคริปต์สำหรับบันทึกเสียง
 
 **Output:**
+
 - `recording_script_SIMPLE.txt` - อ่านง่าย
 - `recording_script_DETAILED.txt` - พร้อม pause markers
 - `sections/` - แยกทีละ section
@@ -184,15 +193,18 @@ python scripts/prepare_voiceover.py \
 ---
 
 ### 3. **DaVinci Resolve Templates** (Individual)
+
 ```bash
 python scripts/generate_davinci_template.py \
   --input-dir output/production_complete_001 \
   --output-dir templates/my_templates \
   --fps 30
 ```
+
 สร้าง timeline templates สำหรับ video editing
 
 **Output:**
+
 - `EDITING_GUIDE.md` - คู่มือ step-by-step
 - `timeline.edl` - Import ใน DaVinci
 - `timeline.csv` - View ใน Excel
@@ -201,6 +213,7 @@ python scripts/generate_davinci_template.py \
 ---
 
 ### 4. **B-roll Downloader** (Individual)
+
 ```bash
 python scripts/download_broll.py \
   --input-dir output/production_complete_001 \
@@ -208,24 +221,29 @@ python scripts/download_broll.py \
   --api-key YOUR_PEXELS_API_KEY \
   --max-videos 10
 ```
+
 ดาวน์โหลด B-roll videos จาก Pexels (ฟรี)
 
-**ต้องการ:** Pexels API key (ฟรีที่ https://www.pexels.com/api/)
+**ต้องการ:** Pexels API key (ฟรีที่ <https://www.pexels.com/api/>)
 
 **Output:**
+
 - `broll_01_*.mp4` - วิดีโอ B-roll
 - `broll_metadata.json` - ข้อมูล credits
 
 ---
 
 ### 5. **Canva Templates** (Individual)
+
 ```bash
 python scripts/generate_canva_templates.py \
   --input-dir output/production_complete_001
 ```
+
 สร้างคู่มือและ specs สำหรับ Canva
 
 **Output:**
+
 - `CANVA_GUIDE.md` - คู่มือสร้าง thumbnail
 - `canva_concept_*.json` - Specs แต่ละ concept
 
@@ -235,9 +253,10 @@ python scripts/generate_canva_templates.py \
 
 ### 📄 1. บันทึกเสียง (Voiceover)
 
-**เครื่องมือ:** Audacity (ฟรี) - https://www.audacityteam.org/
+**เครื่องมือ:** Audacity (ฟรี) - <https://www.audacityteam.org/>
 
 **ขั้นตอน:**
+
 1. เปิด `audio/production_complete_001/recording_script_SIMPLE.txt`
 2. อ่านผ่านครั้งหนึ่งเพื่อฝึก
 3. เปิด Audacity → Record
@@ -246,6 +265,7 @@ python scripts/generate_canva_templates.py \
 6. Export: MP3 (192 kbps) หรือ WAV
 
 **💡 Tips:**
+
 - บันทึกในห้องเงียบ (ใช้ผ้าห่มลด echo)
 - ดื่มน้ำก่อนบันทึก (หลีกเลี่ยงกาแฟ/นม)
 - บันทึกทีละ section (`sections/` folder)
@@ -255,9 +275,10 @@ python scripts/generate_canva_templates.py \
 
 ### 🎬 2. Edit วิดีโอ (DaVinci Resolve)
 
-**เครื่องมือ:** DaVinci Resolve 19 (ฟรี) - https://www.blackmagicdesign.com/products/davinciresolve
+**เครื่องมือ:** DaVinci Resolve 19 (ฟรี) - <https://www.blackmagicdesign.com/products/davinciresolve>
 
 **ขั้นตอน:**
+
 1. เปิด `templates/production_complete_001/EDITING_GUIDE.md`
 2. สร้าง project ใหม่: 1920x1080, 30fps
 3. Import voiceover audio
@@ -267,17 +288,19 @@ python scripts/generate_canva_templates.py \
 7. Export: MP4 (H.264, 10-15 Mbps)
 
 **💡 B-roll ฟรี:**
-- Pexels: https://www.pexels.com/
-- Pixabay: https://pixabay.com/
-- Mixkit: https://mixkit.co/
+
+- Pexels: <https://www.pexels.com/>
+- Pixabay: <https://pixabay.com/>
+- Mixkit: <https://mixkit.co/>
 
 ---
 
 ### 🎨 3. สร้าง Thumbnail (Canva)
 
-**เครื่องมือ:** Canva (ฟรี) - https://www.canva.com/
+**เครื่องมือ:** Canva (ฟรี) - <https://www.canva.com/>
 
 **ขั้นตอน:**
+
 1. เปิด `templates/canva/CANVA_GUIDE.md`
 2. เลือก concept (1, 2, หรือ 3)
 3. ไป Canva → Custom size: 1280x720
@@ -285,6 +308,7 @@ python scripts/generate_canva_templates.py \
 5. Download: JPG (<2MB)
 
 **💡 A/B Testing:**
+
 - สร้างทั้ง 3 concepts
 - ทดสอบดูว่าอันไหนได้ CTR สูงกว่า
 
@@ -292,9 +316,10 @@ python scripts/generate_canva_templates.py \
 
 ### 📺 4. Upload YouTube
 
-**เครื่องมือ:** YouTube Studio - https://studio.youtube.com/
+**เครื่องมือ:** YouTube Studio - <https://studio.youtube.com/>
 
 **ขั้นตอน:**
+
 1. ไป YouTube Studio → Create → Upload videos
 2. เลือกวิดีโอที่ export แล้ว
 3. เปิด `output/production_complete_001/metadata.json`
@@ -335,18 +360,21 @@ python scripts/generate_canva_templates.py \
 ## 🔑 API Keys (สำหรับ Path B/C)
 
 ### Pexels API (ฟรี)
-1. ไป https://www.pexels.com/api/
+
+1. ไป <https://www.pexels.com/api/>
 2. Sign up
 3. Get API key
 4. ใส่ใน `production_config.json`
 
 ### OpenAI API (Path B)
-1. ไป https://platform.openai.com/
+
+1. ไป <https://platform.openai.com/>
 2. สร้าง API key
 3. ต้นทุน: ~$0.015/นาที (TTS)
 
 ### ElevenLabs (Path C)
-1. ไป https://elevenlabs.io/
+
+1. ไป <https://elevenlabs.io/>
 2. Subscribe ($5-22/เดือน)
 3. รองรับภาษาไทย
 

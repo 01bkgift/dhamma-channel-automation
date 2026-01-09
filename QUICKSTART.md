@@ -1,4 +1,4 @@
-# 🚀 Quick Start Guide - Dhamma Channel Automation
+# 🚀 Quick Start Guide - FlowBiz Client Dhamma
 
 คู่มือเริ่มต้นใช้งานอย่างรวดเร็วสำหรับระบบอัตโนมัติ ธรรมะดีดี
 
@@ -12,7 +12,7 @@
 
 ```powershell
 # 1. เปิด PowerShell และไปยังโฟลเดอร์โปรเจกต์
-cd "d:\Auto Tool\dhamma-channel-automation"
+cd "d:\FlowBiz\flowbiz-client-dhamma"
 
 # 2. เปิดใช้งาน virtual environment
 .\venv\Scripts\Activate.ps1
@@ -36,6 +36,7 @@ cat output/result.json
 ```
 
 **สิ่งที่จะได้:**
+
 - 📊 หัวข้อคอนเทนต์ 15 หัวข้อ จัดอันดับตามคะแนน
 - 🎯 คะแนนรวมและคะแนนย่อย (search_intent, freshness, evergreen, brand_fit)
 - 📈 การดูคาดการณ์ 14 วัน
@@ -91,6 +92,7 @@ print(f"⏱️ ระยะเวลา: {result.meta.duration_total} วิน�
 ```
 
 รันด้วยคำสั่ง:
+
 ```powershell
 python test_subtitle.py
 ```
@@ -127,7 +129,7 @@ pytest --cov=src --cov=cli --cov-report=html
 ## 📁 โครงสร้างไฟล์สำคัญ
 
 ```
-dhamma-channel-automation/
+flowbiz-client-dhamma/
 ├── src/agents/
 │   ├── trend_scout/
 │   │   ├── agent.py              # Agent หลัก
@@ -146,6 +148,7 @@ dhamma-channel-automation/
 ## 💡 เคล็ดลับการใช้งาน
 
 ### ✅ แก้ไข Input Data
+
 แก้ไขไฟล์ `src/agents/trend_scout/mock_input.json` เพื่อทดสอบกับข้อมูลของคุณเอง:
 
 ```json
@@ -158,6 +161,7 @@ dhamma-channel-automation/
 ```
 
 ### ✅ บันทึกผลลัพธ์
+
 ผลลัพธ์จะถูกบันทึกในโฟลเดอร์ `output/` อัตโนมัติ:
 
 ```powershell
@@ -169,11 +173,12 @@ cat output/result.json | ConvertFrom-Json | ConvertTo-Json -Depth 10
 ```
 
 ### ✅ ปรับแต่ง Configuration
+
 แก้ไขการตั้งค่าใน `src/automation_core/config.py`:
 
 ```python
 class Config(BaseSettings):
-    app_name: str = "dhamma-automation"
+    app_name: str = "flowbiz-client-dhamma"
     log_level: str = "INFO"
     data_dir: str = "./data"
     log_file: str = "logs/app.log"
@@ -182,6 +187,7 @@ class Config(BaseSettings):
 ## 🎨 Rich Output
 
 CLI ใช้ Rich library แสดงผลสวยงาม:
+
 - 🎨 สีสันตามประเภทข้อมูล
 - 📊 ตารางแสดงผลลัพธ์
 - ⚡ Progress indicators
@@ -190,6 +196,7 @@ CLI ใช้ Rich library แสดงผลสวยงาม:
 ## 🔍 การแก้ไขปัญหา
 
 ### ปัญหา: Module not found
+
 ```powershell
 # ตรวจสอบว่า venv เปิดใช้งาน
 .\venv\Scripts\Activate.ps1
@@ -199,6 +206,7 @@ pip install -e .
 ```
 
 ### ปัญหา: SSL Certificate Error
+
 ```powershell
 # ติดตั้งด้วย trusted hosts
 pip install --trusted-host pypi.org `
@@ -208,6 +216,7 @@ pip install --trusted-host pypi.org `
 ```
 
 ### ปัญหา: Tests ไม่ผ่าน
+
 ```powershell
 # ตรวจสอบว่าติดตั้ง dev dependencies
 pip install -e ".[dev]"

@@ -228,3 +228,12 @@ token.pickle
 client_secret.json
 youtube_client_secret.json
 *_client_secret.json
+
+# B-roll media files (keep structure but ignore large binaries)
+broll/**/*.png
+broll/**/*.jpg
+broll/**/*.jpeg
+broll/**/*.mp4
+!broll/README.md
+!broll/**/.gitkeep
+!broll/

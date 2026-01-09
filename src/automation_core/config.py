@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppConfig(BaseSettings):
     """การตั้งค่าหลักของแอปพลิเคชัน"""
 
-    app_name: str = Field(default="dhamma-automation", description="ชื่อแอปพลิเคชัน")
+    app_name: str = Field(default="flowbiz-client-dhamma", description="ชื่อแอปพลิเคชัน")
     log_level: str = Field(default="INFO", description="ระดับการ log")
     data_dir: str = Field(default="./data", description="โฟลเดอร์เก็บข้อมูล")
 

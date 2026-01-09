@@ -13,7 +13,7 @@ SSML Enhancer เป็นเครื่องมือที่แปลงส
 ### 1. แปลงสคริปต์เป็น SSML
 
 ```pwsh
-& "D:\Auto Tool\dhamma-channel-automation\venv\Scripts\python.exe" scripts\ssml_enhancer.py input.txt output_ssml.txt
+& "d:\FlowBiz\flowbiz-client-dhamma\venv\Scripts\python.exe" scripts\ssml_enhancer.py input.txt output_ssml.txt
 ```
 
 ### 2. เลือกระดับการปรับแต่ง
@@ -38,6 +38,7 @@ python scripts\ssml_enhancer.py input.txt output.txt --preview
 ## ฟีเจอร์ที่เพิ่มอัตโนมัติ
 
 ### ✅ การหยุด (Breaks)
+
 - `.` `!` `?` → pause 0.6s
 - `,` → pause 0.35s  
 - `-` → pause 0.25s
@@ -47,10 +48,12 @@ python scripts\ssml_enhancer.py input.txt output.txt --preview
 - `[PAUSE - นิ่ง 3 วินาที]` → pause 3s
 
 ### ✅ การเน้นเสียง (Emphasis)
+
 - `**คำสำคัญ**` → `<emphasis level="strong">`
 - `*คำ*` → `<emphasis level="moderate">`
 
 ### ✅ น้ำเสียง (Prosody) - Level Heavy
+
 - `คำถาม?` → เพิ่มน้ำเสียงขึ้นท้ายคำถาม
 - `30%` → ชะลอการพูดตัวเลข
 - `อานาปานสติ` → ชะลอคำบาลี/สันสกฤต
@@ -58,11 +61,13 @@ python scripts\ssml_enhancer.py input.txt output.txt --preview
 ## เคล็ดลับการเขียนสคริปต์
 
 ### ❌ ไม่แนะนำ
+
 ```text
 คุณรู้ไหม? เราสามารถฝึกสติได้ทุกที่ สติคืออะไร สติคือการรับรู้
 ```
 
 ### ✅ แนะนำ
+
 ```text
 คุณรู้ไหม?
 
@@ -85,6 +90,7 @@ python scripts\ssml_enhancer.py input.txt output.txt --preview
    - คุณภาพสูงที่สุด
    - น้ำเสียงนุ่มนวล เป็นธรรมชาติ
    - รองรับ SSML ได้ดี
+
    ```pwsh
    --voice th-TH-Neural2-C --rate 0.90
    ```
@@ -92,6 +98,7 @@ python scripts\ssml_enhancer.py input.txt output.txt --preview
 2. **th-TH-Chirp3-HD-Schedar** (ผู้ชาย) ⭐⭐
    - เสียงนุ่ม สงบ
    - เหมาะกับช่องธรรมะ
+
    ```pwsh
    --voice th-TH-Chirp3-HD-Schedar --rate 0.85
    ```
@@ -99,6 +106,7 @@ python scripts\ssml_enhancer.py input.txt output.txt --preview
 3. **th-TH-Wavenet-B** (ผู้ชาย) ⭐
    - เสียงเป็นกันเอง
    - รองรับ SSML ดี
+
    ```pwsh
    --voice th-TH-Wavenet-B --rate 0.88
    ```
@@ -139,7 +147,7 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 ### 3. สร้างเสียง
 
 ```pwsh
-& "D:\Auto Tool\dhamma-channel-automation\venv\Scripts\python.exe" scripts\tts_unified.py `
+& "d:\FlowBiz\flowbiz-client-dhamma\venv\Scripts\python.exe" scripts\tts_unified.py `
   --provider google `
   --script "input_ssml.txt" `
   --output "output.mp3" `
@@ -150,12 +158,15 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 ## ตัวอย่างผลลัพธ์
 
 ### ก่อนใช้ SSML
+
 ```text
 คุณเคยรู้สึกเครียดไหม วันนี้เรามาเรียนรู้การฝึกสติด้วยลมหายใจกันครับ ประโยชน์หลักๆ มี 3 อย่าง ลดความเครียด 30% นอนหลับสนิท มีสติในการทำงาน
 ```
+
 → พูดเร็วเกินไป ไม่มีจังหวะ
 
 ### หลังใช้ SSML
+
 ```xml
 <speak>
 <prosody pitch="+2st">คุณเคยรู้สึกเครียดไหม</prosody>?<break time="0.6s"/>
@@ -170,6 +181,7 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 -<break time="0.25s"/> มีสติในการทำงาน
 </speak>
 ```
+
 → มีจังหวะ มีการหยุด เน้นคำสำคัญ
 
 ## เปรียบเทียบ Enhancement Levels
@@ -189,6 +201,7 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 ## Tips & Best Practices
 
 ### ✅ ควรทำ
+
 1. ใช้ `[PAUSE]` หลังประโยคสำคัญ
 2. ใช้ `**คำ**` กับคำสำคัญ (ไม่ควรเกิน 10% ของข้อความ)
 3. เว้นบรรทัดว่างระหว่างหัวข้อ
@@ -196,6 +209,7 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 5. ทดสอบเสียงก่อนสร้างไฟล์ยาว
 
 ### ❌ ไม่ควรทำ
+
 1. ใส่ emoji ในสคริปต์ (จะถูกลบอัตโนมัติ)
 2. ใช้ `**` มากเกินไป (ฟังดังจนเกินไป)
 3. วางประโยคยาวติดกัน (ควรแบ่งย่อหน้า)
@@ -235,15 +249,18 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 ## การแก้ปัญหา
 
 ### ❌ เสียงยังไม่เป็นธรรมชาติ
+
 - เพิ่ม `[PAUSE]` มากขึ้น
 - ลดความเร็ว (rate 0.85 → 0.80)
 - เปลี่ยนเสียง (ลอง Neural2-C)
 
 ### ❌ SSML tags ซ้อนกัน (nested)
+
 - ใช้ level `medium` แทน `heavy`
 - ไม่ใส่ `**` ใน `**` (ผิด: `***คำ***`)
 
 ### ❌ ไฟล์เสียงใหญ่เกินไป
+
 - แบ่งสคริปต์เป็นหลายไฟล์
 - ลดการใช้ SSML tags (ใช้ level `light`)
 
@@ -256,6 +273,6 @@ python scripts\ssml_enhancer.py input.txt input_ssml.txt --level medium
 
 ---
 
-สร้างโดย Dhamma Channel Automation
+สร้างโดย FlowBiz Client Dhamma
 Version: 1.0
 Last Updated: November 6, 2025

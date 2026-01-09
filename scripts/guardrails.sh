@@ -111,17 +111,17 @@ echo ""
 echo "4. Checking nginx configuration..."
 echo "-------------------------------------------------------------------"
 
-if [ -f "nginx/dhamma-automation.conf" ]; then
+if [ -f "nginx/flowbiz-client-dhamma.conf" ]; then
     check_pass "Nginx config template exists"
     
     # Check for deployment note about FLOWBIZ_ALLOCATED_PORT
-    if grep -q "FLOWBIZ_ALLOCATED_PORT from config/flowbiz_port.env" nginx/dhamma-automation.conf; then
+    if grep -q "FLOWBIZ_ALLOCATED_PORT from config/flowbiz_port.env" nginx/flowbiz-client-dhamma.conf; then
         check_pass "Nginx config has deployment note for FLOWBIZ_ALLOCATED_PORT"
     else
         check_warn "Nginx config missing deployment note for FLOWBIZ_ALLOCATED_PORT"
     fi
 else
-    check_fail "Nginx config template missing: nginx/dhamma-automation.conf"
+    check_fail "Nginx config template missing: nginx/flowbiz-client-dhamma.conf"
 fi
 
 echo ""

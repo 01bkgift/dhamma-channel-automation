@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers production deployment of the Dhamma Channel Automation service as a FlowBiz Client Product on a VPS environment.
+This guide covers production deployment of the FlowBiz Client Dhamma service as a FlowBiz Client Product on a VPS environment.
 
 ## 🚀 VPS Production Docs
 
@@ -105,8 +105,8 @@ This project follows the **System Nginx** architecture as defined in:
 ```bash
 # Clone repository
 cd /opt
-sudo git clone https://github.com/natbkgift/dhamma-channel-automation.git
-cd dhamma-channel-automation
+sudo git clone https://github.com/01bkgift/flowbiz-client-dhamma.git
+cd flowbiz-client-dhamma
 
 # Create .env file
 sudo cp .env.example .env
@@ -115,11 +115,11 @@ sudo nano .env
 
 ### 2. Configure Environment Variables
 
-Edit `/opt/dhamma-channel-automation/.env`:
+Edit `/opt/flowbiz-client-dhamma/.env`:
 
 ```bash
 # FlowBiz Standard Variables
-APP_SERVICE_NAME="dhamma-automation"
+APP_SERVICE_NAME="flowbiz-client-dhamma"
 APP_ENV="production"
 APP_LOG_LEVEL="INFO"
 APP_CORS_ORIGINS='["https://dhamma.yourdomain.com"]'
@@ -394,9 +394,9 @@ Before going to production:
 ```bash
 # Backup output and data directories
 sudo tar -czf dhamma-backup-$(date +%Y%m%d).tar.gz \
-  /opt/dhamma-channel-automation/output \
-  /opt/dhamma-channel-automation/data \
-  /opt/dhamma-channel-automation/.env
+  /opt/flowbiz-client-dhamma/output \
+  /opt/flowbiz-client-dhamma/data \
+  /opt/flowbiz-client-dhamma/.env
 
 # Upload to secure storage
 ```
@@ -405,10 +405,10 @@ sudo tar -czf dhamma-backup-$(date +%Y%m%d).tar.gz \
 
 ```bash
 # Extract backup
-sudo tar -xzf dhamma-backup-YYYYMMDD.tar.gz -C /opt/dhamma-channel-automation/
+sudo tar -xzf dhamma-backup-YYYYMMDD.tar.gz -C /opt/flowbiz-client-dhamma/
 
 # Restart service
-cd /opt/dhamma-channel-automation
+cd /opt/flowbiz-client-dhamma
 sudo docker-compose --env-file config/flowbiz_port.env restart
 ```
 

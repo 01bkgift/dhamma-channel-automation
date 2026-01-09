@@ -31,8 +31,8 @@
 
 | Property | Value |
 |----------|-------|
-| Location | `/etc/nginx/sites-available/dhamma-automation.conf` |
-| Template | `nginx/dhamma-automation.conf` |
+| Location | `/etc/nginx/sites-available/flowbiz-client-dhamma.conf` |
+| Template | `nginx/flowbiz-client-dhamma.conf` |
 | Ports | 80 (HTTP), 443 (HTTPS) |
 | Upstream | `127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}` |
 | TLS | Let's Encrypt via certbot |
@@ -84,7 +84,7 @@ FLOWBIZ_ALLOCATED_PORT=3007
 │       ├── artifacts/            # Approval gate summaries
 │       └── control/              # Cancel decisions
 ├── nginx/
-│   └── dhamma-automation.conf    # Nginx template
+│   └── flowbiz-client-dhamma.conf    # Nginx template
 ├── docker-compose.yml
 └── scripts/
     ├── runtime_verify.sh         # Deploy verification
@@ -124,7 +124,7 @@ Internet → Nginx (:443) → Docker (:3007) → App (:8000)
 ```json
 {
   "status": "ok",
-  "service": "dhamma-automation",
+  "service": "flowbiz-client-dhamma",
   "version": "1.0.0"
 }
 ```
@@ -133,7 +133,7 @@ Internet → Nginx (:443) → Docker (:3007) → App (:8000)
 
 ```json
 {
-  "service": "dhamma-automation",
+  "service": "flowbiz-client-dhamma",
   "environment": "production",
   "version": "1.0.0",
   "build_sha": "abc123"

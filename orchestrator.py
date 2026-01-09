@@ -3070,13 +3070,19 @@ def agent_youtube_upload(step, run_dir: Path):
             video_id = youtube_upload.upload_video(
                 output_mp4_abs, title, description, tags, privacy_status
             )
+            
+            # Check for Soft-Live dry-run mock ID
+            decision = "uploaded"
+            if video_id and video_id.startswith("soft-live-dry-"):
+                decision = "dry_run"
+
             summary_path = _write_summary(
-                decision="uploaded",
+                decision=decision,
                 attempt_count=attempt,
                 video_id=video_id,
             )
             log(
-                f"YouTube upload completed; decision=uploaded; attempt={attempt}",
+                f"YouTube upload completed; decision={decision}; attempt={attempt}",
                 "SUCCESS",
             )
             return summary_path

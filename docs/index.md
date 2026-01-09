@@ -26,8 +26,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/natbkgift/dhamma-channel-automation.git
-cd dhamma-channel-automation
+git clone https://github.com/01bkgift/flowbiz-client-dhamma.git
+cd flowbiz-client-dhamma
 
 # ติดตั้ง dependencies
 pip install -e .
@@ -132,22 +132,26 @@ mkdocs build
 ## 🗺️ แผนงานโครงการ
 
 ### Phase 0: Foundation (ปัจจุบัน) ✅
+
 - [x] TrendScoutAgent พร้อม mock LLM
 - [x] CLI interface เบื้องต้น  
 - [x] Unit testing
 - [x] เอกสารภาษาไทย
 
 ### Phase 1: Topic Prioritization (ถัดไป)
+
 - [ ] TopicPrioritizerAgent
 - [ ] Retrieval Agent (เชื่อมต่อข้อมูลภายนอก)
 - [ ] การประเมินคุณภาพหัวข้อ
 
 ### Phase 2: Content Generation
+
 - [ ] OutlineAgent (สร้างโครงเรื่อง)
 - [ ] ScriptWriterAgent (เขียนสคริปต์)
 - [ ] การจัดการ workflow
 
 ### Phase 3: Quality & Analytics
+
 - [ ] ValidatorAgent (ตรวจสอบคุณภาพ)
 - [ ] AnalyticsAgent (วิเคราะห์ผลงาน)
 - [ ] การปรับปรุงอัตโนมัติ
@@ -173,7 +177,7 @@ mkdocs build
 
 ## 📞 ติดต่อและสนับสนุน
 
-- **GitHub Issues**: [รายงานปัญหาหรือขอฟีเจอร์ใหม่](https://github.com/natbkgift/dhamma-channel-automation/issues)
+- **GitHub Issues**: [รายงานปัญหาหรือขอฟีเจอร์ใหม่](https://github.com/01bkgift/flowbiz-client-dhamma/issues)
 - **เอกสาร**: [หน้าแก้ไขปัญหา](TROUBLESHOOTING.md)
 
 ## 📄 ใบอนุญาต

@@ -56,7 +56,7 @@ def main():
         print("🔧 Mode: PRODUCTION (Real API)")
         # Load credentials setup
         creds_json = Path(
-            os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "client_secret.json")
+            os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "youtube_client_secret.json")
         )  # Default lookup
         token_json = Path("youtube_token.json")
 

@@ -1,6 +1,6 @@
 # 🔧 แก้ไขปัญหา (Troubleshooting)
 
-คู่มือแก้ไขปัญหาที่พบบ่อยในระบบ Dhamma Automation
+คู่มือแก้ไขปัญหาที่พบบ่อยในระบบ FlowBiz Client Dhamma
 
 ## 🚨 ปัญหาที่พบบ่อย
 
@@ -9,17 +9,20 @@
 #### Import Error: ไม่พบโมดูล
 
 **อาการ**:
+
 ```bash
 ModuleNotFoundError: No module named 'automation_core'
 ModuleNotFoundError: No module named 'agents'
 ```
 
 **สาเหตุ**:
+
 - ติดตั้ง package ไม่สำเร็จ
 - Python path ไม่ถูกต้อง
 - Virtual environment ไม่ได้เปิดใช้งาน
 
 **วิธีแก้ไข**:
+
 ```bash
 # 1. ตรวจสอบ Python path
 python -c "import sys; print(sys.path)"
@@ -38,11 +41,13 @@ pip list | grep dhamma
 #### Dependency Conflicts
 
 **อาการ**:
+
 ```bash
 ERROR: pip's dependency resolver does not currently consider all the dependencies
 ```
 
 **วิธีแก้ไข**:
+
 ```bash
 # 1. สร้าง virtual environment ใหม่
 python -m venv venv_clean
@@ -60,14 +65,16 @@ pip install -e .
 
 ### 2. 🔍 ปัญหา CLI (Command Line Issues)
 
-#### คำสั่ง `dhamma-automation` ไม่พบ
+#### คำสั่ง `flowbiz-client-dhamma` ไม่พบ
 
 **อาการ**:
+
 ```bash
-dhamma-automation: command not found
+flowbiz-client-dhamma: command not found
 ```
 
 **วิธีแก้ไข**:
+
 ```bash
 # วิธีที่ 1: ใช้ python -m
 python -m cli.main trend-scout --help
@@ -77,17 +84,19 @@ pip install -e .
 
 # วิธีที่ 3: ตรวจสอบ PATH
 echo $PATH
-pip show dhamma-automation
+pip show flowbiz-client-dhamma
 ```
 
 #### ไฟล์ Input ไม่พบ
 
 **อาการ**:
+
 ```bash
 Error: Invalid value for '--input' / '-i': File 'data.json' does not exist.
 ```
 
 **วิธีแก้ไข**:
+
 ```bash
 # 1. ตรวจสอบ path
 ls -la src/agents/trend_scout/mock_input.json
@@ -106,11 +115,13 @@ cp src/agents/trend_scout/mock_input.json ./input.json
 #### ไฟล์ Prompt ไม่พบ
 
 **อาการ**:
+
 ```python
 PromptLoadError: ไม่พบไฟล์ prompt: prompts/trend_scout_v1.txt
 ```
 
 **การตรวจสอบ**:
+
 ```bash
 # ตรวจสอบว่าไฟล์มีอยู่จริง
 ls -la prompts/
@@ -118,6 +129,7 @@ find . -name "trend_scout_v1.txt"
 ```
 
 **วิธีแก้ไข**:
+
 ```python
 # ใช้ absolute path
 from pathlib import Path
@@ -134,11 +146,13 @@ if not os.path.exists("prompts/trend_scout_v1.txt"):
 #### Encoding Error
 
 **อาการ**:
+
 ```python
 UnicodeDecodeError: 'utf-8' codec can't decode byte
 ```
 
 **วิธีแก้ไข**:
+
 ```python
 # ลองเปลี่ยน encoding
 prompt = load_prompt("prompts/trend_scout_v1.txt", encoding="utf-8-sig")
@@ -152,11 +166,13 @@ file prompts/trend_scout_v1.txt
 #### Tests ไม่ผ่าน
 
 **อาการ**:
+
 ```bash
 FAILED tests/test_trend_scout_agent.py::test_run_basic_functionality
 ```
 
 **การตรวจสอบ**:
+
 ```bash
 # รัน test แบบ verbose
 pytest -v tests/test_trend_scout_agent.py
@@ -169,6 +185,7 @@ pytest --cov=src --cov=cli tests/
 ```
 
 **สาเหตุและแก้ไข**:
+
 ```python
 # 1. Mock data ไม่ถูกต้อง - ตรวจสอบ schema
 def test_with_valid_input():
@@ -189,14 +206,16 @@ test_file = Path(__file__).parent / "fixtures" / "test_input.json"
 #### Import Errors ใน Tests
 
 **อาการ**:
+
 ```bash
 ModuleNotFoundError: No module named 'automation_core'
 ```
 
 **วิธีแก้ไข**:
+
 ```bash
 # 1. รัน tests จาก root directory
-cd /path/to/dhamma-channel-automation
+cd /path/to/flowbiz-client-dhamma
 pytest
 
 # 2. ตั้งค่า PYTHONPATH
@@ -212,12 +231,14 @@ pip install -e .
 #### MkDocs Build ล้มเหลว
 
 **อาการ**:
+
 ```bash
 mkdocs build
 ERROR - Config value: 'theme.language': Expected one of: en, ...
 ```
 
 **วิธีแก้ไข**:
+
 ```yaml
 # แก้ไข mkdocs.yml
 theme:
@@ -228,11 +249,13 @@ theme:
 #### Plugin ไม่พบ
 
 **อาการ**:
+
 ```bash
 Config value: 'plugins': No such config option: git-revision-date-localized
 ```
 
 **วิธีแก้ไข**:
+
 ```bash
 # ติดตั้ง plugins ที่ขาด
 pip install mkdocs-git-revision-date-localized-plugin
@@ -248,6 +271,7 @@ pip install mkdocs-minify-plugin
 #### Agent ทำงานช้า
 
 **การวินิจฉัย**:
+
 ```python
 import time
 import logging
@@ -262,6 +286,7 @@ print(f"Agent took {end_time - start_time:.2f} seconds")
 ```
 
 **การปรับปรุง**:
+
 ```python
 # 1. Caching
 from functools import lru_cache
@@ -291,6 +316,7 @@ def process_multiple_inputs(inputs):
 #### Memory Usage สูง
 
 **การตรวจสอบ**:
+
 ```python
 import psutil
 import os
@@ -301,6 +327,7 @@ print(f"Memory usage: {memory_mb:.2f} MB")
 ```
 
 **วิธีลด Memory**:
+
 ```python
 # 1. ลบ objects ที่ไม่ใช้
 del large_object
@@ -323,11 +350,13 @@ for batch in chunks(large_list, BATCH_SIZE):
 #### Environment Variables ไม่ทำงาน
 
 **อาการ**:
+
 ```python
 config.openai_api_key is None
 ```
 
 **การตรวจสอบ**:
+
 ```bash
 # ตรวจสอบว่ามีไฟล์ .env
 ls -la .env
@@ -341,6 +370,7 @@ print(config.dict())
 ```
 
 **วิธีแก้ไข**:
+
 ```bash
 # 1. สร้างไฟล์ .env
 cp .env.example .env
@@ -403,11 +433,13 @@ python -m memory_profiler script.py
 ### ก่อนขอความช่วยเหลือ
 
 1. **ตรวจสอบ logs**:
+
    ```bash
    tail -f logs/app.log
    ```
 
 2. **รวบรวมข้อมูล**:
+
    ```bash
    python --version
    pip list
@@ -422,6 +454,7 @@ python -m memory_profiler script.py
 ### การรายงานปัญหา
 
 **เทมเพลต Issue**:
+
 ```markdown
 ## ปัญหาที่พบ
 [อธิบายปัญหาอย่างชัดเจน]
@@ -444,7 +477,9 @@ python -m memory_profiler script.py
 
 ## Logs/Error messages
 ```
+
 [วาง error messages ที่นี่]
+
 ```
 
 ## Additional context
@@ -453,13 +488,14 @@ python -m memory_profiler script.py
 
 ### ช่องทางการติดต่อ
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/natbkgift/dhamma-channel-automation/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/natbkgift/dhamma-channel-automation/discussions)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/01bkgift/flowbiz-client-dhamma/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/01bkgift/flowbiz-client-dhamma/discussions)
 - 📖 **Documentation**: อ่านเอกสารนี้และ [Architecture](ARCHITECTURE.md)
 
 ## 🔍 Quick Fix Commands
 
 ### Reset Environment
+
 ```bash
 # ลบ virtual environment และสร้างใหม่
 rm -rf venv
@@ -469,14 +505,16 @@ pip install -e .
 ```
 
 ### Clean Installation
+
 ```bash
 # ทำความสะอาดและติดตั้งใหม่
-pip uninstall dhamma-automation
+pip uninstall flowbiz-client-dhamma
 pip cache purge
 pip install -e .
 ```
 
 ### Verify Installation
+
 ```bash
 # ตรวจสอบการติดตั้ง
 python -c "from automation_core import BaseAgent; print('✅ Core OK')"
@@ -485,6 +523,7 @@ python -c "from cli.main import app; print('✅ CLI OK')"
 ```
 
 ### Test Everything
+
 ```bash
 # รัน test suite ทั้งหมด
 pytest -v

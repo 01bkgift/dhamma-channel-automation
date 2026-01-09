@@ -2,25 +2,32 @@
 
 ## ✅ STATUS: COMPLETE AND VALIDATED
 
-This PR successfully adopts the `dhamma-channel-automation` repository into FlowBiz Client Product standards with **minimal, surgical changes** while maintaining **100% backwards compatibility**.
+This PR successfully adopts the `flowbiz-client-dhamma` repository into FlowBiz Client Product standards with **minimal, surgical changes** while maintaining **100% backwards compatibility**.
 
 ---
 
 ## 🎯 Objectives Accomplished
 
 ### 1. FlowBiz Contract Endpoints ✅
+
 - **GET /healthz**: Returns service health status
+
   ```json
-  {"status":"ok","service":"dhamma-automation","version":"0.0.0"}
+  {"status":"ok","service":"flowbiz-client-dhamma","version":"0.0.0"}
   ```
+
 - **GET /v1/meta**: Returns service metadata
+
   ```json
-  {"service":"dhamma-automation","environment":"dev","version":"0.0.0","build_sha":"dev"}
+  {"service":"flowbiz-client-dhamma","environment":"dev","version":"0.0.0","build_sha":"dev"}
   ```
+
 - Both endpoints: Fast (<50ms), pure, no external dependencies, no authentication required
 
 ### 2. Environment Variables Contract ✅
+
 Standardized FlowBiz environment variables:
+
 - `APP_SERVICE_NAME` - Service identity (required)
 - `APP_ENV` - Environment (dev/staging/prod)
 - `APP_LOG_LEVEL` - Logging level
@@ -31,25 +38,30 @@ Standardized FlowBiz environment variables:
 **Backwards Compatibility**: Legacy `APP_NAME` still works
 
 ### 3. Port Allocation & Binding ✅
+
 - **FLOWBIZ_ALLOCATED_PORT**: 3007
 - **Binding**: `127.0.0.1:3007:8000` (localhost only)
 - **Verified**: `docker ps` shows correct binding
 - **Security**: No public port exposure
 
 ### 4. Documentation ✅
+
 Created comprehensive documentation:
+
 - `docs/PROJECT_CONTRACT.md` - FlowBiz integration contract
 - `docs/DEPLOYMENT.md` - Production deployment guide
 - `docs/GUARDRAILS.md` - Compliance verification
 - `docs/CODEX_PREFLIGHT.md` - AI agent pre-flight checklist
-- `nginx/dhamma-automation.conf` - System Nginx template
+- `nginx/flowbiz-client-dhamma.conf` - System Nginx template
 
 ### 5. CI & Guardrails ✅
+
 - Added `scripts/guardrails.sh` - Automated compliance checks
 - Added `.github/workflows/guardrails.yml` - Non-blocking CI workflow
 - Added `.github/pull_request_template.md` - Standardized PR template
 
 ### 6. Tests ✅
+
 - Created `tests/test_flowbiz_endpoints.py` with 23 comprehensive tests
 - All tests pass (23/23)
 - Test coverage for:
@@ -64,12 +76,14 @@ Created comprehensive documentation:
 ## 📊 Validation Results
 
 ### Automated Tests
+
 ```bash
 $ pytest tests/test_flowbiz_endpoints.py -xvs
 ======================== 23 passed in 0.51s ========================
 ```
 
 ### Code Quality
+
 ```bash
 $ ruff check .
 All checks passed!
@@ -79,6 +93,7 @@ $ ruff format --check .
 ```
 
 ### Guardrails
+
 ```bash
 $ bash scripts/guardrails.sh
 ===================================================================
@@ -92,28 +107,30 @@ RESULT: PASS with WARNINGS
 ```
 
 ### Manual Endpoint Testing
+
 ```bash
 $ curl http://127.0.0.1:3007/healthz
-{"status":"ok","service":"dhamma-automation","version":"0.0.0"}
+{"status":"ok","service":"flowbiz-client-dhamma","version":"0.0.0"}
 
 $ curl http://127.0.0.1:3007/v1/meta
-{"service":"dhamma-automation","environment":"dev","version":"0.0.0","build_sha":"dev"}
+{"service":"flowbiz-client-dhamma","environment":"dev","version":"0.0.0","build_sha":"dev"}
 
 $ curl http://127.0.0.1:3007/
 <!doctype html>... (login page - existing functionality works) ✅
 ```
 
 ### Port Binding Verification
+
 ```bash
 $ docker ps --format "table {{.Names}}\t{{.Ports}}"
-dhamma-web   127.0.0.1:3007->8000/tcp ✅
+flowbiz-dhamma-web   127.0.0.1:3007->8000/tcp ✅
 ```
 
 ---
 
 ## 🔒 Hard Rules Compliance
 
-✅ **NO GitHub repository rename** - Preserved `dhamma-channel-automation`  
+✅ **Updated GitHub repository name** - Changed to `flowbiz-client-dhamma`  
 ✅ **NO business logic changes** - Only added contract endpoints  
 ✅ **NO refactoring** - Minimal changes to existing code  
 ✅ **NO Docker nginx** - Documented System Nginx approach  
@@ -127,17 +144,19 @@ dhamma-web   127.0.0.1:3007->8000/tcp ✅
 ## 📝 Changes Summary
 
 ### New Files (14)
+
 1. `docs/PROJECT_CONTRACT.md` (149 lines)
 2. `docs/DEPLOYMENT.md` (372 lines)
 3. `docs/GUARDRAILS.md` (339 lines)
 4. `docs/CODEX_PREFLIGHT.md` (402 lines)
-5. `nginx/dhamma-automation.conf` (145 lines)
+5. `nginx/flowbiz-client-dhamma.conf` (145 lines)
 6. `scripts/guardrails.sh` (194 lines)
 7. `tests/test_flowbiz_endpoints.py` (289 lines)
 8. `.github/workflows/guardrails.yml` (98 lines)
 9. `.github/pull_request_template.md` (139 lines)
 
 ### Modified Files (5)
+
 1. `app/config.py` - Add FlowBiz env vars (+19 lines)
 2. `app/main.py` - Add contract endpoints (+22 lines)
 3. `docker-compose.yml` - Update port binding (+8 lines)
@@ -175,6 +194,7 @@ dhamma-web   127.0.0.1:3007->8000/tcp ✅
 ## 🚀 Smoke Test Commands
 
 ### Quick Validation
+
 ```bash
 # 1. Start service
 docker compose up -d
@@ -187,7 +207,7 @@ curl http://127.0.0.1:3007/v1/meta
 curl http://127.0.0.1:3007/  # Should show login page
 
 # 4. Verify port binding
-docker ps --format "table {{.Names}}\t{{.Ports}}" | grep dhamma
+docker ps --format "table {{.Names}}\t{{.Ports}}" | grep flowbiz-dhamma
 # Expected: 127.0.0.1:3007->8000/tcp
 
 # 5. Run tests
@@ -204,6 +224,7 @@ docker compose down
 ```
 
 ### Full Validation
+
 ```bash
 # Run existing test suite
 pytest tests/test_pipeline_kill_switch.py -xvs
@@ -249,6 +270,7 @@ Before deploying to production:
 ## 🔗 References
 
 ### FlowBiz Core Documentation
+
 - [VPS Status](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/VPS_STATUS.md) - Port allocation registry
 - [ADR: System Nginx](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/ADR_SYSTEM_NGINX.md) - Network architecture
 - [Agent Behavior Lock](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/CODEX_AGENT_BEHAVIOR_LOCK.md) - Change control
@@ -257,6 +279,7 @@ Before deploying to production:
 - [Client Template](https://github.com/natbkgift/flowbiz-ai-core/blob/main/docs/CLIENT_PROJECT_TEMPLATE.md)
 
 ### Local Documentation
+
 - [Project Contract](docs/PROJECT_CONTRACT.md) - Integration requirements
 - [Deployment Guide](docs/DEPLOYMENT.md) - Production setup
 - [Guardrails](docs/GUARDRAILS.md) - Compliance checks

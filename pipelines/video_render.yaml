@@ -1,5 +1,5 @@
 pipeline: video_render
-version: 0.1
+version: 0.2
 steps:
   - id: voiceover_tts
     uses: voiceover.tts
@@ -7,6 +7,8 @@ steps:
       slug: voiceover_demo
       script_path: scripts/voiceover_script.txt
       dry_run: false
+      provider: google  # Use Google TTS (better Thai voice)
+      voice: th-TH-Neural2-C  # High-quality Thai female voice
 
   - id: video_render
     uses: video.render
@@ -15,7 +17,8 @@ steps:
       dry_run: false
       resolution: "1920x1080"
       fps: 30
-      bg_color: "black"
+      bg_color: "#1a1a2e"  # Dark purple (สวยกว่า pure black)
+      broll_dir: "broll"   # Use B-roll images
 
   - id: post_templates
     uses: post.templates

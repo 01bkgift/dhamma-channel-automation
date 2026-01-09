@@ -1,6 +1,6 @@
 # 🏗️ สถาปัตยกรรมระบบ
 
-เอกสารนี้อธิบายสถาปัตยกรรมของระบบ Dhamma Automation และการออกแบบโครงสร้างโค้ด
+เอกสารนี้อธิบายสถาปัตยกรรมของระบบ FlowBiz Client Dhamma และการออกแบบโครงสร้างโค้ด
 
 ## 📊 แผนภาพระบบ (System Architecture)
 
@@ -66,16 +66,19 @@
 ### 1. Separation of Concerns (แยกความรับผิดชอบ)
 
 **Presentation Layer**: จัดการการแสดงผลและการรับ input
+
 - CLI commands และ argument parsing
 - การแสดงผลด้วย Rich tables และ progress bars
 - การจัดการ errors และ user feedback
 
 **Agents Layer**: ประมวลผลธุรกิจหลัก
+
 - แต่ละ Agent มีหน้าที่เฉพาะด้าน
 - ใช้ BaseAgent เป็น interface มาตรฐาน
 - Generic types สำหรับ type safety
 
 **Core Layer**: ฟังก์ชันพื้นฐานและ utilities
+
 - Configuration management
 - Logging และ error handling
 - ฟังก์ชันช่วยเหลือทั่วไป
@@ -105,6 +108,7 @@ result = agent.run(input_data)
 ```
 
 **ข้อดี**:
+
 - แก้ไข prompt ได้โดยไม่ต้องแก้โค้ด
 - Version control สำหรับ prompt
 - ง่ายต่อการทดสอบ A/B testing
@@ -147,6 +151,7 @@ graph TD
 ### automation_core/
 
 **base_agent.py**
+
 ```python
 class BaseAgent(ABC, Generic[InputModel, OutputModel]):
     """คลาสพื้นฐานสำหรับ AI Agents ทั้งหมด"""
@@ -158,16 +163,18 @@ class BaseAgent(ABC, Generic[InputModel, OutputModel]):
 ```
 
 **config.py**
+
 ```python
 class AppConfig(BaseSettings):
     """การตั้งค่าแอปพลิเคชันด้วย Pydantic"""
     
-    app_name: str = "dhamma-automation"
+    app_name: str = "flowbiz-client-dhamma"
     log_level: str = "INFO"
     # โหลดจาก .env file อัตโนมัติ
 ```
 
 **prompt_loader.py**
+
 ```python
 def load_prompt(path: str) -> str:
     """โหลด prompt template จากไฟล์"""
@@ -179,11 +186,13 @@ def get_prompt_path(prompt_name: str) -> Path:
 ### agents/trend_scout/
 
 **model.py**: Pydantic models สำหรับ Input/Output
+
 - `TrendScoutInput`: ข้อมูลนำเข้า
 - `TrendScoutOutput`: ผลลัพธ์
 - `TopicEntry`: รายการหัวข้อแต่ละตัว
 
 **agent.py**: ตัว Agent หลัก
+
 - อัลกอริทึมการสร้างหัวข้อ
 - การคำนวณคะแนนแต่ละมิติ
 - การจัดอันดับและคัดเลือก
@@ -191,9 +200,10 @@ def get_prompt_path(prompt_name: str) -> Path:
 ## 🔧 Configuration Management
 
 ### Environment Variables
+
 ```bash
 # .env file
-APP_NAME="dhamma-automation"
+APP_NAME="flowbiz-client-dhamma"
 LOG_LEVEL="INFO"
 DATA_DIR="./data"
 
@@ -203,26 +213,30 @@ YOUTUBE_API_KEY="AIza..."
 ```
 
 ### Pydantic Settings
+
 ```python
 # อ่านจาก environment variables และ .env file อัตโนมัติ
 config = AppConfig()
-print(config.app_name)  # "dhamma-automation"
+print(config.app_name)  # "flowbiz-client-dhamma"
 print(config.log_level)  # "INFO"
 ```
 
 ## 🧪 Testing Strategy
 
 ### Unit Tests
+
 - **test_trend_scout_agent.py**: ทดสอบ Agent behavior
 - **test_prompt_loading.py**: ทดสอบการโหลด prompt
 - **test_scoring_utils.py**: ทดสอบการคำนวณคะแนน
 
 ### Integration Tests
+
 - ทดสอบการทำงานร่วมกันของโมดูลต่างๆ
 - ทดสอบกับข้อมูล mock จริง
 - ทดสอบ CLI commands
 
 ### Test Data
+
 ```
 tests/
 ├── fixtures/           # ข้อมูลทดสอบ
@@ -233,6 +247,7 @@ tests/
 ## 🚀 Scalability Considerations
 
 ### การเพิ่ม Agent ใหม่
+
 1. สร้างโฟลเดอร์ใน `agents/`
 2. สร้าง `model.py` กับ Input/Output schemas
 3. สร้าง `agent.py` ที่สืบทอด BaseAgent
@@ -240,6 +255,7 @@ tests/
 5. เขียน tests
 
 ### การปรับขนาด (Scaling)
+
 - **Horizontal**: เพิ่มเครื่อง/container สำหรับ Agent แต่ละตัว
 - **Vertical**: ปรับแต่งประสิทธิภาพ algorithm
 - **Caching**: เก็บผลลัพธ์ที่ใช้บ่อยใน cache
@@ -248,16 +264,19 @@ tests/
 ## 🔐 Security & Privacy
 
 ### Prompt Security
+
 - Prompt templates แยกออกจากโค้ด
 - ไม่ hardcode sensitive data
 - Version control สำหรับ prompt changes
 
 ### API Key Management
+
 - ใช้ environment variables
 - ไม่ commit keys ลง git
 - Rotation และ monitoring
 
 ### Data Privacy
+
 - ไม่เก็บข้อมูลส่วนบุคคล
 - Log masking สำหรับข้อมูลสำคัญ
 - Compliance กับ PDPA (ถ้าจำเป็น)
