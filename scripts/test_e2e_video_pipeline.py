@@ -79,6 +79,7 @@ def run_test(run_id: str, dry_run: bool = False):
     env["SOFT_LIVE_ENABLED"] = "true"
     env["SOFT_LIVE_YOUTUBE_MODE"] = "dry_run"
     env["SOFT_LIVE_FAIL_CLOSED"] = "true"
+    env["APPROVAL_ENABLED"] = "false"  # Instant approval
     env["PIPELINE_DRY_RUN"] = "true" if dry_run else "false"
     
     # Inject Pipeline Params for post_templates validation
