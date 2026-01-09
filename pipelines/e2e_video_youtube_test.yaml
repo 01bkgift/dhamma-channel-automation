@@ -1,0 +1,49 @@
+pipeline: e2e_video_youtube_test
+version: 1.0
+description: E2E test pipeline - TTS to YouTube (dry_run, instant approval)
+steps:
+  - id: voiceover_tts
+    uses: voiceover.tts
+    config:
+      slug: e2e_test
+      script_path: scripts/test_fixtures/e2e_voiceover_script.txt
+      dry_run: false
+      provider: google
+      voice: th-TH-Neural2-C
+
+  - id: video_render
+    uses: video.render
+    config:
+      slug: e2e_test
+      dry_run: false
+      resolution: "1920x1080"
+      fps: 30
+      bg_color: "#1a1a2e"
+      broll_dir: "broll"
+
+  - id: quality_gate
+    uses: quality.gate
+    needs: [video_render]
+    config:
+      min_duration_sec: 1
+      max_duration_sec: 300
+
+  - id: decision_support
+    uses: decision.support
+    needs: [quality_gate]
+
+  - id: approval_gate
+    uses: approval.gate
+    needs: [decision_support]
+    config:
+      grace_period_minutes: 0  # Instant approval for testing
+
+  - id: soft_live
+    uses: soft_live.enforce
+    needs: [approval_gate]
+
+  - id: youtube_upload
+    uses: youtube.upload
+    needs: [soft_live]
+    config:
+      dry_run: true
