@@ -541,7 +541,7 @@ Host flowbiz-vps
   User <your_user>
   Port 22
   IdentityFile ~/.ssh/id_ed25519_flowbiz
-  StrictHostKeyChecking accept-new
+  StrictHostKeyChecking yes
 ```
 
 **การใช้งาน:**
