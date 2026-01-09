@@ -89,6 +89,20 @@ def run_test(run_id: str, dry_run: bool = False):
         "description": "E2E Test Video Description"
     })
     
+    # Pre-create metadata.json to allow post_templates to find 'platform'
+    # This is a fallback/robustness measure if env var injection fails
+    output_dir = ROOT_DIR / "output" / run_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    metadata_path = output_dir / "metadata.json"
+    metadata_content = {
+        "title": "E2E Test Video",
+        "description": "Auto-generated E2E test video",
+        "platform": "YouTube",
+        "language": "th"
+    }
+    metadata_path.write_text(json.dumps(metadata_content, indent=2), encoding="utf-8")
+    print(f"Pre-created metadata.json at {metadata_path}")
+    
     # Ensure assets and fixtures exist
     fixture_path = ROOT_DIR / "scripts" / "test_fixtures" / "e2e_voiceover_script.txt"
     if not fixture_path.exists():
