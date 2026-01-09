@@ -71,6 +71,41 @@ def assert_json_field(path: Path, field: str, expected_value, description: str):
         return False
 
 
+def check_video_properties(video_path: Path):
+    """Verify video resolution and duration using ffprobe."""
+    try:
+        # Use existing imports (subprocess, json, Path, log)
+        cmd = [
+            "ffprobe", 
+            "-v", "error", 
+            "-select_streams", "v:0", 
+            "-show_entries", "stream=width,height,duration", 
+            "-of", "json", 
+            str(video_path)
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        data = json.loads(result.stdout)
+        
+        width = data["streams"][0]["width"]
+        height = data["streams"][0]["height"]
+        duration = float(data["streams"][0].get("duration", 0))
+        
+        log(f"Video Properties: Resolution={width}x{height}, Duration={duration:.2f}s", "INFO")
+        
+        if width != 1920 or height != 1080:
+            log(f"FAIL: Resolution mismatch. Expected 1920x1080, got {width}x{height}", "ERROR")
+            return False
+            
+        if duration <= 0:
+            log("FAIL: Invalid video duration", "ERROR")
+            return False
+            
+        return True
+    except Exception as e:
+        log(f"FAIL: Could not verify video properties: {e}", "ERROR")
+        return False
+
+
 def run_test(run_id: str, dry_run: bool = False):
     log(f"Starting E2E Video Pipeline Test with Run ID: {run_id}")
     
@@ -152,7 +187,11 @@ def run_test(run_id: str, dry_run: bool = False):
             video_data = json.loads(video_summary_path.read_text("utf-8"))
             mp4_rel_path = video_data.get("output_mp4_path")
             if mp4_rel_path:
-                all_passed &= assert_file_exists(ROOT_DIR / mp4_rel_path, "Output MP4 File")
+                output_mp4_full_path = ROOT_DIR / mp4_rel_path
+                all_passed &= assert_file_exists(output_mp4_full_path, "Output MP4 File")
+                # After checking file existence, check properties
+                if all_passed: # Only check properties if file existence is confirmed
+                    all_passed &= check_video_properties(output_mp4_full_path)
             else:
                 log("FAIL: output_mp4_path missing in video_render_summary.json", "ERROR")
                 all_passed = False
