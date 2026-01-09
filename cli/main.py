@@ -22,7 +22,7 @@ from automation_core.logging import get_logger
 
 # สร้าง Typer app
 app = typer.Typer(
-    name="dhamma-automation",
+    name="flowbiz-dhamma",
     help="🙏 ระบบอัตโนมัติสำหรับการผลิตคอนเทนต์ช่อง YouTube ธรรมะดีดี",
     add_completion=False,
     rich_markup_mode="rich",
@@ -54,10 +54,10 @@ def trend_scout(
 
     ตัวอย่างการใช้งาน:
 
-    dhamma-automation trend-scout --input mock_input.json --out result.json
+    flowbiz-dhamma trend-scout --input mock_input.json --out result.json
     """
 
-    console.print("\n🙏 [bold blue]ระบบอัตโนมัติ ธรรมะดีดี[/bold blue]")
+    console.print("\n🙏 [bold blue]ระบบอัตโนมัติ FlowBiz Client Dhamma[/bold blue]")
     console.print("📊 รัน TrendScoutAgent v1.0.0\n")
 
     try:
@@ -221,7 +221,7 @@ def _calculate_average_score(topics) -> float:
 @app.command()
 def version():
     """📋 แสดงเวอร์ชันของระบบ"""
-    console.print(f"🙏 [bold blue]Dhamma Automation[/bold blue] v{config.app_name}")
+    console.print(f"🙏 [bold blue]FlowBiz Client Dhamma[/bold blue] v0.1.0")
     console.print("📊 TrendScoutAgent v1.0.0")
     console.print("⚙️  Python CLI with Typer & Rich")
 

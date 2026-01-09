@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-07 18:47:50  
 **Branch:** `main` (commit `7bceb6e`)  
-**PR:** <https://github.com/01bkgift/dhamma-channel-automation/pull/14>
+**PR:** <https://github.com/01bkgift/flowbiz-client-dhamma/pull/14>
 
 ---
 

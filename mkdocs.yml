@@ -1,8 +1,8 @@
 site_name: "เอกสารระบบอัตโนมัติ ธรรมะดีดี"
 site_description: "เอกสารสำหรับระบบการผลิตคอนเทนต์ช่อง YouTube ธรรมะดีดี ด้วย AI Agents"
-site_url: "https://natbkgift.github.io/dhamma-channel-automation"
-repo_url: "https://github.com/natbkgift/dhamma-channel-automation"
-repo_name: "natbkgift/dhamma-channel-automation"
+site_url: "https://01bkgift.github.io/flowbiz-client-dhamma"
+repo_url: "https://github.com/01bkgift/flowbiz-client-dhamma"
+repo_name: "01bkgift/flowbiz-client-dhamma"
 
 # Theme Configuration
 theme:
@@ -81,8 +81,8 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: natbkgift
-      repo: dhamma-channel-automation
+      user: 01bkgift
+      repo: flowbiz-client-dhamma
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -105,7 +105,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/natbkgift/dhamma-channel-automation
+      link: https://github.com/01bkgift/flowbiz-client-dhamma
   
   version:
     provider: mike

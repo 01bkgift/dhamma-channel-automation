@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dhamma-automation"
+name = "flowbiz-client-dhamma"
 version = "0.1.0"
 description = "ระบบอัตโนมัติสำหรับการผลิตคอนเทนต์ช่อง YouTube ธรรมะดีดี"
 authors = [
@@ -54,12 +54,12 @@ ml = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/natbkgift/dhamma-channel-automation"
-Repository = "https://github.com/natbkgift/dhamma-channel-automation"
-Documentation = "https://natbkgift.github.io/dhamma-channel-automation"
+Homepage = "https://github.com/01bkgift/flowbiz-client-dhamma"
+Repository = "https://github.com/01bkgift/flowbiz-client-dhamma"
+Documentation = "https://01bkgift.github.io/flowbiz-client-dhamma"
 
 [project.scripts]
-dhamma-automation = "cli.main:app"
+flowbiz-dhamma = "cli.main:app"
 
 [tool.setuptools.packages.find]
 where = ["."]

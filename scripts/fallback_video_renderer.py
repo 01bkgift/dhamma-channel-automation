@@ -136,6 +136,12 @@ def render_video(
             draw = ImageDraw.Draw(img)
             # Try to use a Thai font if available
             font_paths = [
+                # Linux (Docker) fonts
+                "/usr/share/fonts/truetype/thai-tlwg/TH-Sarabun-Bold.ttf",
+                "/usr/share/fonts/truetype/thai-tlwg/Loma-Bold.ttf",
+                "/usr/share/fonts/truetype/noto/NotoSansThai-Bold.ttf",
+                "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+                # Windows fonts
                 "C:/Windows/Fonts/Sarabun-Bold.ttf",
                 "C:/Windows/Fonts/THSarabunNew-Bold.ttf",
                 "C:/Windows/Fonts/NotoSansThai-Bold.ttf",

@@ -2,8 +2,8 @@
 
 ## Service Identity
 
-- **Service Name**: `dhamma-automation`
-- **Repository**: `natbkgift/dhamma-channel-automation`
+- **Service Name**: `flowbiz-client-dhamma`
+- **Repository**: `01bkgift/flowbiz-client-dhamma`
 - **Type**: FlowBiz Client Product
 - **Port Allocation**: 3007
 
@@ -18,6 +18,7 @@ All FlowBiz client projects MUST implement these standardized HTTP endpoints:
 **Purpose**: Health check for monitoring and load balancing
 
 **Response**: HTTP 200 OK
+
 ```json
 {
   "status": "ok",
@@ -27,6 +28,7 @@ All FlowBiz client projects MUST implement these standardized HTTP endpoints:
 ```
 
 **Requirements**:
+
 - MUST return 200 OK when service is operational
 - MUST be fast (<50ms)
 - MUST NOT touch external services or databases
@@ -37,6 +39,7 @@ All FlowBiz client projects MUST implement these standardized HTTP endpoints:
 **Purpose**: Service metadata for deployment verification and debugging
 
 **Response**: HTTP 200 OK
+
 ```json
 {
   "service": "<APP_SERVICE_NAME>",
@@ -47,6 +50,7 @@ All FlowBiz client projects MUST implement these standardized HTTP endpoints:
 ```
 
 **Requirements**:
+
 - MUST return 200 OK
 - MUST be fast (<50ms)
 - MUST NOT touch external services or databases
@@ -69,7 +73,7 @@ All FlowBiz client projects MUST implement these standardized HTTP endpoints:
 
 ```bash
 # FlowBiz Standard Variables
-APP_SERVICE_NAME="dhamma-automation"
+APP_SERVICE_NAME="flowbiz-client-dhamma"
 APP_ENV="dev"
 APP_LOG_LEVEL="INFO"
 APP_CORS_ORIGINS='["*"]'
@@ -80,16 +84,19 @@ FLOWBIZ_BUILD_SHA="dev"
 ## Port Binding Rules
 
 ### Development
+
 - Internal Port: `8000` (FastAPI default)
 - External Port: `3007` (FlowBiz allocated)
 - Binding: `127.0.0.1:3007:8000` (localhost only)
 
 ### Production (Docker)
+
 - Container exposes port `8000` internally
 - Host binds to `127.0.0.1:3007` (localhost only)
 - System Nginx proxies to `http://127.0.0.1:3007`
 
 **Critical Security Rules**:
+
 - ✅ MUST bind to `127.0.0.1` (localhost) only
 - ❌ NEVER bind to `0.0.0.0` (all interfaces)
 - ❌ NEVER expose ports directly to the internet
@@ -102,16 +109,19 @@ FLOWBIZ_BUILD_SHA="dev"
 ## Runtime Contract
 
 ### Startup
+
 1. Service MUST start within 30 seconds
 2. Service MUST respond to `/healthz` immediately after startup
 3. Service MUST log startup success to stdout
 
 ### Shutdown
+
 1. Service MUST handle SIGTERM gracefully
 2. Service MUST complete in-flight requests within 30 seconds
 3. Service MUST close connections cleanly
 
 ### Monitoring
+
 1. Service MUST respond to `/healthz` checks every 30 seconds
 2. Service failure MUST return non-200 status or timeout
 3. Logs MUST be written to stdout/stderr for collection
@@ -126,10 +136,10 @@ curl http://localhost:3007/healthz
 curl http://localhost:3007/v1/meta
 
 # 2. Verify environment variables
-docker exec dhamma-web env | grep -E "APP_|FLOWBIZ_"
+docker exec flowbiz-dhamma-web env | grep -E "APP_|FLOWBIZ_"
 
 # 3. Check port binding
-docker ps | grep dhamma-web
+docker ps | grep flowbiz-dhamma-web
 # Should show: 127.0.0.1:3007->8000/tcp
 
 # 4. Run automated checks

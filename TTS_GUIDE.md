@@ -8,6 +8,7 @@
 โดยไม่เรียกใช้ผู้ให้บริการภายนอก (สร้างเสียงเงียบด้วย Null engine)
 
 **คำสั่งตัวอย่าง (dry-run, ไม่สร้างไฟล์):**
+
 ```bash
 python scripts/tts_generate.py --run-id sample_run --slug voiceover_demo --script samples/reference/tts/input.txt --dry-run
 ```
@@ -27,7 +28,8 @@ python scripts/tts_generate.py --run-id sample_run --slug voiceover_demo --scrip
 ```
 
 **รับ API Key ฟรี:**
-1. ไปที่ https://platform.openai.com/api-keys
+
+1. ไปที่ <https://platform.openai.com/api-keys>
 2. สร้างบัญชี (มี $5 free credit)
 3. คลิก "Create new secret key"
 4. คัดลอก key และวางใน `production_config.json`
@@ -49,7 +51,7 @@ python scripts/tts_generate.py --run-id sample_run --slug voiceover_demo --scrip
 #### แบบที่ 2: รันคำสั่งโดยตรง
 
 ```powershell
-cd "D:\Auto Tool\dhamma-channel-automation"
+cd "d:\FlowBiz\flowbiz-client-dhamma"
 venv\Scripts\activate
 python scripts/tts_generator.py ^
   --script "audio/production_complete_001/recording_script_SIMPLE.txt" ^
@@ -83,11 +85,13 @@ python scripts/tts_generator.py ^
 ### 5. ตัวอย่างคำสั่ง
 
 **เสียงอบอุ่น ช้าๆ:**
+
 ```powershell
 python scripts/tts_generator.py --script "audio/.../recording_script_SIMPLE.txt" --output "audio/.../voiceover.mp3" --voice fable --speed 0.9
 ```
 
 **เสียงชัดเจน เร็วขึ้น:**
+
 ```powershell
 python scripts/tts_generator.py --script "audio/.../recording_script_SIMPLE.txt" --output "audio/.../voiceover.mp3" --voice echo --speed 1.2
 ```

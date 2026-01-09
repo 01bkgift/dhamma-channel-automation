@@ -91,6 +91,24 @@ grep -q '^YOUTUBE_REFRESH_TOKEN=' .env && echo "✓ YOUTUBE_REFRESH_TOKEN" || ec
 > [!CAUTION]
 > **STOP IF:** มี credentials ใดๆ ขาดหายไป — ติดต่อ admin เพื่อเพิ่ม credentials
 
+### 7. ตรวจสอบ YouTube Upload Enabled
+
+```bash
+grep -q '^YOUTUBE_UPLOAD_ENABLED=true' .env && echo "✓ YOUTUBE_UPLOAD_ENABLED" || echo "✗ MISSING or false"
+```
+
+> [!WARNING]
+> **หากขาด:** ต้องเพิ่ม `YOUTUBE_UPLOAD_ENABLED=true` ใน `.env` (ค่า default เป็น `false`)
+
+### 8. ตรวจสอบ youtube_token.json
+
+```bash
+ls -la youtube_token.json 2>/dev/null && echo "✓ TOKEN FILE EXISTS" || echo "✗ TOKEN FILE MISSING"
+```
+
+> [!CAUTION]
+> **หากขาด:** ต้องสร้าง token ผ่าน OAuth flow หรือ copy จากที่อื่น
+
 ---
 
 ## B) Configure Soft-Live Unlisted Mode
@@ -108,12 +126,13 @@ nano .env
 SOFT_LIVE_ENABLED=true
 SOFT_LIVE_YOUTUBE_MODE=unlisted
 SOFT_LIVE_FAIL_CLOSED=true
+YOUTUBE_UPLOAD_ENABLED=true
 ```
 
 ### 2. Restart Containers
 
 ```bash
-docker compose --env-file config/flowbiz_port.env up -d --remove-orphans
+docker compose --env-file config/flowbiz_port.env up -d --build --remove-orphans
 ```
 
 ### 3. ยืนยัน Health หลัง Restart
@@ -139,16 +158,51 @@ RUN_ID="smoke_unlisted_$(date +%Y%m%d_%H%M)"
 echo "Run ID: ${RUN_ID}"
 ```
 
-### 2. รัน Pipeline
+### 2. Prepare Mock Artifacts (สำคัญ: ต้องทำก่อนรัน)
+
+เนื่องจาก Pipeline `requires_quality` ต้องการไฟล์จากขั้นตอนก่อนหน้า (Production Video Gen) เราต้องสร้าง Mock artifacts ขึ้นมา:
+
+```bash
+# 1. สร้างโฟลเดอร์ Artifacts ล่วงหน้า
+mkdir -p output/${RUN_ID}/artifacts
+
+# 2. สร้าง Mock Quality Gate Summary (เพื่อให้ Decision Support ผ่าน)
+cat > output/${RUN_ID}/artifacts/quality_gate_summary.json << 'EOF'
+{
+  "run_id": "${RUN_ID}",
+  "status": "passed",
+  "passed_checks": 3,
+  "failed_checks": 0,
+  "video_duration_sec": 30,
+  "video_size_bytes": 1024000
+}
+EOF
+
+# 3. Inject Video File (ต้องมีไฟล์วิดีโอจริงเพื่อ Upload)
+# ใช้ไฟล์ทดสอบที่มีในเครื่อง หรือสร้าง dummy (ถ้า Youtube API รองรับ) แต่ควรใช้ไฟล์จริง
+if [ -f "assets/test_smoke.mp4" ]; then
+    cp assets/test_smoke.mp4 output/${RUN_ID}/artifacts/video.mp4
+    echo "✓ Injected video.mp4 from assets"
+else
+    echo "⚠️ WARNING: ไม่พบ assets/test_smoke.mp4"
+    echo "กรุณาหาไฟล์ .mp4 มาวางที่: output/${RUN_ID}/artifacts/video.mp4 ก่อน Approve"
+fi
+```
+
+### 3. รัน Pipeline
+
+> [!NOTE]
+> ใช้ `orchestrator.py` (แทน `run_pipeline.py`) เพื่อรองรับ `--run-id`
 
 ```bash
 cd /opt/flowbiz-client-dhamma
-python scripts/run_pipeline.py \
+# รันภายใน container เพื่อให้มี fonts และ ffmpeg
+docker compose --env-file config/flowbiz_port.env exec web python orchestrator.py \
   --pipeline pipelines/youtube_upload_smoke_requires_quality.yaml \
   --run-id "${RUN_ID}"
 ```
 
-### 3. Output Location
+### 4. Output Location
 
 Artifacts จะถูกสร้างที่:
 
@@ -168,6 +222,18 @@ Pipeline ใช้ระบบ **timeout-based auto-approve**:
 - Grace period: **2 ชั่วโมง** (120 นาที)
 - หากไม่มีการ cancel ภายใน 2 ชม. → **approved_by_timeout**
 - หากต้องการ cancel → สร้าง cancel file
+- **หากตรวจสอบทุกอย่างครบแล้ว สามารถ force approve ได้โดยรอเวลา (หรือแก้ config dev)**
+
+### ⚠️ Double Check: Video File
+
+ตรวจสอบว่ามีไฟล์วิดีโอใน artifacts แล้วหรือยัง (เราทำในขั้นตอน C.2 แล้ว แต่เช็คอีกที):
+
+```bash
+ls -l output/${RUN_ID}/artifacts/video.mp4
+```
+
+> [!IMPORTANT]
+> ต้องมีไฟล์ `video.mp4` ก่อนที่ Pipeline จะเริ่มขั้นตอน Upload (หลัง Approved)
 
 ### ตรวจสอบสถานะ Approval Gate
 

@@ -22,6 +22,7 @@ This document provides a comprehensive pre-flight checklist for Codex (AI coding
 ### 3. Review Hard Rules
 
 **NEVER**:
+
 - ❌ Rename the GitHub repository
 - ❌ Change agent logic, scoring, prompts without baseline updates
 - ❌ Modify existing business logic unless required
@@ -32,6 +33,7 @@ This document provides a comprehensive pre-flight checklist for Codex (AI coding
 - ❌ Suggest insecure operations (chmod 666 docker.sock, etc.)
 
 **ALWAYS**:
+
 - ✅ Bind services to localhost (127.0.0.1) only
 - ✅ Use System Nginx as the ONLY public reverse proxy
 - ✅ Update [BASELINE.md](./BASELINE.md) when changing agent outputs
@@ -46,7 +48,7 @@ This document provides a comprehensive pre-flight checklist for Codex (AI coding
 ```bash
 # Clone and setup
 git clone <repo>
-cd dhamma-channel-automation
+cd flowbiz-client-dhamma
 python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -e ".[dev]"
@@ -93,6 +95,7 @@ pytest --cov=src --cov=app --cov=cli --cov-report=term-missing
 ### 7. Minimal Change Principle
 
 **For Each Change**:
+
 - [ ] Is this change absolutely necessary?
 - [ ] Can I achieve the goal with fewer modifications?
 - [ ] Am I changing only what's required?
@@ -102,6 +105,7 @@ pytest --cov=src --cov=app --cov=cli --cov-report=term-missing
 ### 8. Incremental Validation
 
 **After Each Significant Change**:
+
 ```bash
 # 1. Format code
 ruff format .
@@ -119,6 +123,7 @@ mypy src/ app/ cli/
 ### 9. Environment Contract Compliance
 
 **When touching configuration**:
+
 - [ ] All env vars have defaults (except APP_SERVICE_NAME)
 - [ ] New env vars added to .env.example
 - [ ] Env vars documented in PROJECT_CONTRACT.md
@@ -128,6 +133,7 @@ mypy src/ app/ cli/
 ### 10. Endpoint Contract Compliance
 
 **When touching endpoints**:
+
 - [ ] /healthz returns correct schema
 - [ ] /v1/meta returns correct schema
 - [ ] Endpoints respond in <50ms
@@ -138,6 +144,7 @@ mypy src/ app/ cli/
 ### 11. Port Binding Compliance
 
 **When touching Docker/networking**:
+
 - [ ] All bindings use 127.0.0.1 (localhost)
 - [ ] Port 3007 used consistently
 - [ ] No 0.0.0.0 bindings introduced
@@ -192,6 +199,7 @@ bash scripts/guardrails.sh
 ### 15. Manual Testing
 
 **Web Service**:
+
 ```bash
 # Start service
 docker-compose up -d
@@ -214,10 +222,11 @@ docker-compose down
 ```
 
 **CLI Tools** (if applicable):
+
 ```bash
 # Test CLI commands
-dhamma-automation --help
-dhamma-automation <your-command>
+flowbiz-client-dhamma --help
+flowbiz-client-dhamma <your-command>
 ```
 
 ### 16. Documentation Review
@@ -232,6 +241,7 @@ dhamma-automation <your-command>
 ### 17. Baseline Updates
 
 **If agent behavior changed**:
+
 - [ ] Updated samples/reference/ with new outputs
 - [ ] Updated docs/BASELINE.md with changes
 - [ ] Documented reason for baseline change
@@ -285,6 +295,7 @@ curl http://127.0.0.1:3007/v1/meta
 pytest -xvs
 bash scripts/guardrails.sh
 ```
+
 ```
 
 ### 20. Pre-PR Validation
@@ -322,6 +333,7 @@ git push origin feature/your-feature
 ### 23. Post-Merge Verification
 
 **After merge to main**:
+
 ```bash
 # Pull latest
 git checkout main
@@ -332,7 +344,7 @@ pytest -xvs
 bash scripts/guardrails.sh
 
 # Monitor production (if deployed)
-curl https://dhamma.yourdomain.com/healthz
+curl https://flowbiz-client-dhamma.com/healthz
 ```
 
 ## Emergency Stop Conditions
@@ -393,6 +405,7 @@ Your changes are ready when:
 ## Questions?
 
 If uncertain about any requirement:
+
 1. Check this document first
 2. Review FlowBiz core documentation
 3. Examine existing code patterns

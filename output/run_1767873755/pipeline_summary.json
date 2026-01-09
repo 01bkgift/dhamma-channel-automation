@@ -1,0 +1,19 @@
+{
+  "pipeline": "youtube_upload_smoke_requires_quality",
+  "run_id": "run_1767873755",
+  "started_at": "2026-01-08T19:02:35.675815",
+  "total_steps": 5,
+  "successful": 1,
+  "failed": 0,
+  "results": {
+    "decision_support": {
+      "status": "success",
+      "output": "D:\\FlowBiz\\flowbiz-client-dhamma\\output\\run_1767873755\\decision_support_summary.json"
+    },
+    "approval_gate": {
+      "status": "held",
+      "reason": "Approval pending. Grace period active for another 120.0 minutes."
+    }
+  },
+  "output_dir": "D:\\FlowBiz\\flowbiz-client-dhamma\\output\\run_1767873755"
+}

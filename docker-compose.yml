@@ -5,16 +5,18 @@ services:
     container_name: dhamma-web
     ports:
       - "127.0.0.1:${FLOWBIZ_ALLOCATED_PORT:?FLOWBIZ_ALLOCATED_PORT is required. Use --env-file config/flowbiz_port.env}:8000"
+    env_file:
+      - .env
     environment:
-      - APP_SERVICE_NAME=dhamma-automation
+      - APP_SERVICE_NAME=flowbiz-client-dhamma
       - APP_ENV=dev
       - APP_LOG_LEVEL=INFO
       - APP_CORS_ORIGINS=["*"]
       - FLOWBIZ_VERSION=0.0.0
       - FLOWBIZ_BUILD_SHA=dev
-      - APP_NAME=dhamma-automation
+      - APP_NAME=flowbiz-client-dhamma
       - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=admin123
+      - ADMIN_PASSWORD=@NatJit2029
       - OUTPUT_DIR=/app/output
     volumes:
       - ./output:/app/output

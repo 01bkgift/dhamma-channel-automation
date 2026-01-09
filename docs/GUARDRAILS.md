@@ -15,6 +15,7 @@ Guardrails are automated checks that verify compliance with FlowBiz Client Produ
 **Port source**: `config/flowbiz_port.env` (single source of truth for `FLOWBIZ_ALLOCATED_PORT`)
 
 **Verification**:
+
 ```bash
 # Check docker-compose.yml
 grep -E "ports:" docker-compose.yml -A1
@@ -24,6 +25,7 @@ grep -E "ports:" docker-compose.yml -A1
 ```
 
 **Fix**:
+
 ```yaml
 # Correct
 ports:
@@ -40,10 +42,12 @@ ports:
 **Check**: Contract endpoints exist and return correct schema
 
 **Endpoints**:
+
 - `GET /healthz`
 - `GET /v1/meta`
 
 **Verification**:
+
 ```bash
 # Start service
 docker-compose --env-file config/flowbiz_port.env up -d
@@ -51,7 +55,7 @@ docker-compose --env-file config/flowbiz_port.env up -d
 # Test healthz
 source config/flowbiz_port.env
 curl "http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/healthz"
-# Expected: {"status":"ok","service":"dhamma-automation","version":"..."}
+# Expected: {"status":"ok","service":"flowbiz-client-dhamma","version":"..."}
 
 # Test meta
 curl "http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/v1/meta"
@@ -65,6 +69,7 @@ curl "http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/v1/meta"
 **Check**: Required environment variables are documented in .env.example
 
 **Required Variables**:
+
 - `APP_SERVICE_NAME`
 - `APP_ENV`
 - `APP_LOG_LEVEL`
@@ -73,6 +78,7 @@ curl "http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/v1/meta"
 - `FLOWBIZ_BUILD_SHA`
 
 **Verification**:
+
 ```bash
 # Check .env.example
 grep -E "APP_SERVICE_NAME|APP_ENV|APP_LOG_LEVEL|APP_CORS_ORIGINS|FLOWBIZ_VERSION|FLOWBIZ_BUILD_SHA" .env.example
@@ -85,11 +91,13 @@ grep -E "APP_SERVICE_NAME|APP_ENV|APP_LOG_LEVEL|APP_CORS_ORIGINS|FLOWBIZ_VERSION
 **Check**: No insecure practices in Dockerfile
 
 **Common Issues**:
+
 - Running as root user
 - Exposed secrets in build args
 - Unnecessary privileged mode
 
 **Verification**:
+
 ```bash
 # Check for USER directive
 grep -i "USER" Dockerfile
@@ -105,6 +113,7 @@ grep -iE "password|secret|key|token" Dockerfile
 **Check**: Allocated port is available and registered
 
 **Verification**:
+
 ```bash
 # Check if port is in use
 source config/flowbiz_port.env
@@ -139,6 +148,7 @@ Guardrails run automatically on every PR via GitHub Actions.
 **Workflow**: `.github/workflows/guardrails.yml`
 
 **Behavior**:
+
 - Runs on every pull request
 - Non-blocking (warnings only)
 - Results posted as PR comment
@@ -189,15 +199,18 @@ Overall: PASS with 1 warning(s)
 ## Interpreting Results
 
 ### PASS ✓
+
 - Check passed completely
 - No action required
 
 ### WARN ⚠
+
 - Check passed but has recommendations
 - Action recommended but not required
 - Won't block deployment
 
 ### FAIL ✗
+
 - Check failed
 - Action required before deployment
 - May block production deployment
@@ -209,6 +222,7 @@ Overall: PASS with 1 warning(s)
 **Error**: "Port binding exposes service publicly"
 
 **Fix**:
+
 ```yaml
 # docker-compose.yml
 ports:
@@ -220,6 +234,7 @@ ports:
 **Error**: "/healthz endpoint returned 404"
 
 **Fix**: Implement missing endpoint in `app/main.py`:
+
 ```python
 @app.get("/healthz")
 async def healthz():
@@ -235,8 +250,9 @@ async def healthz():
 **Error**: "Required env var APP_SERVICE_NAME not in .env.example"
 
 **Fix**: Add to `.env.example`:
+
 ```bash
-APP_SERVICE_NAME="dhamma-automation"
+APP_SERVICE_NAME="flowbiz-client-dhamma"
 ```
 
 ### Documentation Missing
@@ -316,7 +332,7 @@ Even after deployment, periodically verify compliance:
 
 ```bash
 # Weekly cron job
-0 2 * * 1 cd /opt/dhamma-channel-automation && bash scripts/guardrails.sh
+0 2 * * 1 cd /opt/flowbiz-client-dhamma && bash scripts/guardrails.sh
 ```
 
 ### Alerts

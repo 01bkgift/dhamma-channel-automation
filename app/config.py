@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # FlowBiz Standard Environment Variables
-APP_SERVICE_NAME = os.getenv("APP_SERVICE_NAME", "dhamma-automation")
+APP_SERVICE_NAME = os.getenv("APP_SERVICE_NAME", "flowbiz-client-dhamma")
 APP_ENV = os.getenv("APP_ENV", "dev")
 APP_LOG_LEVEL = os.getenv("APP_LOG_LEVEL", "INFO")
 FLOWBIZ_VERSION = os.getenv("FLOWBIZ_VERSION", "0.0.0")
@@ -23,7 +23,7 @@ except json.JSONDecodeError:
 APP_NAME = os.getenv("APP_NAME", APP_SERVICE_NAME)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
-SESSION_COOKIE = os.getenv("SESSION_COOKIE_NAME", "dhamma_session")
+SESSION_COOKIE = os.getenv("SESSION_COOKIE_NAME", "flowbiz_session")
 
 # บัญชีผู้ดูแลระบบ (ไม่มีระบบสมัครสมาชิก)
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")

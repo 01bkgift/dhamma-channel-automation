@@ -179,13 +179,13 @@ grep -E "127\.0\.0\.1.*:8000" docker-compose.yml
 ### 4.6 Install nginx site config
 
 ```bash
-sudo cp nginx/dhamma-automation.conf /etc/nginx/sites-available/
-sudo nano /etc/nginx/sites-available/dhamma-automation.conf
+sudo cp nginx/flowbiz-client-dhamma.conf /etc/nginx/sites-available/
+sudo nano /etc/nginx/sites-available/flowbiz-client-dhamma.conf
 # แก้ไข:
 # - DOMAIN_NAME → domain จริง
 # - ตรวจสอบ upstream port ตรงกับ FLOWBIZ_ALLOCATED_PORT
 
-sudo ln -s /etc/nginx/sites-available/dhamma-automation.conf /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/flowbiz-client-dhamma.conf /etc/nginx/sites-enabled/
 ```
 
 ### 4.7 Test and reload nginx
@@ -250,8 +250,8 @@ git reset --hard origin/main
 # Run deploy verification (ไม่ใช่ preflight.sh)
 bash scripts/runtime_verify.sh
 
-# Start containers
-docker compose --env-file config/flowbiz_port.env up -d --remove-orphans
+# Start containers (Build to ensure fonts/deps are updated)
+docker compose --env-file config/flowbiz_port.env up -d --build --remove-orphans
 
 # Verify containers running
 docker compose --env-file config/flowbiz_port.env ps
@@ -267,7 +267,7 @@ curl -fsS "http://127.0.0.1:${FLOWBIZ_ALLOCATED_PORT}/healthz"
 Expected response:
 
 ```json
-{"status":"ok","service":"dhamma-automation","version":"..."}
+{"status":"ok","service":"flowbiz-client-dhamma","version":"..."}
 ```
 
 Alternative (with jq):
@@ -300,9 +300,13 @@ ss -lntp | grep "${FLOWBIZ_ALLOCATED_PORT}"
 
 ### Command
 
+### Command
+
 ```bash
 cd /opt/flowbiz-client-dhamma
-python scripts/run_pipeline.py --pipeline pipelines/youtube_upload_smoke_requires_quality.yaml
+# Must run inside container to access ffmpeg and fonts
+docker compose --env-file config/flowbiz_port.env exec web python orchestrator.py \
+  --pipeline pipelines/youtube_upload_smoke_requires_quality.yaml
 ```
 
 ### Expected Behavior
@@ -448,7 +452,7 @@ bash scripts/runtime_verify.sh
 ```bash
 # Check disk usage
 df -h
-du -sh /opt/dhamma-channel-automation/output/*
+du -sh /opt/flowbiz-client-dhamma/output/*
 
 # Clean old outputs (CAUTION: audit implications)
 # ลบเฉพาะหลังจาก backup/archive แล้วเท่านั้น

@@ -2,7 +2,7 @@
 
 ## Global Kill Switch: PIPELINE_ENABLED
 
-The Dhamma Channel Automation system includes a **global kill switch** that allows operators to safely disable the pipeline without code changes. This is critical for production environments where immediate control is required.
+The FlowBiz Client Dhamma system includes a **global kill switch** that allows operators to safely disable the pipeline without code changes. This is critical for production environments where immediate control is required.
 
 ## Purpose
 
@@ -16,6 +16,7 @@ The `PIPELINE_ENABLED` environment variable provides:
 ## Environment Variable: PIPELINE_ENABLED
 
 ### Default Behavior
+
 - **When not set:** Pipeline is **ENABLED** (runs normally)
 - **When set to "false":** Pipeline is **DISABLED** (stops safely)
 
@@ -24,6 +25,7 @@ This default-enabled design ensures backward compatibility with existing deploym
 ### Accepted Values
 
 **Enable Pipeline (run normally):**
+
 - Not set (environment variable absent)
 - `PIPELINE_ENABLED=true`
 - `PIPELINE_ENABLED=1`
@@ -32,6 +34,7 @@ This default-enabled design ensures backward compatibility with existing deploym
 - `PIPELINE_ENABLED=enabled`
 
 **Disable Pipeline (stop safely):**
+
 - `PIPELINE_ENABLED=false` (recommended)
 - `PIPELINE_ENABLED=0`
 - `PIPELINE_ENABLED=no`
@@ -45,6 +48,7 @@ Values are case-insensitive: `False`, `FALSE`, `false` all work.
 ### Safe Stop Behavior
 
 When `PIPELINE_ENABLED=false`:
+
 1. **Orchestrator:** Main entry point checks the flag before loading pipeline YAML
 2. **Web Dashboard:** Job runner checks the flag before starting agent processes
 3. **Exit Code:** Returns `0` (success) to indicate intentional no-op, not an error
@@ -72,6 +76,7 @@ When `PIPELINE_ENABLED=false`:
 ### Command Line (Bash/Linux/macOS)
 
 **Disable Pipeline:**
+
 ```bash
 # Export for entire shell session
 export PIPELINE_ENABLED=false
@@ -85,12 +90,14 @@ PIPELINE_ENABLED=false python orchestrator.py --pipeline pipeline.web.yml --run-
 ```
 
 **Enable Pipeline (explicitly):**
+
 ```bash
 export PIPELINE_ENABLED=true
 python orchestrator.py --pipeline pipeline.web.yml --run-id prod_001
 ```
 
 **Enable Pipeline (default - no env var):**
+
 ```bash
 # Just run without setting PIPELINE_ENABLED
 python orchestrator.py --pipeline pipeline.web.yml --run-id prod_002
@@ -99,12 +106,14 @@ python orchestrator.py --pipeline pipeline.web.yml --run-id prod_002
 ### Command Line (Windows CMD)
 
 **Disable Pipeline:**
+
 ```cmd
 set PIPELINE_ENABLED=false
 python orchestrator.py --pipeline pipeline.web.yml --run-id test_001
 ```
 
 **Enable Pipeline:**
+
 ```cmd
 set PIPELINE_ENABLED=true
 python orchestrator.py --pipeline pipeline.web.yml --run-id prod_001
@@ -113,12 +122,14 @@ python orchestrator.py --pipeline pipeline.web.yml --run-id prod_001
 ### Command Line (Windows PowerShell)
 
 **Disable Pipeline:**
+
 ```powershell
 $env:PIPELINE_ENABLED="false"
 python orchestrator.py --pipeline pipeline.web.yml --run-id test_001
 ```
 
 **Enable Pipeline:**
+
 ```powershell
 $env:PIPELINE_ENABLED="true"
 python orchestrator.py --pipeline pipeline.web.yml --run-id prod_001
@@ -127,12 +138,14 @@ python orchestrator.py --pipeline pipeline.web.yml --run-id prod_001
 ### Environment File (.env)
 
 **Persistent Configuration:**
+
 ```bash
 # Add to .env file in project root
 PIPELINE_ENABLED=false
 ```
 
 Then load with `python-dotenv` or manually:
+
 ```bash
 source .env  # Linux/macOS
 python orchestrator.py --pipeline pipeline.web.yml
@@ -141,19 +154,22 @@ python orchestrator.py --pipeline pipeline.web.yml
 ### Docker / Container Environments
 
 **Docker Compose:**
+
 ```yaml
 services:
-  dhamma-automation:
+  flowbiz-client-dhamma:
     environment:
       - PIPELINE_ENABLED=false
 ```
 
 **Docker Run:**
+
 ```bash
-docker run -e PIPELINE_ENABLED=false dhamma-automation:latest
+docker run -e PIPELINE_ENABLED=false flowbiz-client-dhamma:latest
 ```
 
 **Kubernetes:**
+
 ```yaml
 env:
   - name: PIPELINE_ENABLED
@@ -163,6 +179,7 @@ env:
 ### Web Dashboard
 
 The kill switch applies to web-triggered jobs:
+
 1. Set `PIPELINE_ENABLED=false` in the environment where web server runs
 2. Jobs started via dashboard will see "Pipeline disabled by PIPELINE_ENABLED=false"
 3. Job status shows "completed" (no-op) immediately
@@ -170,16 +187,20 @@ The kill switch applies to web-triggered jobs:
 ## Use Cases
 
 ### 1. API Outage Response
+
 **Scenario:** OpenAI API is down or rate-limited  
 **Action:**
+
 ```bash
 export PIPELINE_ENABLED=false
 # Pipeline stops, no wasted API calls or partial outputs
 ```
 
 ### 2. Content Policy Review
+
 **Scenario:** New YouTube policy requires review of all content generation  
 **Action:**
+
 1. Set `PIPELINE_ENABLED=false` in production environment
 2. Review existing outputs and prompts
 3. Update agents/prompts as needed
@@ -187,8 +208,10 @@ export PIPELINE_ENABLED=false
 5. Re-enable: `PIPELINE_ENABLED=true`
 
 ### 3. Scheduled Maintenance
+
 **Scenario:** Deploying new agent versions, updating dependencies  
 **Action:**
+
 ```bash
 # Before maintenance
 export PIPELINE_ENABLED=false
@@ -205,16 +228,20 @@ export PIPELINE_ENABLED=true
 ```
 
 ### 4. Manual Quality Control
+
 **Scenario:** Reviewing outputs before enabling automation  
 **Action:**
+
 1. Keep `PIPELINE_ENABLED=false` during initial rollout
 2. Manually trigger test runs with kill switch disabled locally
 3. Review all outputs for quality/compliance
 4. Enable globally once confident: `PIPELINE_ENABLED=true`
 
 ### 5. Cost Control
+
 **Scenario:** Prevent runaway costs from accidental loops or scheduling issues  
 **Action:**
+
 ```bash
 # Immediately stop all pipeline execution
 export PIPELINE_ENABLED=false
@@ -229,6 +256,7 @@ export PIPELINE_ENABLED=false
 ### Log Messages
 
 When disabled, expect this log message:
+
 ```
 [2025-12-26 17:30:45] [INFO] Pipeline disabled by PIPELINE_ENABLED=false
 ```
@@ -271,6 +299,7 @@ ls -la output/normal_test/  # Should contain pipeline outputs
 ### Automated Test
 
 See `tests/test_pipeline_kill_switch.py` for unit tests covering:
+
 - Kill switch disables pipeline execution
 - Default behavior is enabled
 - Various disable values work correctly
@@ -302,12 +331,14 @@ For comprehensive production safety, also implement:
 **Symptom:** Pipeline immediately exits with "Pipeline disabled" message
 
 **Check:**
+
 ```bash
 echo $PIPELINE_ENABLED  # Should be empty, true, or enabled value
 env | grep PIPELINE_ENABLED  # Check for unexpected values
 ```
 
 **Fix:**
+
 ```bash
 unset PIPELINE_ENABLED  # Remove variable entirely
 # OR
@@ -319,12 +350,14 @@ export PIPELINE_ENABLED=true  # Explicitly enable
 **Symptom:** Pipeline runs despite `PIPELINE_ENABLED=false`
 
 **Check:**
+
 1. Verify environment variable is set: `echo $PIPELINE_ENABLED`
 2. Ensure no typos: `PIPELINE_ENABLED` not `PIPLINE_ENABLED`
 3. Check if running with different user/shell where env var not set
 4. For web: ensure web server process has the env var set
 
 **Fix:**
+
 ```bash
 # Verify setting takes effect
 export PIPELINE_ENABLED=false
@@ -337,6 +370,7 @@ python -c "import os; print('PIPELINE_ENABLED:', os.environ.get('PIPELINE_ENABLE
 ### Initial Deployment
 
 1. **Deploy with kill switch disabled:**
+
    ```bash
    export PIPELINE_ENABLED=false
    ```
@@ -356,6 +390,7 @@ python -c "import os; print('PIPELINE_ENABLED:', os.environ.get('PIPELINE_ENABLE
 If production issues occur:
 
 1. **Immediately disable:**
+
    ```bash
    export PIPELINE_ENABLED=false
    ```
@@ -377,6 +412,7 @@ If production issues occur:
 ## Contact
 
 For questions about the kill switch:
+
 - Review this document
 - Check `docs/BASELINE.md` for related baseline behavior
 - Contact repository maintainer

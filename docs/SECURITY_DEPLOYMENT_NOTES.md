@@ -19,7 +19,7 @@
 
 ```bash
 # บน local machine
-ssh-keygen -t ed25519 -C "deploy@dhamma-automation"
+ssh-keygen -t ed25519 -C "deploy@flowbiz-client-dhamma"
 
 # Copy to server
 ssh-copy-id -i ~/.ssh/id_ed25519.pub user@vps-host
@@ -93,7 +93,7 @@ sudo systemctl restart sshd
 *.key
 *_secret*.json
 youtube_token.json
-client_secret.json
+youtube_client_secret.json
 ```
 
 Verify in `.gitignore`:
@@ -111,9 +111,9 @@ grep -E "\.env|secret|token|\.pem|\.key" .gitignore
 | Event | Location | Retention |
 |-------|----------|-----------|
 | SSH access | `/var/log/auth.log` | 90+ days |
-| nginx access | `/var/log/nginx/dhamma-access.log` | 90+ days |
-| nginx errors | `/var/log/nginx/dhamma-error.log` | 90+ days |
-| Container logs | `docker logs dhamma-web` | 90+ days |
+| nginx access | `/var/log/nginx/flowbiz-dhamma-access.log` | 90+ days |
+| nginx errors | `/var/log/nginx/flowbiz-dhamma-error.log` | 90+ days |
+| Container logs | `docker logs flowbiz-dhamma-web` | 90+ days |
 | Deploy history | `git log` | Permanent |
 | Approval decisions | `output/<run_id>/artifacts/` | 90+ days |
 | Cancel actions | `output/<run_id>/control/` | 90+ days |
@@ -134,7 +134,7 @@ docker compose --env-file config/flowbiz_port.env logs \
   --since 2160h > audit_container.log
 
 # Nginx logs
-sudo rsync -a /var/log/nginx/dhamma-access.log* /path/to/audit_destination/
+sudo rsync -a /var/log/nginx/flowbiz-dhamma-access.log* /path/to/audit_destination/
 ```
 
 ---

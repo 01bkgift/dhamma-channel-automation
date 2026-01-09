@@ -1,0 +1,31 @@
+{
+  "pipeline": "youtube_upload_smoke_final",
+  "run_id": "smoke_test_final_5",
+  "started_at": "2026-01-08T14:16:49.972671",
+  "total_steps": 5,
+  "successful": 5,
+  "failed": 0,
+  "results": {
+    "decision_support": {
+      "status": "success",
+      "output": "D:\\FlowBiz\\dhamma-channel-automation\\output\\smoke_test_final_5\\decision_support_summary.json"
+    },
+    "approval_gate": {
+      "status": "success",
+      "output": "D:\\FlowBiz\\dhamma-channel-automation\\output\\smoke_test_final_5\\artifacts\\approval_gate_summary.json"
+    },
+    "soft_live": {
+      "status": "success",
+      "output": "D:\\FlowBiz\\dhamma-channel-automation\\output\\smoke_test_final_5\\artifacts\\soft_live_summary.json"
+    },
+    "notify_webhook": {
+      "status": "success",
+      "output": "D:\\FlowBiz\\dhamma-channel-automation\\output\\smoke_test_final_5\\artifacts\\notify_summary.json"
+    },
+    "youtube_upload": {
+      "status": "success",
+      "output": "output/smoke_test_final_5/artifacts/youtube_upload_summary.json"
+    }
+  },
+  "output_dir": "D:\\FlowBiz\\dhamma-channel-automation\\output\\smoke_test_final_5"
+}
