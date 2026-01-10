@@ -215,13 +215,10 @@ def run_test(run_id: str, dry_run: bool = False):
     all_passed &= assert_file_exists(artifacts_dir / "soft_live_summary.json", "Soft Live Summary")
     all_passed &= assert_json_field(artifacts_dir / "soft_live_summary.json", "enforced_mode", "dry_run", "Soft Live Enforced Mode")
     
-    # H. YouTube Upload (Should be skipped or dry_run success depending on implementation details of dry_run logic)
-    # The current configuration sets dry_run=true in yaml step config, so it should attempt upload in dry_run mode OR skip if disabled.
-    # Based on agent_youtube_upload logic: if dry_run=True in config, it updates internal logic.
-    # Wait, the step config is youtube.upload config.
+    # H. YouTube Upload
+    # The test pipeline is configured with dry_run: true in the youtube.upload step.
+    # This should result in a summary file indicating a successful dry-run.
     all_passed &= assert_file_exists(artifacts_dir / "youtube_upload_summary.json", "YouTube Upload Summary")
-    # In dry_run pipeline config, we expect decision to be skipped (upload disabled) OR pass (if upload enabled but dry run mode)
-    # Let's check status.
     
     if all_passed:
         log("SUCCESS: All E2E verification checks passed!", "INFO")
