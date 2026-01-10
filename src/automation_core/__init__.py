@@ -13,12 +13,14 @@ __version__ = "1.0.0"
 __author__ = "FlowBiz Team"
 
 from .base_agent import BaseAgent
+from .base_step import BaseStep
 from .config import AppConfig
 from .logging import setup_logging
 from .prompt_loader import PromptLoadError, load_prompt
 
 __all__ = [
     "BaseAgent",
+    "BaseStep",
     "AppConfig",
     "setup_logging",
     "load_prompt",

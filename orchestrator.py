@@ -43,6 +43,7 @@ from steps.approval_gate import (  # noqa: E402
 from steps.decision_support import run_decision_support  # noqa: E402
 from steps.notify_webhook import step as notify_step  # noqa: E402
 from steps.soft_live_enforce import run_soft_live_enforce  # noqa: E402
+from steps.trend_scout import TrendScoutStep  # noqa: E402
 
 POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
 
@@ -3736,6 +3737,25 @@ def agent_soft_live_enforce(step: dict, run_dir: Path):
     return path
 
 
+def run_trend_scout_step(step: dict, run_dir: Path) -> Path:
+    """Wrapper for TrendScoutStep class-based step"""
+    # Convert orchestrator step/run_dir to step context
+    context = {
+        "niches": step.get("input", {}).get("niches", []),
+        "horizon_days": step.get("input", {}).get("horizon_days", 30),
+        "output_dir": str(run_dir / "artifacts"),
+    }
+    
+    # TrendScoutStep expects output in trend_candidates.json
+    # The execute method handles the output saving
+    result = TrendScoutStep().execute(context)
+    
+    if result["status"] == "success":
+        return Path(result["output_file"])
+    else:
+        raise RuntimeError(f"TrendScout failed: {result.get('error', 'Unknown error')}")
+
+
 # ========== AGENT REGISTRY ==========
 
 AGENTS = {
@@ -3752,7 +3772,7 @@ AGENTS = {
     "Dashboard": agent_dashboard,
     "BackupArchive": agent_backup_archive,
     # Video Workflow Phase
-    "TrendScout": agent_trend_scout,
+    "TrendScout": run_trend_scout_step,
     "TopicPrioritizer": agent_topic_prioritizer,
     "ResearchRetrieval": agent_research_retrieval,
     "DataEnrichment": agent_data_enrichment,

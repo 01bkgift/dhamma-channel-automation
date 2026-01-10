@@ -7,9 +7,13 @@ Agent นี้รับข้อมูลเทรนด์จากหลา�
 
 import hashlib
 import logging
+import os
 import random
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
+
+from googleapiclient.discovery import build
+from pytrends.request import TrendReq
 
 from automation_core.base_agent import BaseAgent
 from automation_core.utils.scoring import (
@@ -22,12 +26,14 @@ from automation_core.utils.text import (
 )
 
 from .model import (
+    GoogleTrendItem,
     MetaInfo,
     SelfCheck,
     TopicEntry,
     TopicScore,
     TrendScoutInput,
     TrendScoutOutput,
+    YTTrendingItem,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,6 +65,11 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
             "brand_fit": 0.20,
         }
 
+        # ตรวจสอบว่าใช้ API จริงหรือไม่
+        self.use_real_apis = (
+            os.getenv("TREND_SCOUT_USE_REAL_APIS", "false").lower() == "true"
+        )
+
         # เสาหลักเนื้อหาของช่อง (ตาม v1 specification)
         self.content_pillars = [
             "ธรรมะประยุกต์",
@@ -78,6 +89,18 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
         logger.debug(f"ได้รับ keywords: {input_data.keywords}")
 
         try:
+            # 0. รวบรวมข้อมูลดิบจาก API (ถ้าเปิดใช้)
+            if self.use_real_apis:
+                logger.info("กำลังดึงข้อมูลจาก APIs จริง...")
+
+                # ดึง Google Trends
+                google_trends = self._fetch_google_trends(input_data.keywords)
+                input_data.google_trends.extend(google_trends)
+
+                # ดึง YouTube Trending
+                yt_trending = self._fetch_youtube_trending(input_data.keywords)
+                input_data.youtube_trending_raw.extend(yt_trending)
+
             # 1. รวบรวมคำสำคัญจากแหล่งต่างๆ
             all_keywords = self._collect_keywords(input_data)
             logger.debug(f"รวบรวมคำสำคัญได้ {len(all_keywords)} คำ")
@@ -522,3 +545,88 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
                 duplicate_ok=duplicate_ok, score_range_valid=score_range_valid
             ),
         )
+
+    def _fetch_google_trends(self, keywords: list[str]) -> list[GoogleTrendItem]:
+        """Fetch real Google Trends data"""
+        try:
+            pytrends = TrendReq(hl="th-TH", tz=420)
+            pytrends.build_payload(keywords, timeframe="today 30-d", geo="TH")
+            interest_over_time = pytrends.interest_over_time()
+
+            trends = []
+            for keyword in keywords:
+                if keyword in interest_over_time.columns:
+                    scores = [int(s) for s in interest_over_time[keyword].tolist()]
+                    trends.append(
+                        GoogleTrendItem(term=keyword, score_series=scores, region="TH")
+                    )
+            return trends
+        except Exception as e:
+            logger.warning(f"Google Trends API failed: {e}")
+            return []
+
+    def _fetch_youtube_trending(
+        self, niche_keywords: list[str]
+    ) -> list[YTTrendingItem]:
+        """Fetch trending YouTube videos from niche keywords"""
+        api_key = os.getenv("YOUTUBE_API_KEY")
+        if not api_key:
+            logger.warning("YOUTUBE_API_KEY not set")
+            return []
+
+        try:
+            youtube = build("youtube", "v3", developerKey=api_key)
+
+            # Search for videos in niche
+            search_response = (
+                youtube.search()
+                .list(
+                    q=" OR ".join(niche_keywords),
+                    part="snippet",
+                    maxResults=10,
+                    order="viewCount",
+                    regionCode="TH",
+                    relevanceLanguage="th",
+                    type="video",
+                    publishedAfter=(datetime.now(timezone.utc) - timedelta(days=30))
+                    .replace(microsecond=0)
+                    .isoformat()
+                    .replace("+00:00", "Z"),
+                )
+                .execute()
+            )
+
+            trending = []
+            for item in search_response.get("items", []):
+                video_id = item["id"]["videoId"]
+
+                # Get video statistics
+                video_response = (
+                    youtube.videos()
+                    .list(part="statistics,snippet", id=video_id)
+                    .execute()
+                )
+
+                if video_response["items"]:
+                    video = video_response["items"][0]
+                    stats = video["statistics"]
+                    snippet = video["snippet"]
+
+                    published_at = datetime.fromisoformat(
+                        snippet["publishedAt"].replace("Z", "+00:00")
+                    )
+                    age_days = (datetime.now(timezone.utc) - published_at).days
+
+                    trending.append(
+                        YTTrendingItem(
+                            title=snippet["title"],
+                            views_est=int(stats.get("viewCount", 0)),
+                            age_days=age_days,
+                            keywords=extract_keywords(snippet["title"]),
+                        )
+                    )
+
+            return trending
+        except Exception as e:
+            logger.warning(f"YouTube API failed: {e}")
+            return []

@@ -4,10 +4,13 @@
 """
 
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
+import pandas as pd
 import pytest
 
 # Add src to path
@@ -243,3 +246,84 @@ class TestTrendScoutWithMockData:
             assert len(result.topics) > 0
             assert result.meta.self_check.score_range_valid
             assert result.meta.self_check.duplicate_ok
+
+
+class TestTrendScoutAPIIntegration:
+    """ทดสอบการเชื่อมต่อ API จริงโดยใช้ Mocking"""
+
+    @pytest.fixture
+    def mock_google_trends(self, monkeypatch):
+        """Mock pytrends"""
+        mock_pytrends = MagicMock()
+        mock_df = pd.DataFrame(
+            {"ปล่อยวาง": [54, 60, 67, 72, 75], "เครียด": [78, 82, 79, 85, 88]}
+        )
+        mock_pytrends.interest_over_time.return_value = mock_df
+
+        def mock_build(*args, **kwargs):
+            return mock_pytrends
+
+        monkeypatch.setattr("agents.trend_scout.agent.TrendReq", mock_build)
+        return mock_pytrends
+
+    @pytest.fixture
+    def mock_youtube_api(self, monkeypatch):
+        """Mock YouTube Data API"""
+        mock_youtube = MagicMock()
+
+        # Mock search response
+        mock_youtube.search().list().execute.return_value = {
+            "items": [
+                {
+                    "id": {"videoId": "test_video_1"},
+                    "snippet": {"title": "วิธีปล่อยวางความเครียด"},
+                }
+            ]
+        }
+
+        # Mock video details
+        mock_youtube.videos().list().execute.return_value = {
+            "items": [
+                {
+                    "statistics": {"viewCount": "50000"},
+                    "snippet": {
+                        "title": "วิธีปล่อยวางความเครียด",
+                        "publishedAt": "2024-01-01T00:00:00Z",
+                    },
+                }
+            ]
+        }
+
+        def mock_build(*args, **kwargs):
+            return mock_youtube
+
+        monkeypatch.setattr("agents.trend_scout.agent.build", mock_build)
+        return mock_youtube
+
+    @pytest.fixture
+    def agent(self):
+        """สร้าง TrendScoutAgent สำหรับทดสอบ API"""
+        return TrendScoutAgent()
+
+    def test_google_trends_integration(self, agent, mock_google_trends, monkeypatch):
+        """ทดสอบการเรียก Google Trends API"""
+        monkeypatch.setenv("TREND_SCOUT_USE_REAL_APIS", "true")
+        agent.use_real_apis = True
+
+        agent_input = TrendScoutInput(keywords=["ปล่อยวาง", "เครียด"])
+        result = agent.run(agent_input)
+
+        assert len(result.topics) > 0
+        assert mock_google_trends.build_payload.called
+
+    def test_youtube_api_integration(self, agent, mock_youtube_api, monkeypatch):
+        """ทดสอบการเรียก YouTube Data API"""
+        monkeypatch.setenv("TREND_SCOUT_USE_REAL_APIS", "true")
+        monkeypatch.setenv("YOUTUBE_API_KEY", "test_key")
+        agent.use_real_apis = True
+
+        agent_input = TrendScoutInput(keywords=["ธรรมะ"])
+        result = agent.run(agent_input)
+
+        assert len(result.topics) > 0
+        assert mock_youtube_api.search().list.called

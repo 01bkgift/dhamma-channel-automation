@@ -1,0 +1,11 @@
+pipeline: smoke-trend-scout
+version: 1.0
+description: Smoke test for TrendScout agent
+
+steps:
+  - id: trend_scout
+    uses: TrendScout
+    input:
+      niches: ["ธรรมะ", "สมาธิ", "ปล่อยวาง"]
+      horizon_days: 30
+    output: trend_candidates.json
