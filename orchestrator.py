@@ -4044,7 +4044,9 @@ def run_agent_monitoring_step(step: dict, run_dir: Path) -> Path:
         return Path(result["output_file"])
     else:
         # Error -> Fail closed
-        raise RuntimeError(f"AgentMonitoring failed: {result.get('error', 'Unknown error')}")
+        raise RuntimeError(
+            f"AgentMonitoring failed: {result.get('error', 'Unknown error')}"
+        )
 
 
 # ========== AGENT REGISTRY ==========
