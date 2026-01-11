@@ -52,7 +52,10 @@ def run_decision_support(step: dict[str, Any], run_dir: Path) -> Path:
 
     Generates a deterministic recommendation based on Quality Gate and KPI artifacts.
     """
-    artifacts_dir = run_dir / "artifacts"
+    # Accept both calling conventions:
+    # - run_dir points at the pipeline run directory (containing `artifacts/`)
+    # - run_dir points directly at the `artifacts/` directory (common in unit tests)
+    artifacts_dir = run_dir if run_dir.name == "artifacts" else run_dir / "artifacts"
 
     # Define input paths
     quality_gate_path = artifacts_dir / "quality_gate_summary.json"
