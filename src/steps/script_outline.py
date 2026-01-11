@@ -206,19 +206,19 @@ class ScriptOutlineStep(BaseStep):
             lines.append(f"### {section.section}")
             lines.append(f"*{section.est_seconds} วินาที*")
             if section.goal:
-                lines.append(f"\n**เป้าหมาย**: {section.goal}")
+                lines.append(f"**เป้าหมาย**: {section.goal}")
             if section.content_draft:
-                lines.append(f"\n{section.content_draft}")
+                lines.append(f"{section.content_draft}")
             if section.key_points:
-                lines.append("\n**ประเด็นสำคัญ**:")
+                lines.append("**ประเด็นสำคัญ**:")
                 for point in section.key_points:
                     lines.append(f"- {point}")
             if section.steps:
-                lines.append("\n**ขั้นตอน**:")
+                lines.append("**ขั้นตอน**:")
                 for i, step in enumerate(section.steps, 1):
                     lines.append(f"{i}. {step}")
             if section.question:
-                lines.append(f"\n**คำถาม**: {section.question}")
+                lines.append(f"**คำถาม**: {section.question}")
             lines.append("")
         
         if result.warnings:
