@@ -2,9 +2,9 @@ from .agent_monitoring import AgentMonitoringStep
 from .data_enrichment import DataEnrichmentStep
 from .doctrine_validator import DoctrineValidatorStep
 from .research_retrieval import ResearchRetrievalStep
-from .security import SecurityStep
 from .script_outline import ScriptOutlineStep
 from .script_writer import ScriptWriterStep
+from .security import SecurityStep
 from .topic_prioritizer import TopicPrioritizerStep
 from .trend_scout import TrendScoutStep
 

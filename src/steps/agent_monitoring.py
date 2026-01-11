@@ -10,7 +10,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from automation_core.base_step import BaseStep
 

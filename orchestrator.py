@@ -35,6 +35,7 @@ from automation_core.adapters import (  # noqa: E402
 )
 from automation_core.adapters.noop import NoopAdapter  # noqa: E402
 from automation_core.utils.env import parse_pipeline_enabled  # noqa: E402
+from steps.agent_monitoring import AgentMonitoringStep  # noqa: E402
 from steps.approval_gate import (  # noqa: E402
     ApprovalPendingHold,
     ApprovalRejectedError,
@@ -45,7 +46,6 @@ from steps.notify_webhook import step as notify_step  # noqa: E402
 from steps.soft_live_enforce import run_soft_live_enforce  # noqa: E402
 from steps.topic_prioritizer import TopicPrioritizerStep  # noqa: E402
 from steps.trend_scout import TrendScoutStep  # noqa: E402
-from steps.agent_monitoring import AgentMonitoringStep  # noqa: E402
 
 POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
 

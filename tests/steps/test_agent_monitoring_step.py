@@ -4,10 +4,9 @@ Tests for AgentMonitoringStep.
 
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -47,7 +46,7 @@ def test_success_all_pass(monitoring_step, context, tmp_path):
 
                 # Verify JSON report content
                 report_path = Path(result["report_file"])
-                with open(report_path, "r", encoding="utf-8") as f:
+                with open(report_path, encoding="utf-8") as f:
                     report_data = json.load(f)
 
                 assert report_data["status"] == "success"
