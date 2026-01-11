@@ -311,7 +311,9 @@ class ScriptOutlineAgent(BaseAgent[ScriptOutlineInput, ScriptOutlineOutput]):
     def _should_include_story(self, input_data: ScriptOutlineInput) -> bool:
         """ตัดสินใจว่าควรใส่ story/analogy หรือไม่"""
         # ใช้ hash ของหัวข้อเพื่อให้ deterministic
-        topic_hash = int(hashlib.md5(input_data.topic_title.encode()).hexdigest(), 16) % 100
+        topic_hash = (
+            int(hashlib.md5(input_data.topic_title.encode()).hexdigest(), 16) % 100
+        )
         return topic_hash < 80  # 80% โอกาส
 
     def _should_include_closing(self, input_data: ScriptOutlineInput) -> bool:
@@ -453,7 +455,9 @@ class ScriptOutlineAgent(BaseAgent[ScriptOutlineInput, ScriptOutlineOutput]):
         ]
 
         # ใช้ hash เพื่อความสม่ำเสมอ
-        topic_hash = int(hashlib.md5(input_data.topic_title.encode()).hexdigest(), 16) % len(questions)
+        topic_hash = int(
+            hashlib.md5(input_data.topic_title.encode()).hexdigest(), 16
+        ) % len(questions)
         return questions[topic_hash]
 
     def _calculate_pacing_check(

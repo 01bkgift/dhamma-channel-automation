@@ -4,8 +4,8 @@ YouTube Token Generator
 Generates youtube_token.json from youtube_client_secret.json
 """
 
-import os
 from pathlib import Path
+
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 # Scopes required for Upload and Analytics
@@ -14,6 +14,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
+
 
 def main():
     client_secret_file = Path("youtube_client_secret.json")
@@ -26,9 +27,11 @@ def main():
         return
 
     print(f"🔐 Starting OAuth flow using {client_secret_file}...")
-    
+
     try:
-        flow = InstalledAppFlow.from_client_secrets_file(str(client_secret_file), SCOPES)
+        flow = InstalledAppFlow.from_client_secrets_file(
+            str(client_secret_file), SCOPES
+        )
         # Using run_local_server which is standard for desktop apps
         # If it fails to open a browser, it usually prints a link
         creds = flow.run_local_server(port=0)
@@ -42,6 +45,7 @@ def main():
 
     except Exception as e:
         print(f"❌ An error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()

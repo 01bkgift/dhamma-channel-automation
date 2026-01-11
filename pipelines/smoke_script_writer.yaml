@@ -1,0 +1,31 @@
+pipeline: smoke-script-writer
+version: 1.0
+description: Smoke test for ScriptWriter step (uses file references)
+
+steps:
+  - id: outline
+    uses: ScriptOutline
+    input:
+      topic_title: "ปล่อยวางความกังวลก่อนนอน"
+      summary_bullets:
+        - "การสังเกตเวทนาโดยไม่ยึดช่วยคลายกังวล"
+        - "อานาปานสติช่วงสั้นก่อนหลับลดการวนคิด"
+      core_concepts:
+        - "สติ"
+        - "เวทนา"
+      target_minutes: 10
+      viewer_name: "คนทำงานเมือง"
+      pain_points:
+        - "นอนไม่หลับ"
+      desired_state: "ใจสงบ"
+    output: outline.json
+
+  - id: script_writer
+    uses: ScriptWriter
+    needs: [outline]
+    input:
+      outline_file: "artifacts/outline.json"
+      passages_file: "examples/passages_sample.json"
+      target_seconds: 600
+      tone: "อบอุ่น สงบ"
+    output: script.md

@@ -35,6 +35,7 @@ DEFAULT_MIN_CONFIDENCE = 70
 
 class ScriptOutlineContext(TypedDict, total=False):
     """Context for ScriptOutlineStep"""
+
     # Input from previous step (via input_from in pipeline)
     input_file: str  # Path to data_enrichment.json
 
@@ -127,7 +128,9 @@ class ScriptOutlineStep(BaseStep):
             "warnings": result.warnings,
         }
 
-    def _extract_research_data(self, data: dict, research_key: str | None = None) -> dict:
+    def _extract_research_data(
+        self, data: dict, research_key: str | None = None
+    ) -> dict:
         """Helper to extract research data from different formats"""
         source = data.get(research_key, {}) if research_key else data
 
@@ -142,7 +145,9 @@ class ScriptOutlineStep(BaseStep):
 
         return {
             "topic_title": topic,
-            "summary_bullets": [c.get("text", "") for c in claims[:MAX_SUMMARY_BULLETS]],
+            "summary_bullets": [
+                c.get("text", "") for c in claims[:MAX_SUMMARY_BULLETS]
+            ],
             "core_concepts": keywords[:MAX_CORE_CONCEPTS],
             "missing_concepts": [],
         }
@@ -205,7 +210,9 @@ class ScriptOutlineStep(BaseStep):
             ),
             retention_goals=RetentionGoals(
                 hook_drop_max_pct=context.get("hook_drop_max_pct", 30),
-                mid_segment_break_every_sec=context.get("mid_segment_break_every_sec", 120),
+                mid_segment_break_every_sec=context.get(
+                    "mid_segment_break_every_sec", 120
+                ),
             ),
         )
 

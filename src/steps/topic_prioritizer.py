@@ -148,20 +148,25 @@ class TopicPrioritizerStep(BaseStep):
                     pillar=topic.get("category", topic.get("pillar", "ธรรมะประยุกต์")),
                     predicted_14d_views=topic.get(
                         "predicted_14d_views",
-                        topic.get("priority", 3) * 2000  # Estimate from priority
+                        topic.get("priority", 3) * 2000,  # Estimate from priority
                     ),
-                    scores=topic.get("scores", {
-                        "search_intent": 0.7,
-                        "freshness": 0.6,
-                        "evergreen": 0.5,
-                        "brand_fit": 0.8,
-                        "composite": 0.65,
-                    }),
+                    scores=topic.get(
+                        "scores",
+                        {
+                            "search_intent": 0.7,
+                            "freshness": 0.6,
+                            "evergreen": 0.5,
+                            "brand_fit": 0.8,
+                            "composite": 0.65,
+                        },
+                    ),
                     reason=topic.get("reason", topic.get("why_now", "")),
                 )
                 candidates.append(candidate)
             except Exception as e:
-                self.logger.warning(f"Failed to convert topic {topic.get('title')}: {e}")
+                self.logger.warning(
+                    f"Failed to convert topic {topic.get('title')}: {e}"
+                )
                 continue
 
         return candidates

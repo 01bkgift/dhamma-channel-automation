@@ -221,7 +221,7 @@ def _calculate_average_score(topics) -> float:
 @app.command()
 def version():
     """📋 แสดงเวอร์ชันของระบบ"""
-    console.print(f"🙏 [bold blue]FlowBiz Client Dhamma[/bold blue] v0.1.0")
+    console.print("🙏 [bold blue]FlowBiz Client Dhamma[/bold blue] v0.1.0")
     console.print("📊 TrendScoutAgent v1.0.0")
     console.print("⚙️  Python CLI with Typer & Rich")
 

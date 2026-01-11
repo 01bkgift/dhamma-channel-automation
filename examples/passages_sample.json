@@ -1,0 +1,20 @@
+{
+  "primary": [
+    {
+      "id": "p123",
+      "source_name": "อานาปานสติสูตร",
+      "collection": "พระสุตตันตปิฎก",
+      "canonical_ref": "MN 118",
+      "original_text": "อานาปานสติเมื่อพัฒนาแล้วย่อมนำไปสู่ความสงบ",
+      "thai_modernized": "การสติดูลมหายใจที่พัฒนาแล้วจะทำให้ใจสงบ",
+      "relevance_final": 0.85,
+      "doctrinal_tags": [
+        "อานาปานสติ",
+        "สมาธิ"
+      ],
+      "license": "public_domain",
+      "reason": "เกี่ยวข้องกับการหายใจและความสงบ"
+    }
+  ],
+  "supportive": []
+}

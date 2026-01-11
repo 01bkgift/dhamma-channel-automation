@@ -7,10 +7,9 @@ Agent นี้รับข้อมูลเทรนด์จากหลา�
 
 import hashlib
 import logging
-import os
 import random
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from googleapiclient.discovery import build
@@ -604,7 +603,7 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
                     regionCode="TH",
                     relevanceLanguage="th",
                     type="video",
-                    publishedAfter=(datetime.now(timezone.utc) - timedelta(days=30))
+                    publishedAfter=(datetime.now(UTC) - timedelta(days=30))
                     .replace(microsecond=0)
                     .isoformat()
                     .replace("+00:00", "Z"),
@@ -631,7 +630,7 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
                     published_at = datetime.fromisoformat(
                         snippet["publishedAt"].replace("Z", "+00:00")
                     )
-                    age_days = (datetime.now(timezone.utc) - published_at).days
+                    age_days = (datetime.now(UTC) - published_at).days
 
                     trending.append(
                         YTTrendingItem(
