@@ -1772,6 +1772,57 @@ def run_script_outline_step(step: dict, run_dir: Path) -> Path:
         raise RuntimeError(f"ScriptOutline failed: {result.get('error', 'Unknown error')}")
 
 
+def run_script_writer_step(step: dict, run_dir: Path) -> Path:
+    """Wrapper for ScriptWriterStep class with input_from support"""
+    from steps.script_writer import ScriptWriterStep
+
+    config = step.get("input", {})
+
+    # Handle input_from (file from previous step)
+    input_from = step.get("input_from")
+    outline_file = ""
+    if input_from:
+        path_json = run_dir / input_from.replace(".md", ".json")
+        path_direct = run_dir / input_from
+        path_artifacts_json = run_dir / "artifacts" / input_from.replace(".md", ".json")
+        path_artifacts = run_dir / "artifacts" / input_from
+
+        if path_json.exists():
+            outline_file = str(path_json)
+        elif path_artifacts_json.exists():
+            outline_file = str(path_artifacts_json)
+        elif path_direct.exists():
+            outline_file = str(path_direct)
+        elif path_artifacts.exists():
+            outline_file = str(path_artifacts)
+
+    # Look for passages from research step
+    passages_file = ""
+    for candidate in ["research_bundle.json", "passages.json"]:
+        path = run_dir / candidate
+        path_artifacts = run_dir / "artifacts" / candidate
+        if path.exists():
+            passages_file = str(path)
+            break
+        elif path_artifacts.exists():
+            passages_file = str(path_artifacts)
+            break
+
+    context = {
+        "outline_file": outline_file,
+        "passages_file": passages_file,
+        "output_dir": str(run_dir / "artifacts"),
+        **config,
+    }
+
+    result = ScriptWriterStep().execute(context)
+
+    if result["status"] == "success":
+        return Path(result["script_file"])
+    else:
+        raise RuntimeError(f"ScriptWriter failed: {result.get('error', 'Unknown error')}")
+
+
 def agent_legal_compliance(step, run_dir: Path):
     """Legal/Compliance - ตรวจสอบด้านกฎหมายและข้อบังคับ"""
     in_path = run_dir / step["input_from"]
@@ -3877,7 +3928,7 @@ AGENTS = {
     "ResearchRetrieval": run_research_retrieval_step,
     "DataEnrichment": run_data_enrichment_step,
     "ScriptOutline": run_script_outline_step,
-    "ScriptWriter": agent_script_writer,
+    "ScriptWriter": run_script_writer_step,
     "DoctrineValidator": agent_doctrine_validator,
     "LegalCompliance": agent_legal_compliance,
     "VisualAsset": agent_visual_asset,
