@@ -42,7 +42,8 @@ def test_detect_unknown_user_and_auth_fail() -> None:
     assert "suspicious_access" in flag_codes
     assert "auth_fail" in flag_codes
     assert any(
-        action.startswith("Block IP") for action in result.security_report[0].suggested_action
+        action.startswith("Block IP")
+        for action in result.security_report[0].suggested_action
     )
     assert "Reset credential" in result.security_report[0].suggested_action
     assert len(result.incident_alert) == 1

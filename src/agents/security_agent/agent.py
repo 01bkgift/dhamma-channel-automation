@@ -42,12 +42,16 @@ class SecurityAgent(BaseAgent[SecurityInput, SecurityOutput]):
             actions: list[str] = []
             priority = _normalize_priority(cfg.alert_priority.get(event.event, "low"))
 
-            if cfg.monitor_event and event.event in cfg.monitor_event and priority == "low":
+            if (
+                cfg.monitor_event
+                and event.event in cfg.monitor_event
+                and priority == "low"
+            ):
                 priority = "medium"
 
-            if _is_suspicious_user(event.user, cfg.allowlist_users) or _is_suspicious_ip(
-                event.ip, cfg.allowlist_ip_ranges
-            ):
+            if _is_suspicious_user(
+                event.user, cfg.allowlist_users
+            ) or _is_suspicious_ip(event.ip, cfg.allowlist_ip_ranges):
                 flags.append(
                     SecurityFlag(
                         code="suspicious_access",

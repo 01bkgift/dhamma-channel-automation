@@ -113,7 +113,6 @@ class DoctrineValidatorStep(BaseStep):
                 ensure_ascii=False,
                 indent=2,
                 sort_keys=True,
-                default=str,
             )
 
         validated_script_path = output_dir / "script_validated.md"
@@ -227,8 +226,10 @@ class DoctrineValidatorStep(BaseStep):
         if matches:
             for idx, match in enumerate(matches):
                 start = match.end()
-                end = matches[idx + 1].start() if idx + 1 < len(matches) else len(
-                    markdown
+                end = (
+                    matches[idx + 1].start()
+                    if idx + 1 < len(matches)
+                    else len(markdown)
                 )
                 block = markdown[start:end].strip()
                 if not block:
@@ -238,7 +239,9 @@ class DoctrineValidatorStep(BaseStep):
                     continue
                 segment_type = match.group(1).strip().lower()
                 est_seconds = (
-                    int(match.group(2)) if match.group(2) and match.group(2).isdigit() else None
+                    int(match.group(2))
+                    if match.group(2) and match.group(2).isdigit()
+                    else None
                 )
                 segments.append(
                     ScriptSegment(
@@ -250,7 +253,9 @@ class DoctrineValidatorStep(BaseStep):
             if segments:
                 return segments
 
-        blocks = [part.strip() for part in markdown.strip().split("\n\n") if part.strip()]
+        blocks = [
+            part.strip() for part in markdown.strip().split("\n\n") if part.strip()
+        ]
         for i, block in enumerate(blocks[:10]):
             segment_type = "hook" if i == 0 else "teaching"
             segments.append(
@@ -327,7 +332,7 @@ class DoctrineValidatorStep(BaseStep):
             status_emoji = "❌"
 
         header = f"""<!-- DOCTRINE VALIDATION -->
-<!-- Status: {status_emoji} {'APPROVED' if not result.summary.recommend_rewrite else 'NEEDS_REVIEW'} -->
+<!-- Status: {status_emoji} {"APPROVED" if not result.summary.recommend_rewrite else "NEEDS_REVIEW"} -->
 <!-- Validated at: {result.validated_at} -->
 <!-- Strictness: {result.strictness} -->
 <!-- Summary: OK={result.summary.ok}/{result.summary.total}, Citation Coverage={result.meta.citation_coverage:.0%} -->
@@ -341,7 +346,7 @@ class DoctrineValidatorStep(BaseStep):
 <!-- ==================== -->
 <!-- VALIDATION SUMMARY -->
 <!-- Total: {result.summary.total} | OK: {result.summary.ok} | Mismatch: {result.summary.mismatch} | Hallucination: {result.summary.hallucination} -->
-<!-- Recommend Rewrite: {'Yes' if result.summary.recommend_rewrite else 'No'} -->
+<!-- Recommend Rewrite: {"Yes" if result.summary.recommend_rewrite else "No"} -->
 <!-- ==================== -->
 """
 

@@ -4017,9 +4017,7 @@ def run_security_step(step: dict, run_dir: Path) -> Path:
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
-        raise RuntimeError(
-            f"Security failed: {result.get('error', 'Unknown error')}"
-        )
+        raise RuntimeError(f"Security failed: {result.get('error', 'Unknown error')}")
 
 
 # ========== AGENT REGISTRY ==========
