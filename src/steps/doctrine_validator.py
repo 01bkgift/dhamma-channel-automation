@@ -107,7 +107,14 @@ class DoctrineValidatorStep(BaseStep):
 
         report_json_path = output_dir / "validation_report.json"
         with open(report_json_path, "w", encoding="utf-8") as f:
-            json.dump(result.model_dump(), f, ensure_ascii=False, indent=2, default=str)
+            json.dump(
+                result.model_dump(),
+                f,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+                default=str,
+            )
 
         validated_script_path = output_dir / "script_validated.md"
         validated_content = self._create_validated_script(original_script, result)
