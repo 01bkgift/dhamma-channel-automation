@@ -1,3 +1,4 @@
+from .agent_monitoring import AgentMonitoringStep
 from .data_enrichment import DataEnrichmentStep
 from .doctrine_validator import DoctrineValidatorStep
 from .research_retrieval import ResearchRetrievalStep
@@ -17,4 +18,5 @@ STEP_REGISTRY = {
     "ScriptOutline": ScriptOutlineStep,
     "ScriptWriter": ScriptWriterStep,
     "DoctrineValidator": DoctrineValidatorStep,
+    "AgentMonitoring": AgentMonitoringStep,
 }

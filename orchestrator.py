@@ -45,6 +45,7 @@ from steps.notify_webhook import step as notify_step  # noqa: E402
 from steps.soft_live_enforce import run_soft_live_enforce  # noqa: E402
 from steps.topic_prioritizer import TopicPrioritizerStep  # noqa: E402
 from steps.trend_scout import TrendScoutStep  # noqa: E402
+from steps.agent_monitoring import AgentMonitoringStep  # noqa: E402
 
 POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
 
@@ -4020,6 +4021,31 @@ def run_security_step(step: dict, run_dir: Path) -> Path:
         raise RuntimeError(f"Security failed: {result.get('error', 'Unknown error')}")
 
 
+def run_agent_monitoring_step(step: dict, run_dir: Path) -> Path:
+    """
+    Wrapper for AgentMonitoringStep.
+    Executes pre-flight checks and returns path to summary report.
+    """
+    # Prepare context from step config + run_dir
+    context = {
+        "output_dir": str(run_dir / "artifacts"),
+        "check_disk_space": step.get("config", {}).get("check_disk_space", True),
+        "min_disk_GB": step.get("config", {}).get("min_disk_GB", 2),
+        "check_memory": step.get("config", {}).get("check_memory", True),
+        "required_secrets": step.get("config", {}).get("required_secrets", ["YOUTUBE_API_KEY"]),
+    }
+
+    step_instance = AgentMonitoringStep()
+    result = step_instance.execute(context)
+
+    if result["status"] in ("success", "warning"):
+        # Success or Warning -> Return output file path (pass)
+        return Path(result["output_file"])
+    else:
+        # Error -> Fail closed
+        raise RuntimeError(f"AgentMonitoring failed: {result.get('error', 'Unknown error')}")
+
+
 # ========== AGENT REGISTRY ==========
 
 AGENTS = {
@@ -4031,6 +4057,7 @@ AGENTS = {
     "DataSync": agent_data_sync,
     "InventoryIndex": agent_inventory_index,
     "Monitoring": agent_monitoring,
+    "AgentMonitoring": run_agent_monitoring_step,
     "Notification": agent_notification,
     "ErrorFlag": agent_error_flag,
     "Dashboard": agent_dashboard,

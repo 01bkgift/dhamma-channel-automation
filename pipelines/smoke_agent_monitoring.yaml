@@ -1,0 +1,10 @@
+pipeline: "Smoke Test: Agent Monitoring"
+steps:
+  - id: "check_health"
+    uses: "AgentMonitoring"
+    config:
+      check_disk_space: true
+      min_disk_GB: 1
+      check_memory: true
+      required_secrets: 
+        - "YOUTUBE_API_KEY"
