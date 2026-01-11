@@ -4027,12 +4027,13 @@ def run_agent_monitoring_step(step: dict, run_dir: Path) -> Path:
     Executes pre-flight checks and returns path to summary report.
     """
     # Prepare context from step config + run_dir
+    config = step.get("config", {})
     context = {
         "output_dir": str(run_dir / "artifacts"),
-        "check_disk_space": step.get("config", {}).get("check_disk_space", True),
-        "min_disk_GB": step.get("config", {}).get("min_disk_GB", 2),
-        "check_memory": step.get("config", {}).get("check_memory", True),
-        "required_secrets": step.get("config", {}).get("required_secrets", ["YOUTUBE_API_KEY"]),
+        "check_disk_space": config.get("check_disk_space", True),
+        "min_disk_GB": config.get("min_disk_GB", 2),
+        "check_memory": config.get("check_memory", True),
+        "required_secrets": config.get("required_secrets", ["YOUTUBE_API_KEY"]),
     }
 
     step_instance = AgentMonitoringStep()
