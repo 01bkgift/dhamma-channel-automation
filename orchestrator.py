@@ -1831,6 +1831,73 @@ def run_script_writer_step(step: dict, run_dir: Path) -> Path:
         )
 
 
+def run_doctrine_validator_step(step: dict, run_dir: Path) -> Path:
+    """Wrapper for DoctrineValidatorStep class with input_from support"""
+    from steps.doctrine_validator import DoctrineValidatorStep
+
+    config = step.get("input", {})
+
+    input_from = step.get("input_from")
+    script_file = ""
+    if input_from:
+        path_json = run_dir / input_from.replace(".md", ".json")
+        path_direct = run_dir / input_from
+        path_artifacts_json = run_dir / "artifacts" / input_from.replace(".md", ".json")
+        path_artifacts = run_dir / "artifacts" / input_from
+
+        if path_json.exists():
+            script_file = str(path_json)
+        elif path_artifacts_json.exists():
+            script_file = str(path_artifacts_json)
+        elif path_direct.exists():
+            script_file = str(path_direct)
+        elif path_artifacts.exists():
+            script_file = str(path_artifacts)
+        else:
+            script_file = str(path_direct)
+
+    passages_file = ""
+    for candidate in ["research_bundle.json", "passages.json"]:
+        path = run_dir / candidate
+        path_artifacts = run_dir / "artifacts" / candidate
+        if path.exists():
+            passages_file = str(path)
+            break
+        elif path_artifacts.exists():
+            passages_file = str(path_artifacts)
+            break
+
+    context = {
+        "script_file": script_file,
+        "passages_file": passages_file,
+        "output_dir": str(run_dir / "artifacts"),
+        **config,
+    }
+
+    result = DoctrineValidatorStep().execute(context)
+
+    if result["status"] == "success":
+        output_path = Path(result["output_file"])
+        output_name = step.get("output")
+        if output_name:
+            output_target = run_dir / output_name
+            if output_target != output_path and output_path.exists():
+                write_text(output_target, output_path.read_text(encoding="utf-8"))
+
+        report_file = result.get("report_file")
+        if report_file:
+            report_path = Path(report_file)
+            report_target = run_dir / "validation_report.json"
+            if report_target != report_path and report_path.exists():
+                write_text(report_target, report_path.read_text(encoding="utf-8"))
+
+        return output_path
+    else:
+        raise RuntimeError(
+            f"DoctrineValidator failed: {result.get('error', 'Unknown error')}"
+        )
+
+
 def agent_legal_compliance(step, run_dir: Path):
     """Legal/Compliance - ตรวจสอบด้านกฎหมายและข้อบังคับ"""
     in_path = run_dir / step["input_from"]
@@ -3941,7 +4008,7 @@ AGENTS = {
     "DataEnrichment": run_data_enrichment_step,
     "ScriptOutline": run_script_outline_step,
     "ScriptWriter": run_script_writer_step,
-    "DoctrineValidator": agent_doctrine_validator,
+    "DoctrineValidator": run_doctrine_validator_step,
     "LegalCompliance": agent_legal_compliance,
     "VisualAsset": agent_visual_asset,
     "Voiceover": agent_voiceover,

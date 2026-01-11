@@ -1,0 +1,32 @@
+pipeline: smoke-doctrine-validator
+version: 1.0
+description: Smoke test for DoctrineValidator step (standalone validation)
+
+steps:
+  - id: doctrine_validator
+    uses: DoctrineValidator
+    input:
+      script_segments:
+        - segment_type: "hook"
+          text: "คุณเคยรู้สึกว่าใจไม่สงบไหม?"
+          est_seconds: 8
+        - segment_type: "teaching"
+          text: "การมีสติรู้ลมหายใจเข้าออกช่วยให้ใจสงบ [CIT:p123]"
+          est_seconds: 60
+        - segment_type: "practice"
+          text: "ลองหายใจเข้าลึกๆ นับ 1-2-3-4"
+          est_seconds: 30
+      passages:
+        primary:
+          - id: "p123"
+            original_text: "การมีสติรู้ลมหายใจเข้าออกช่วยให้ใจสงบ"
+            thai_modernized: "มีสติอยู่กับลมหายใจทำให้ใจสงบ"
+            doctrinal_tags:
+              - "สติ"
+              - "อานาปานสติ"
+            canonical_ref: "MN 118"
+            license: "public_domain"
+        supportive: []
+      strictness: "normal"
+      check_sensitive: true
+    output: script_validated.md
