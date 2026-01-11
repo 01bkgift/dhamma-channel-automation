@@ -43,8 +43,8 @@ from steps.approval_gate import (  # noqa: E402
 from steps.decision_support import run_decision_support  # noqa: E402
 from steps.notify_webhook import step as notify_step  # noqa: E402
 from steps.soft_live_enforce import run_soft_live_enforce  # noqa: E402
-from steps.trend_scout import TrendScoutStep  # noqa: E402
 from steps.topic_prioritizer import TopicPrioritizerStep  # noqa: E402
+from steps.trend_scout import TrendScoutStep  # noqa: E402
 
 POST_TEMPLATES_ALIASES = {"post_templates", "post.templates"}
 
@@ -1701,26 +1701,26 @@ def agent_seo_metadata(step, run_dir: Path):
 def run_data_enrichment_step(step: dict, run_dir: Path) -> Path:
     """Wrapper for DataEnrichmentStep class with input_from support"""
     from steps.data_enrichment import DataEnrichmentStep
-    
+
     config = step.get("config", {})
-    
+
     # Handle input_from (file from previous step)
     input_from = step.get("input_from")
     input_file = ""
     if input_from:
         path_direct = run_dir / input_from
         path_artifacts = run_dir / "artifacts" / input_from
-        
+
         if path_direct.exists():
             input_file = str(path_direct)
         elif path_artifacts.exists():
             input_file = str(path_artifacts)
         else:
             input_file = str(path_direct)
-    
+
     # Direct items from input
     items = step.get("input", {}).get("items", [])
-    
+
     context = {
         "input_file": input_file,
         "items": items,
@@ -1729,9 +1729,9 @@ def run_data_enrichment_step(step: dict, run_dir: Path) -> Path:
         "enrichment_schema": step.get("input", {}).get("enrichment_schema") or config.get("enrichment_schema"),
         "min_confidence_pct": step.get("input", {}).get("min_confidence_pct") or config.get("min_confidence_pct", 70),
     }
-    
+
     result = DataEnrichmentStep().execute(context)
-    
+
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
@@ -1741,42 +1741,31 @@ def run_data_enrichment_step(step: dict, run_dir: Path) -> Path:
 def run_script_outline_step(step: dict, run_dir: Path) -> Path:
     """Wrapper for ScriptOutlineStep class with input_from support"""
     from steps.script_outline import ScriptOutlineStep
-    
+
     config = step.get("input", {})
-    
+
     # Handle input_from (file from previous step)
     input_from = step.get("input_from")
     input_file = ""
     if input_from:
         path_direct = run_dir / input_from
         path_artifacts = run_dir / "artifacts" / input_from
-        
+
         if path_direct.exists():
             input_file = str(path_direct)
         elif path_artifacts.exists():
             input_file = str(path_artifacts)
         else:
             input_file = str(path_direct)
-    
+
     context = {
         "input_file": input_file,
         "output_dir": str(run_dir / "artifacts"),
-        "topic_title": config.get("topic_title"),
-        "summary_bullets": config.get("summary_bullets"),
-        "core_concepts": config.get("core_concepts"),
-        "missing_concepts": config.get("missing_concepts"),
-        "target_minutes": config.get("target_minutes", 10),
-        "viewer_name": config.get("viewer_name"),
-        "pain_points": config.get("pain_points"),
-        "desired_state": config.get("desired_state"),
-        "tone": config.get("tone"),
-        "avoid": config.get("avoid"),
-        "hook_drop_max_pct": config.get("hook_drop_max_pct", 30),
-        "mid_segment_break_every_sec": config.get("mid_segment_break_every_sec", 120),
+        **config,
     }
-    
+
     result = ScriptOutlineStep().execute(context)
-    
+
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
@@ -3093,7 +3082,7 @@ def agent_youtube_upload(step, run_dir: Path):
             video_id = youtube_upload.upload_video(
                 output_mp4_abs, title, description, tags, privacy_status
             )
-            
+
             # Check for Soft-Live dry-run mock ID
             decision = "uploaded"
             if video_id and video_id.startswith("soft-live-dry-"):
@@ -3767,11 +3756,11 @@ def run_trend_scout_step(step: dict, run_dir: Path) -> Path:
         "horizon_days": step.get("input", {}).get("horizon_days", 30),
         "output_dir": str(run_dir / "artifacts"),
     }
-    
+
     # TrendScoutStep expects output in trend_candidates.json
     # The execute method handles the output saving
     result = TrendScoutStep().execute(context)
-    
+
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
@@ -3781,7 +3770,7 @@ def run_trend_scout_step(step: dict, run_dir: Path) -> Path:
 def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
     """Wrapper for TopicPrioritizerStep class-based step"""
     config = step.get("config", {})
-    
+
     # Handle both direct path or relative to run_dir
     input_from = step.get("input_from")
     input_file = ""
@@ -3789,7 +3778,7 @@ def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
         # Try both locations
         path_direct = run_dir / input_from
         path_artifacts = run_dir / "artifacts" / input_from
-        
+
         if path_direct.exists():
             input_file = str(path_direct)
         elif path_artifacts.exists():
@@ -3822,9 +3811,9 @@ def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
 def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
     """Wrapper for ResearchRetrievalStep class with input_from support"""
     from steps.research_retrieval import ResearchRetrievalStep
-    
+
     config = step.get("config", {})
-    
+
     # Handle input_from (file from previous step)
     input_from = step.get("input_from")
     input_file = ""
@@ -3832,7 +3821,7 @@ def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
         # Try both locations
         path_direct = run_dir / input_from
         path_artifacts = run_dir / "artifacts" / input_from
-        
+
         if path_direct.exists():
             input_file = str(path_direct)
         elif path_artifacts.exists():
@@ -3844,7 +3833,7 @@ def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
         input_file = config.get("input_file", "")
         if input_file and not Path(input_file).is_absolute():
             input_file = str(run_dir / input_file)
-    
+
     context = {
         "input_file": input_file,
         "output_dir": str(run_dir / "artifacts"),
@@ -3858,9 +3847,9 @@ def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
         "forbidden_sources": config.get("forbidden_sources", []),
         "context_language": config.get("context_language", "th"),
     }
-    
+
     result = ResearchRetrievalStep().execute(context)
-    
+
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
