@@ -1,4 +1,5 @@
 from .data_enrichment import DataEnrichmentStep
+from .doctrine_validator import DoctrineValidatorStep
 from .research_retrieval import ResearchRetrievalStep
 from .script_outline import ScriptOutlineStep
 from .script_writer import ScriptWriterStep
@@ -13,4 +14,5 @@ STEP_REGISTRY = {
     "DataEnrichment": DataEnrichmentStep,
     "ScriptOutline": ScriptOutlineStep,
     "ScriptWriter": ScriptWriterStep,
+    "DoctrineValidator": DoctrineValidatorStep,
 }
