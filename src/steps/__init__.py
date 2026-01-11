@@ -1,6 +1,7 @@
 from .data_enrichment import DataEnrichmentStep
 from .doctrine_validator import DoctrineValidatorStep
 from .research_retrieval import ResearchRetrievalStep
+from .security import SecurityStep
 from .script_outline import ScriptOutlineStep
 from .script_writer import ScriptWriterStep
 from .topic_prioritizer import TopicPrioritizerStep
@@ -12,6 +13,7 @@ STEP_REGISTRY = {
     "TopicPrioritizer": TopicPrioritizerStep,
     "ResearchRetrieval": ResearchRetrievalStep,
     "DataEnrichment": DataEnrichmentStep,
+    "Security": SecurityStep,
     "ScriptOutline": ScriptOutlineStep,
     "ScriptWriter": ScriptWriterStep,
     "DoctrineValidator": DoctrineValidatorStep,

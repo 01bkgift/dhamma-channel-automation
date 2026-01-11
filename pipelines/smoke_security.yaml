@@ -1,0 +1,25 @@
+pipeline: smoke-security
+version: 1.0
+description: Smoke test for Security agent
+
+steps:
+  - id: security_check
+    uses: Security
+    input:
+      events:
+        - timestamp: "2025-01-01T10:00:00Z"
+          agent: "Integration"
+          event: "api_key_access"
+          user: "unknown"
+          ip: "203.0.113.99"
+          status: "failed"
+      config:
+        sensitive_agents: ["Integration"]
+        monitor_event: ["api_key_access", "data_export", "auth_fail"]
+        allowlist_users: ["operator"]
+        allowlist_ip_ranges: ["192.168.1.0/24"]
+        alert_priority:
+          api_key_access: "high"
+          auth_fail: "critical"
+          data_export: "medium"
+    output: security_report.json

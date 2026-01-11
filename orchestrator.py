@@ -3986,13 +3986,49 @@ def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
         )
 
 
+def run_security_step(step: dict, run_dir: Path) -> Path:
+    """Wrapper for SecurityStep class with input_from support."""
+    from steps.security import SecurityStep
+
+    input_payload = step.get("input", {})
+    input_from = step.get("input_from")
+    input_log_file = ""
+    if input_from:
+        path_direct = run_dir / input_from
+        path_artifacts = run_dir / "artifacts" / input_from
+
+        if path_direct.exists():
+            input_log_file = str(path_direct)
+        elif path_artifacts.exists():
+            input_log_file = str(path_artifacts)
+        else:
+            input_log_file = str(path_direct)
+
+    context = {
+        "input_log_file": input_log_file,
+        "events": input_payload.get("events", []),
+        "config": input_payload.get("config", {}),
+        "config_file": input_payload.get("config_file", ""),
+        "output_dir": str(run_dir / "artifacts"),
+    }
+
+    result = SecurityStep().execute(context)
+
+    if result["status"] == "success":
+        return Path(result["output_file"])
+    else:
+        raise RuntimeError(
+            f"Security failed: {result.get('error', 'Unknown error')}"
+        )
+
+
 # ========== AGENT REGISTRY ==========
 
 AGENTS = {
     # System Setup Phase
     "PromptPack": agent_prompt_pack,
     "AgentTemplate": agent_template,
-    "Security": agent_security,
+    "Security": run_security_step,
     "Integration": agent_integration,
     "DataSync": agent_data_sync,
     "InventoryIndex": agent_inventory_index,
