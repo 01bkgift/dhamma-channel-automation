@@ -69,7 +69,6 @@ class AgentMonitoringStep(BaseStep):
 
         issues: list[str] = []
         checks = {
-            "system": True,
             "config": True,
             "resources": True
         }
@@ -173,7 +172,6 @@ class AgentMonitoringStep(BaseStep):
         lines.append("## Checks")
         lines.append(f"- System Resources: {'✅' if checks['resources'] else '⚠️'}")
         lines.append(f"- Configuration: {'✅' if checks['config'] else '⚠️'}")
-        lines.append(f"- internal_system: {'✅' if checks['system'] else '⚠️'}") # checks['system'] didn't have specific logic, defaulted to true
         lines.append("")
 
         if issues:

@@ -4,6 +4,7 @@ Tests for AgentMonitoringStep.
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -30,35 +31,6 @@ def context(tmp_path):
 
 def test_success_all_pass(monitoring_step, context, tmp_path):
     """Test successful execution with all checks passing."""
-    with patch("shutil.disk_usage") as mock_disk, \
-         patch("os.environ.get") as mock_env, \
-         patch("pathlib.Path.exists") as mock_exists:
-        
-        # Mock disk space > 1GB (return total, used, free in bytes)
-        # 2GB free
-        mock_disk.return_value = (100, 50, 2 * 1024**3)
-        
-        # Mock secret presence
-        mock_env.return_value = "secret_value"
-        
-        # Mock .env file existence (any call to exists for env files returns True)
-        # We need to be careful not to break other exists calls.
-        # But for unit test logic, we can just ensure 'prod.env' or '.env' check returns True.
-        # Actually easier to use fs/tmp_path.
-        
-        # Create dummy .env
-        (Path(context["output_dir"])).mkdir(parents=True, exist_ok=True)
-        (Path("prod.env")).touch() # This interacts with real FS if not mocked.
-        # Let's mock Path.exists specifically for env files logic
-        def side_effect(self):
-            if str(self).endswith(".env"):
-                return True
-            return False
-            
-    # Better approach: Don't mock Path.exists globally. Create real file.
-    # Note: The test runs in a temp dir usually if configured? No, pytest doesn't change CWD by default.
-    # We should use patches for isolation.
-    
     with patch("shutil.disk_usage") as mock_disk:
         mock_disk.return_value = (100, 50, 2 * 1024**3)
         
@@ -69,14 +41,24 @@ def test_success_all_pass(monitoring_step, context, tmp_path):
                 result = monitoring_step.execute(context)
                 
                 assert result["status"] == "success"
-                assert result["checks"]["system"] is True
                 assert result["checks"]["config"] is True
                 assert result["checks"]["resources"] is True
                 assert not result["issues"]
                 
-                # Check output files
-                assert Path(result["output_file"]).exists()
-                assert Path(result["report_file"]).exists()
+                # Verify JSON report content
+                report_path = Path(result['report_file'])
+                with open(report_path, 'r', encoding='utf-8') as f:
+                    report_data = json.load(f)
+
+                assert report_data['status'] == 'success'
+                assert not report_data['issues']
+                assert report_data['checks']['resources'] is True
+
+                # Verify Markdown summary content
+                summary_path = Path(result['output_file'])
+                summary_content = summary_path.read_text(encoding='utf-8')
+                assert '✅ **System Healthy**' in summary_content
+                assert 'No issues found' in summary_content
 
 
 def test_warning_low_disk(monitoring_step, context):
@@ -123,6 +105,25 @@ def test_warning_missing_env_file(monitoring_step, context):
                 assert result["status"] == "warning"
                 assert result["checks"]["config"] is False
                 assert "MISSING_ENV_FILE: neither prod.env nor .env found" in result["issues"]
+
+
+def test_warning_psutil_missing(monitoring_step, context):
+    """Test warning when psutil is not installed."""
+    context['check_memory'] = True
+    with patch('shutil.disk_usage') as mock_disk, \
+         patch.dict(os.environ, {'TEST_SECRET': 'value'}), \
+         patch('pathlib.Path.exists', return_value=True):
+        
+        mock_disk.return_value = (100, 50, 2 * 1024**3)
+        
+        # Mock ImportError for psutil by manipulating sys.modules
+        with patch.dict(sys.modules, {'psutil': None}):
+            result = monitoring_step.execute(context)
+            
+            assert result['status'] == 'warning'
+            assert any('RESOURCE_CHECK_SKIPPED: psutil_not_installed' in issue for issue in result['issues'])
+            # Per rules, skipped check isn't failure, so resources is True if disk passed
+            assert result['checks']['resources'] is True
 
 
 def test_error_invalid_context(monitoring_step):
