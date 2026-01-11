@@ -1,0 +1,18 @@
+name: smoke_chain_prioritizer_research
+description: Test input_from chain - TopicPrioritizer to ResearchRetrieval
+
+steps:
+  - id: topic_prioritizer
+    uses: TopicPrioritizer
+    config:
+      input_file: "data/mock_topics.json"
+      strategy_focus: "evergreen_balance"
+    output: topics_ranked.json
+
+  - id: research_retrieval
+    uses: ResearchRetrieval
+    needs: [topic_prioritizer]
+    input_from: topics_ranked.json
+    config:
+      max_passages: 8
+    output: research_bundle.json

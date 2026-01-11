@@ -1,0 +1,16 @@
+name: smoke_research_retrieval
+description: Smoke test for ResearchRetrieval step with direct input
+
+steps:
+  - id: research_retrieval
+    uses: ResearchRetrieval
+    config:
+      topic_title: "ปล่อยวางก่อนนอน"
+      raw_query: "วิธีปล่อยวางก่อนนอนจากหลักธรรม"
+      refinement_hints:
+        - "เน้นหลักคำสอนพุทธศาสนา"
+        - "เกี่ยวกับปฏิบัติ อานาปานสติ"
+      max_passages: 10
+      required_tags:
+        - "สติ"
+    output: research_bundle.json

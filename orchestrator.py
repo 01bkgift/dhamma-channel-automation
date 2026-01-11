@@ -3763,8 +3763,18 @@ def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
     
     # Handle both direct path or relative to run_dir
     input_from = step.get("input_from")
+    input_file = ""
     if input_from:
-        input_file = str(run_dir / input_from)
+        # Try both locations
+        path_direct = run_dir / input_from
+        path_artifacts = run_dir / "artifacts" / input_from
+        
+        if path_direct.exists():
+            input_file = str(path_direct)
+        elif path_artifacts.exists():
+            input_file = str(path_artifacts)
+        else:
+            input_file = str(path_direct) # Will fail in execute() with clear error
     else:
         # Fallback to config if input_from is missing
         input_file = config.get("input_file", "data/mock_topics.json")
@@ -3788,6 +3798,54 @@ def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
         raise RuntimeError(f"TopicPrioritizer failed: {result.get('error', 'Unknown error')}")
 
 
+def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
+    """Wrapper for ResearchRetrievalStep class with input_from support"""
+    from steps.research_retrieval import ResearchRetrievalStep
+    
+    config = step.get("config", {})
+    
+    # Handle input_from (file from previous step)
+    input_from = step.get("input_from")
+    input_file = ""
+    if input_from:
+        # Try both locations
+        path_direct = run_dir / input_from
+        path_artifacts = run_dir / "artifacts" / input_from
+        
+        if path_direct.exists():
+            input_file = str(path_direct)
+        elif path_artifacts.exists():
+            input_file = str(path_artifacts)
+        else:
+            input_file = str(path_direct)
+    else:
+        # Fallback to config if input_from is missing
+        input_file = config.get("input_file", "")
+        if input_file and not Path(input_file).is_absolute():
+            input_file = str(run_dir / input_file)
+    
+    context = {
+        "input_file": input_file,
+        "output_dir": str(run_dir / "artifacts"),
+        # Direct input (overrides input_file if provided)
+        "topic_title": config.get("topic_title", ""),
+        "raw_query": config.get("raw_query", ""),
+        # Agent parameters
+        "refinement_hints": config.get("refinement_hints", []),
+        "max_passages": config.get("max_passages", 12),
+        "required_tags": config.get("required_tags", []),
+        "forbidden_sources": config.get("forbidden_sources", []),
+        "context_language": config.get("context_language", "th"),
+    }
+    
+    result = ResearchRetrievalStep().execute(context)
+    
+    if result["status"] == "success":
+        return Path(result["output_file"])
+    else:
+        raise RuntimeError(f"ResearchRetrieval failed: {result.get('error', 'Unknown error')}")
+
+
 # ========== AGENT REGISTRY ==========
 
 AGENTS = {
@@ -3806,7 +3864,7 @@ AGENTS = {
     # Video Workflow Phase
     "TrendScout": run_trend_scout_step,
     "TopicPrioritizer": run_topic_prioritizer_step,
-    "ResearchRetrieval": agent_research_retrieval,
+    "ResearchRetrieval": run_research_retrieval_step,
     "DataEnrichment": agent_data_enrichment,
     "ScriptOutline": agent_script_outline,
     "ScriptWriter": agent_script_writer,
