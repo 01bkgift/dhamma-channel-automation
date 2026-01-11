@@ -7,10 +7,19 @@ import json
 import logging
 from pathlib import Path
 
+from typing import TypedDict
 from automation_core.base_step import BaseStep
 from agents.trend_scout import TrendScoutAgent, TrendScoutInput
 
 logger = logging.getLogger(__name__)
+
+
+class TrendScoutContext(TypedDict, total=False):
+    """Context for TrendScoutStep"""
+
+    niches: list[str]
+    horizon_days: int
+    output_dir: str
 
 
 class TrendScoutStep(BaseStep):
@@ -20,7 +29,7 @@ class TrendScoutStep(BaseStep):
         super().__init__(step_id="trend_scout", step_type="TrendScout", version="1.0.0")
         self.agent = TrendScoutAgent()
 
-    def execute(self, context: dict) -> dict:
+    def execute(self, context: TrendScoutContext) -> dict:
         """
         Execute trend scouting
 

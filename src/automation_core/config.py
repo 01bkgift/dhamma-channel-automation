@@ -25,6 +25,9 @@ class AppConfig(BaseSettings):
     google_trends_api_key: str | None = Field(
         default=None, description="Google Trends API Key"
     )
+    trend_scout_use_real_apis: bool = Field(
+        default=False, description="Whether TrendScout should use real APIs"
+    )
 
     # Database (สำหรับอนาคต)
     database_url: str | None = Field(default=None, description="Database URL")

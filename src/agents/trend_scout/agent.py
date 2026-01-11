@@ -9,6 +9,7 @@ import hashlib
 import logging
 import os
 import random
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -16,6 +17,7 @@ from googleapiclient.discovery import build
 from pytrends.request import TrendReq
 
 from automation_core.base_agent import BaseAgent
+from automation_core.config import config
 from automation_core.utils.scoring import (
     calculate_composite_score,
     validate_score_range,
@@ -66,9 +68,7 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
         }
 
         # ตรวจสอบว่าใช้ API จริงหรือไม่
-        self.use_real_apis = (
-            os.getenv("TREND_SCOUT_USE_REAL_APIS", "false").lower() == "true"
-        )
+        self.use_real_apis = config.trend_scout_use_real_apis
 
         # เสาหลักเนื้อหาของช่อง (ตาม v1 specification)
         self.content_pillars = [
@@ -547,31 +547,47 @@ class TrendScoutAgent(BaseAgent[TrendScoutInput, TrendScoutOutput]):
         )
 
     def _fetch_google_trends(self, keywords: list[str]) -> list[GoogleTrendItem]:
-        """Fetch real Google Trends data"""
-        try:
-            pytrends = TrendReq(hl="th-TH", tz=420)
-            pytrends.build_payload(keywords, timeframe="today 30-d", geo="TH")
-            interest_over_time = pytrends.interest_over_time()
+        """Fetch real Google Trends data with exponential backoff retry"""
+        max_retries = 3
+        base_delay = 5  # seconds
 
-            trends = []
-            for keyword in keywords:
-                if keyword in interest_over_time.columns:
-                    scores = [int(s) for s in interest_over_time[keyword].tolist()]
-                    trends.append(
-                        GoogleTrendItem(term=keyword, score_series=scores, region="TH")
+        for attempt in range(max_retries):
+            try:
+                pytrends = TrendReq(hl="th-TH", tz=420)
+                pytrends.build_payload(keywords, timeframe="today 30-d", geo="TH")
+                interest_over_time = pytrends.interest_over_time()
+
+                trends = []
+                for keyword in keywords:
+                    if keyword in interest_over_time.columns:
+                        scores = [int(s) for s in interest_over_time[keyword].tolist()]
+                        trends.append(
+                            GoogleTrendItem(
+                                term=keyword, score_series=scores, region="TH"
+                            )
+                        )
+                return trends
+            except Exception as e:
+                # Check for rate limit error (usually 429)
+                if "429" in str(e) and attempt < max_retries - 1:
+                    delay = base_delay * (2**attempt)
+                    logger.warning(
+                        f"Google Trends rate limited. Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
                     )
-            return trends
-        except Exception as e:
-            logger.warning(f"Google Trends API failed: {e}")
-            return []
+                    time.sleep(delay)
+                    continue
+
+                logger.warning(f"Google Trends API failed: {e}")
+                return []
+        return []
 
     def _fetch_youtube_trending(
         self, niche_keywords: list[str]
     ) -> list[YTTrendingItem]:
         """Fetch trending YouTube videos from niche keywords"""
-        api_key = os.getenv("YOUTUBE_API_KEY")
+        api_key = config.youtube_api_key
         if not api_key:
-            logger.warning("YOUTUBE_API_KEY not set")
+            logger.warning("YOUTUBE_API_KEY not set in config")
             return []
 
         try:
