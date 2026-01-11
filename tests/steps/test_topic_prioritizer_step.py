@@ -47,17 +47,21 @@ class TestTopicPrioritizerStep:
         }
 
         input_file = tmp_path / "trend_candidates.json"
-        input_file.write_text(json.dumps(mock_data, ensure_ascii=False), encoding="utf-8")
+        input_file.write_text(
+            json.dumps(mock_data, ensure_ascii=False), encoding="utf-8"
+        )
 
         step = TopicPrioritizerStep()
-        result = step.execute({
-            "input_file": str(input_file),
-            "output_dir": str(tmp_path),
-            "strategy_focus": "fast_growth",
-            "weeks": 4,
-            "longform_per_week": 2,
-            "shorts_per_week": 4,
-        })
+        result = step.execute(
+            {
+                "input_file": str(input_file),
+                "output_dir": str(tmp_path),
+                "strategy_focus": "fast_growth",
+                "weeks": 4,
+                "longform_per_week": 2,
+                "shorts_per_week": 4,
+            }
+        )
 
         assert result["status"] == "success"
         assert "output_file" in result
@@ -71,11 +75,13 @@ class TestTopicPrioritizerStep:
             pytest.skip("mock_topics.json not found")
 
         step = TopicPrioritizerStep()
-        result = step.execute({
-            "input_file": str(mock_file),
-            "output_dir": "output/test_step",
-            "strategy_focus": "evergreen_balance",
-        })
+        result = step.execute(
+            {
+                "input_file": str(mock_file),
+                "output_dir": "output/test_step",
+                "strategy_focus": "evergreen_balance",
+            }
+        )
 
         assert result["status"] == "success"
         assert result["scheduled_count"] > 0
@@ -94,27 +100,33 @@ class TestTopicPrioritizerStep:
         }
 
         input_file = tmp_path / "trend_candidates.json"
-        input_file.write_text(json.dumps(mock_data, ensure_ascii=False), encoding="utf-8")
+        input_file.write_text(
+            json.dumps(mock_data, ensure_ascii=False), encoding="utf-8"
+        )
 
         step = TopicPrioritizerStep()
         strategies = ["fast_growth", "evergreen_balance", "depth_series"]
 
         for strategy in strategies:
-            result = step.execute({
-                "input_file": str(input_file),
-                "output_dir": str(tmp_path / strategy),
-                "strategy_focus": strategy,
-            })
+            result = step.execute(
+                {
+                    "input_file": str(input_file),
+                    "output_dir": str(tmp_path / strategy),
+                    "strategy_focus": strategy,
+                }
+            )
             assert result["status"] == "success", f"Failed for strategy: {strategy}"
             assert result["strategy_focus"] == strategy
 
     def test_missing_input_file(self, tmp_path):
         """Test error handling for missing input file"""
         step = TopicPrioritizerStep()
-        result = step.execute({
-            "input_file": str(tmp_path / "nonexistent.json"),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "input_file": str(tmp_path / "nonexistent.json"),
+                "output_dir": str(tmp_path),
+            }
+        )
 
         assert result["status"] == "error"
         assert "not found" in result["error"]
@@ -127,9 +139,11 @@ class TestTopicPrioritizerStep:
         input_file.write_text(json.dumps(mock_data), encoding="utf-8")
 
         step = TopicPrioritizerStep()
-        result = step.execute({
-            "input_file": str(input_file),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "input_file": str(input_file),
+                "output_dir": str(tmp_path),
+            }
+        )
 
         assert result["status"] == "error"

@@ -8,7 +8,7 @@ ScriptWriter Pipeline Step
 import json
 import logging
 from pathlib import Path
-from typing import Optional, TypedDict, Union
+from typing import TypedDict
 
 from agents.research_retrieval.model import Passage
 from agents.script_outline.model import ScriptOutlineOutput
@@ -30,10 +30,11 @@ DEFAULT_VOICE = "เป็นกันเอง สุภาพ ใช้คำ�
 
 class ScriptWriterContext(TypedDict, total=False):
     """Context for ScriptWriterStep"""
-    outline_file: str      # Path to outline.json
-    passages_file: str     # Path to passages.json
-    outline: dict          # Direct outline data
-    passages: dict         # Direct passages data
+
+    outline_file: str  # Path to outline.json
+    passages_file: str  # Path to passages.json
+    outline: dict  # Direct outline data
+    passages: dict  # Direct passages data
     tone: str
     voice: str
     avoid: list[str]
@@ -98,7 +99,9 @@ class ScriptWriterStep(BaseStep):
             "warnings": result.warnings,
         }
 
-    def _get_outline_data(self, context: ScriptWriterContext) -> Optional[ScriptOutlineOutput]:
+    def _get_outline_data(
+        self, context: ScriptWriterContext
+    ) -> ScriptOutlineOutput | None:
         """Get outline from file or context"""
         outline_file = context.get("outline_file")
         if outline_file:
@@ -118,7 +121,7 @@ class ScriptWriterStep(BaseStep):
                 self.logger.warning(f"Failed to parse outline: {e}")
         return None
 
-    def _get_passages_data(self, context: ScriptWriterContext) -> Optional[PassageData]:
+    def _get_passages_data(self, context: ScriptWriterContext) -> PassageData | None:
         """Get passages from file or context"""
         passages_file = context.get("passages_file")
         if passages_file:
@@ -135,7 +138,7 @@ class ScriptWriterStep(BaseStep):
             return self._parse_passages(passages)
         return None
 
-    def _parse_passages(self, data: Union[dict, list]) -> PassageData:
+    def _parse_passages(self, data: dict | list) -> PassageData:
         """Parse passages from dict"""
         primary, supportive = [], []
         if isinstance(data, dict):
@@ -146,7 +149,10 @@ class ScriptWriterStep(BaseStep):
         return PassageData(primary=primary, supportive=supportive)
 
     def _build_agent_input(
-        self, outline: ScriptOutlineOutput, passages: PassageData, context: ScriptWriterContext
+        self,
+        outline: ScriptOutlineOutput,
+        passages: PassageData,
+        context: ScriptWriterContext,
     ) -> ScriptWriterInput:
         """Build agent input"""
         return ScriptWriterInput(

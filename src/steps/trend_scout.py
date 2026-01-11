@@ -6,10 +6,10 @@ Wraps TrendScoutAgent for orchestrator integration
 import json
 import logging
 from pathlib import Path
-
 from typing import TypedDict
-from automation_core.base_step import BaseStep
+
 from agents.trend_scout import TrendScoutAgent, TrendScoutInput
+from automation_core.base_step import BaseStep
 
 logger = logging.getLogger(__name__)
 

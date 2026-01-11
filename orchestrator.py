@@ -1726,8 +1726,10 @@ def run_data_enrichment_step(step: dict, run_dir: Path) -> Path:
         "items": items,
         "output_dir": str(run_dir / "artifacts"),
         "data_type": config.get("data_type", "video"),
-        "enrichment_schema": step.get("input", {}).get("enrichment_schema") or config.get("enrichment_schema"),
-        "min_confidence_pct": step.get("input", {}).get("min_confidence_pct") or config.get("min_confidence_pct", 70),
+        "enrichment_schema": step.get("input", {}).get("enrichment_schema")
+        or config.get("enrichment_schema"),
+        "min_confidence_pct": step.get("input", {}).get("min_confidence_pct")
+        or config.get("min_confidence_pct", 70),
     }
 
     result = DataEnrichmentStep().execute(context)
@@ -1735,7 +1737,9 @@ def run_data_enrichment_step(step: dict, run_dir: Path) -> Path:
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
-        raise RuntimeError(f"DataEnrichment failed: {result.get('error', 'Unknown error')}")
+        raise RuntimeError(
+            f"DataEnrichment failed: {result.get('error', 'Unknown error')}"
+        )
 
 
 def run_script_outline_step(step: dict, run_dir: Path) -> Path:
@@ -1769,7 +1773,9 @@ def run_script_outline_step(step: dict, run_dir: Path) -> Path:
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
-        raise RuntimeError(f"ScriptOutline failed: {result.get('error', 'Unknown error')}")
+        raise RuntimeError(
+            f"ScriptOutline failed: {result.get('error', 'Unknown error')}"
+        )
 
 
 def run_script_writer_step(step: dict, run_dir: Path) -> Path:
@@ -1820,7 +1826,9 @@ def run_script_writer_step(step: dict, run_dir: Path) -> Path:
     if result["status"] == "success":
         return Path(result["script_file"])
     else:
-        raise RuntimeError(f"ScriptWriter failed: {result.get('error', 'Unknown error')}")
+        raise RuntimeError(
+            f"ScriptWriter failed: {result.get('error', 'Unknown error')}"
+        )
 
 
 def agent_legal_compliance(step, run_dir: Path):
@@ -3835,12 +3843,12 @@ def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
         elif path_artifacts.exists():
             input_file = str(path_artifacts)
         else:
-            input_file = str(path_direct) # Will fail in execute() with clear error
+            input_file = str(path_direct)  # Will fail in execute() with clear error
     else:
         # Fallback to config if input_from is missing
         input_file = config.get("input_file", "data/mock_topics.json")
         if not Path(input_file).is_absolute():
-             input_file = str(ROOT / input_file)
+            input_file = str(ROOT / input_file)
 
     context = {
         "input_file": input_file,
@@ -3856,7 +3864,9 @@ def run_topic_prioritizer_step(step: dict, run_dir: Path) -> Path:
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
-        raise RuntimeError(f"TopicPrioritizer failed: {result.get('error', 'Unknown error')}")
+        raise RuntimeError(
+            f"TopicPrioritizer failed: {result.get('error', 'Unknown error')}"
+        )
 
 
 def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
@@ -3904,7 +3914,9 @@ def run_research_retrieval_step(step: dict, run_dir: Path) -> Path:
     if result["status"] == "success":
         return Path(result["output_file"])
     else:
-        raise RuntimeError(f"ResearchRetrieval failed: {result.get('error', 'Unknown error')}")
+        raise RuntimeError(
+            f"ResearchRetrieval failed: {result.get('error', 'Unknown error')}"
+        )
 
 
 # ========== AGENT REGISTRY ==========

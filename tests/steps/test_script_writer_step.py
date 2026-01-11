@@ -7,8 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from agents.script_outline import (
@@ -90,11 +88,13 @@ class TestScriptWriterStep:
         )
 
         step = ScriptWriterStep()
-        result = step.execute({
-            "outline_file": str(outline_file),
-            "passages_file": str(passages_file),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "outline_file": str(outline_file),
+                "passages_file": str(passages_file),
+                "output_dir": str(tmp_path),
+            }
+        )
 
         assert result["status"] == "success"
         assert Path(result["output_file"]).exists()
@@ -104,11 +104,13 @@ class TestScriptWriterStep:
     def test_execute_with_direct_input(self, tmp_path):
         """Test with inline data"""
         step = ScriptWriterStep()
-        result = step.execute({
-            "outline": self._generate_valid_outline(),
-            "passages": self._generate_valid_passages(),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "outline": self._generate_valid_outline(),
+                "passages": self._generate_valid_passages(),
+                "output_dir": str(tmp_path),
+            }
+        )
 
         assert result["status"] == "success"
         assert "quality_check" in result
@@ -116,11 +118,13 @@ class TestScriptWriterStep:
     def test_output_is_markdown(self, tmp_path):
         """Test output is script.md (matches video.yaml)"""
         step = ScriptWriterStep()
-        result = step.execute({
-            "outline": self._generate_valid_outline(),
-            "passages": self._generate_valid_passages(),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "outline": self._generate_valid_outline(),
+                "passages": self._generate_valid_passages(),
+                "output_dir": str(tmp_path),
+            }
+        )
 
         assert result["status"] == "success"
         assert result["script_file"].endswith("script.md")
@@ -132,29 +136,35 @@ class TestScriptWriterStep:
     def test_missing_outline_error(self, tmp_path):
         """Test error when outline missing"""
         step = ScriptWriterStep()
-        result = step.execute({
-            "passages": self._generate_valid_passages(),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "passages": self._generate_valid_passages(),
+                "output_dir": str(tmp_path),
+            }
+        )
         assert result["status"] == "error"
 
     def test_missing_passages_error(self, tmp_path):
         """Test error when passages missing"""
         step = ScriptWriterStep()
-        result = step.execute({
-            "outline": self._generate_valid_outline(),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "outline": self._generate_valid_outline(),
+                "output_dir": str(tmp_path),
+            }
+        )
         assert result["status"] == "error"
 
     def test_quality_check_in_result(self, tmp_path):
         """Test quality check structure"""
         step = ScriptWriterStep()
-        result = step.execute({
-            "outline": self._generate_valid_outline(),
-            "passages": self._generate_valid_passages(),
-            "output_dir": str(tmp_path),
-        })
+        result = step.execute(
+            {
+                "outline": self._generate_valid_outline(),
+                "passages": self._generate_valid_passages(),
+                "output_dir": str(tmp_path),
+            }
+        )
 
         assert result["status"] == "success"
         qc = result["quality_check"]

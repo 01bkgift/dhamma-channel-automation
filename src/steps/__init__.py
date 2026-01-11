@@ -1,9 +1,9 @@
-from .trend_scout import TrendScoutStep
-from .topic_prioritizer import TopicPrioritizerStep
-from .research_retrieval import ResearchRetrievalStep
 from .data_enrichment import DataEnrichmentStep
+from .research_retrieval import ResearchRetrievalStep
 from .script_outline import ScriptOutlineStep
 from .script_writer import ScriptWriterStep
+from .topic_prioritizer import TopicPrioritizerStep
+from .trend_scout import TrendScoutStep
 
 # Register step for orchestrator
 STEP_REGISTRY = {

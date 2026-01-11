@@ -49,7 +49,7 @@ class TestTrendScoutStep:
         output_file = Path(result["output_file"])
         assert output_file.exists()
 
-        with open(output_file, "r", encoding="utf-8") as f:
+        with open(output_file, encoding="utf-8") as f:
             data = json.load(f)
             assert "topics" in data
             assert len(data["topics"]) > 0
@@ -68,7 +68,7 @@ class TestTrendScoutStep:
         result = step.execute(context)
 
         output_file = Path(result["output_file"])
-        with open(output_file, "r", encoding="utf-8") as f:
+        with open(output_file, encoding="utf-8") as f:
             data = json.load(f)
 
         # Validate schema
