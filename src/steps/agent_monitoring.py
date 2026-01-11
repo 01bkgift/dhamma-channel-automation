@@ -92,14 +92,13 @@ class AgentMonitoringStep(BaseStep):
             try:
                 import psutil  # type: ignore
                 mem = psutil.virtual_memory()
-                # Heuristic: Warn if available memory is very low (< 500MB)
-                # This logic can be tuned or parameterized, but keeping it simple as prompt didn't specify threshold
-                # Prompt said: "Memory below safe threshold" -> Let's assume 500MB for now or just check availability.
-                # Actually prompt output example says: RESOURCE_CHECK_SKIPPED: psutil_not_installed
+                # Heuristic: Warn if available memory is very low.
+                # This threshold is configurable via the 'min_memory_MB' context parameter.
+                min_memory_mb = context.get("min_memory_MB", 500)
                 available_mb = mem.available / (1024**2)
-                if available_mb < 500: # 500MB safety buffer
+                if available_mb < min_memory_mb:
                      checks["resources"] = False
-                     issues.append(f"LOW_MEMORY: available={available_mb:.2f}MB required=500MB")
+                     issues.append(f"LOW_MEMORY: available={available_mb:.2f}MB required={min_memory_mb}MB")
 
             except ImportError:
                 # Mark check as passed (as per prompt rules) but warn
