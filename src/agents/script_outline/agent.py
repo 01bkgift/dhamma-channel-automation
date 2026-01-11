@@ -67,7 +67,6 @@ class ScriptOutlineAgent(BaseAgent[ScriptOutlineInput, ScriptOutlineOutput]):
         self.standard_sections = [
             "Hook",
             "Problem Amplify",
-            "Transition Prompt",
             "Story / Analogy",
             "Core Teaching",
             "Practice / Application",
@@ -311,8 +310,8 @@ class ScriptOutlineAgent(BaseAgent[ScriptOutlineInput, ScriptOutlineOutput]):
 
     def _should_include_story(self, input_data: ScriptOutlineInput) -> bool:
         """ตัดสินใจว่าควรใส่ story/analogy หรือไม่"""
-        # ใช้ hash เพื่อความสม่ำเสมอ
-        topic_hash = hash(input_data.topic_title) % 100
+        # ใช้ hash ของหัวข้อเพื่อให้ deterministic
+        topic_hash = int(hashlib.md5(input_data.topic_title.encode()).hexdigest(), 16) % 100
         return topic_hash < 80  # 80% โอกาส
 
     def _should_include_closing(self, input_data: ScriptOutlineInput) -> bool:
@@ -447,15 +446,14 @@ class ScriptOutlineAgent(BaseAgent[ScriptOutlineInput, ScriptOutlineOutput]):
 
     def _generate_reflection_question(self, input_data: ScriptOutlineInput) -> str:
         """สร้างคำถาม reflection"""
-
         questions = [
             "ถ้าความคิดพรุ่งนี้ยังไม่จบวันนี้ได้ คุณยังอยากกุมมันไว้ทั้งคืนไหม?",
             "ใจที่ผ่อนคลายกับใจที่ตึงเครียด ใจแบบไหนที่คุณอยากอยู่ด้วย?",
             "ถ้าเราไม่สามารถควบคุมความคิดได้ เราจะปล่อยวางยังไง?",
         ]
 
-        # เลือกตาม hash
-        topic_hash = hash(input_data.topic_title) % len(questions)
+        # ใช้ hash เพื่อความสม่ำเสมอ
+        topic_hash = int(hashlib.md5(input_data.topic_title.encode()).hexdigest(), 16) % len(questions)
         return questions[topic_hash]
 
     def _calculate_pacing_check(

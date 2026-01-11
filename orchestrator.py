@@ -1738,6 +1738,51 @@ def run_data_enrichment_step(step: dict, run_dir: Path) -> Path:
         raise RuntimeError(f"DataEnrichment failed: {result.get('error', 'Unknown error')}")
 
 
+def run_script_outline_step(step: dict, run_dir: Path) -> Path:
+    """Wrapper for ScriptOutlineStep class with input_from support"""
+    from steps.script_outline import ScriptOutlineStep
+    
+    config = step.get("input", {})
+    
+    # Handle input_from (file from previous step)
+    input_from = step.get("input_from")
+    input_file = ""
+    if input_from:
+        path_direct = run_dir / input_from
+        path_artifacts = run_dir / "artifacts" / input_from
+        
+        if path_direct.exists():
+            input_file = str(path_direct)
+        elif path_artifacts.exists():
+            input_file = str(path_artifacts)
+        else:
+            input_file = str(path_direct)
+    
+    context = {
+        "input_file": input_file,
+        "output_dir": str(run_dir / "artifacts"),
+        "topic_title": config.get("topic_title"),
+        "summary_bullets": config.get("summary_bullets"),
+        "core_concepts": config.get("core_concepts"),
+        "missing_concepts": config.get("missing_concepts"),
+        "target_minutes": config.get("target_minutes", 10),
+        "viewer_name": config.get("viewer_name"),
+        "pain_points": config.get("pain_points"),
+        "desired_state": config.get("desired_state"),
+        "tone": config.get("tone"),
+        "avoid": config.get("avoid"),
+        "hook_drop_max_pct": config.get("hook_drop_max_pct", 30),
+        "mid_segment_break_every_sec": config.get("mid_segment_break_every_sec", 120),
+    }
+    
+    result = ScriptOutlineStep().execute(context)
+    
+    if result["status"] == "success":
+        return Path(result["output_file"])
+    else:
+        raise RuntimeError(f"ScriptOutline failed: {result.get('error', 'Unknown error')}")
+
+
 def agent_legal_compliance(step, run_dir: Path):
     """Legal/Compliance - ตรวจสอบด้านกฎหมายและข้อบังคับ"""
     in_path = run_dir / step["input_from"]
@@ -3842,7 +3887,7 @@ AGENTS = {
     "TopicPrioritizer": run_topic_prioritizer_step,
     "ResearchRetrieval": run_research_retrieval_step,
     "DataEnrichment": run_data_enrichment_step,
-    "ScriptOutline": agent_script_outline,
+    "ScriptOutline": run_script_outline_step,
     "ScriptWriter": agent_script_writer,
     "DoctrineValidator": agent_doctrine_validator,
     "LegalCompliance": agent_legal_compliance,

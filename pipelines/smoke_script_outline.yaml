@@ -1,0 +1,25 @@
+pipeline: smoke-script-outline
+version: 1.0
+description: Smoke test for ScriptOutline step (uses step wrapper)
+
+steps:
+  - id: script_outline
+    uses: ScriptOutline
+    input:
+      topic_title: "ปล่อยวางความกังวลก่อนนอน"
+      summary_bullets:
+        - "การสังเกตเวทนาโดยไม่ยึดช่วยคลายกังวล"
+        - "อานาปานสติช่วงสั้นก่อนหลับลดการวนคิด"
+        - "การยอมรับความไม่แน่นอนทำให้ใจคลาย"
+      core_concepts:
+        - "สติ"
+        - "เวทนา"
+        - "ปล่อยวาง"
+      target_minutes: 10
+      viewer_name: "คนทำงานเมือง"
+      pain_points:
+        - "นอนไม่ค่อยหลับ"
+        - "คิดเรื่องงานซ้ำ"
+      desired_state: "ใจผ่อนคลาย หลับง่ายขึ้น"
+      tone: "อบอุ่น สงบ"
+    output: outline.md

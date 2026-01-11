@@ -40,13 +40,12 @@
 ลำดับหลัก (ปรับได้เล็กน้อย):
 1. Hook (≤ 8s) — ดึงความสนใจ, ใช้ 1 Hook Pattern
 2. Problem Amplify — ขยายความรู้สึก/สถานการณ์ (ไม่เกิน 45–60s)
-3. Transition Prompt — เชื่อมไปสู่หลักธรรมด้วยคำถาม/สังเกต
-4. Story / Analogy (ถ้ามี) — เรื่องสั้นหรือภาพเปรียบ (60–90s)
-5. Core Teaching Segment(s) — แยกเป็น 2–3 sub-block (แต่ละ block 60–120s)
-6. Practice / Application — ขั้นตอนปฏิบัติ 3–5 ข้อ + micro-guided
-7. Reflection Question — 1 คำถามให้ผู้ชมคิด/รู้สึก
-8. Soft CTA (ไม่เกิน 15–20s) — เชิญติดตาม / ชวนย้อนมาใช้ในคืนถัดไป
-9. Optional Calm Closing — ประโยคสั้นปล่อยวาง (อาจรวมกับ CTA)
+3. Story / Analogy (ถ้ามี) — เรื่องสั้นหรือภาพเปรียบ (60–90s)
+4. Core Teaching Segment(s) — แยกเป็น 2–3 sub-block (แต่ละ block 60–120s)
+5. Practice / Application — ขั้นตอนปฏิบัติ 3–5 ข้อ + micro-guided
+6. Reflection Question — 1 คำถามให้ผู้ชมคิด/รู้สึก
+7. Soft CTA (ไม่เกิน 15–20s) — เชิญติดตาม / ชวนย้อนมาใช้ในคืนถัดไป
+8. Optional Calm Closing — ประโยคสั้นปล่อยวาง (อาจรวมกับ CTA)
 
 [HOOK PATTERN LIBRARY (เลือก 1–2 เท่านั้น)]
 - question_open ("เคยไหม…?")
